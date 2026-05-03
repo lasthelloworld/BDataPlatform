@@ -19,4 +19,8 @@ d:\works\projects\BDataPlatform\
 │       └── InteractionGuide.vue # 交互说明
 
 # 运行命令
-npm run dev
+npm run dev //运行测试
+npm run build //打包
+npm run preview //预览打包结果
+npm run test //运行测试
+npm run lint //运行代码规范检查

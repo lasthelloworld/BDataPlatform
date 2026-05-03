@@ -19,7 +19,7 @@
     <div class="user-info">
       <div class="avatar">👤</div>
       <div class="user-detail">
-        <div class="user-name">销售总监</div>
+        <div class="user-name">运营总监</div>
         <div class="user-role">管理员</div>
       </div>
     </div>
