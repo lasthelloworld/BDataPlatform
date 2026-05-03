@@ -17,3 +17,6 @@ d:\works\projects\BDataPlatform\
 │       ├── OrderTable.vue       # 订单明细表格
 │       ├── ExportDialog.vue     # 数据导出弹窗
 │       └── InteractionGuide.vue # 交互说明
+
+# 运行命令
+npm run dev
