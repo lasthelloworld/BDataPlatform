@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>标注索引 - 销售数据分析平台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+      padding: 24px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      background: #fafafa;
+    }
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f1f1f;
+    }
+    .header p {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    th {
+      background: #fafafa;
+      font-weight: 500;
+      color: #666;
+      font-size: 13px;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:hover td {
+      background: #f8f8f8;
+    }
+    .marker {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 12px;
+      color: #1677ff;
+      background: #e6f4ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .component {
+      font-size: 12px;
+      color: #888;
+    }
+    .component-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 6px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      color: #666;
+    }
+    .index-col {
+      width: 60px;
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+    }
+    .element-col {
+      width: 180px;
+    }
+    .marker-col {
+      width: 300px;
+    }
+    .summary {
+      padding: 16px 24px;
+      background: #fafafa;
+      border-top: 1px solid #f0f0f0;
+      font-size: 13px;
+      color: #666;
+    }
+    .summary strong {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📌 标注索引 - 销售数据分析平台</h1>
+      <p>本文档列出项目中所有可交互元素的 data-marker 标注说明，便于需求追溯和测试验证。</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th class="index-col">#</th>
+          <th class="element-col">元素标识</th>
+          <th>标注说明（data-marker）</th>
+          <th class="component-col">所在组件</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="index-col">1</td>
+          <td class="element-col">侧边栏菜单项</td>
+          <td><span class="marker">侧边栏导航菜单</span></td>
+          <td><span class="component-badge">Sidebar.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">2</td>
+          <td class="element-col">导出数据按钮</td>
+          <td><span class="marker">打开数据导出配置弹窗</span></td>
+          <td><span class="component-badge">FilterBar.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">3</td>
+          <td class="element-col">日期范围选择器</td>
+          <td><span class="marker">选择时间范围筛选数据</span></td>
+          <td><span class="component-badge">FilterBar.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">4</td>
+          <td class="element-col">区域级联选择器</td>
+          <td><span class="marker">选择省/市二级联动区域筛选数据</span></td>
+          <td><span class="component-badge">FilterBar.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">5</td>
+          <td class="element-col">重置按钮</td>
+          <td><span class="marker">重置筛选条件恢复默认值</span></td>
+          <td><span class="component-badge">FilterBar.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">6</td>
+          <td class="element-col">总销售额指标卡片</td>
+          <td><span class="marker">核心指标-总销售额卡片</span></td>
+          <td><span class="component-badge">MetricCards.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">7</td>
+          <td class="element-col">订单量指标卡片</td>
+          <td><span class="marker">核心指标-订单量卡片</span></td>
+          <td><span class="component-badge">MetricCards.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">8</td>
+          <td class="element-col">客单价指标卡片</td>
+          <td><span class="marker">核心指标-客单价卡片</span></td>
+          <td><span class="component-badge">MetricCards.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">9</td>
+          <td class="element-col">同比增长率指标卡片</td>
+          <td><span class="marker">核心指标-同比增长率卡片</span></td>
+          <td><span class="component-badge">MetricCards.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">10</td>
+          <td class="element-col">月度趋势折线图</td>
+          <td><span class="marker">月度销售趋势折线图容器</span></td>
+          <td><span class="component-badge">SalesCharts.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">11</td>
+          <td class="element-col">区域占比饼图</td>
+          <td><span class="marker">区域销售占比饼图容器</span></td>
+          <td><span class="component-badge">SalesCharts.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">12</td>
+          <td class="element-col">面包屑导航项</td>
+          <td><span class="marker">点击面包屑返回上级区域</span></td>
+          <td><span class="component-badge">SalesCharts.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">13</td>
+          <td class="element-col">订单搜索框</td>
+          <td><span class="marker">输入关键字搜索订单</span></td>
+          <td><span class="component-badge">OrderTable.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">14</td>
+          <td class="element-col">导出配置弹窗</td>
+          <td><span class="marker">数据导出配置弹窗</span></td>
+          <td><span class="component-badge">ExportDialog.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">15</td>
+          <td class="element-col">全选复选框</td>
+          <td><span class="marker">全选/取消全选导出选项</span></td>
+          <td><span class="component-badge">ExportDialog.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">16</td>
+          <td class="element-col">指标摘要复选框</td>
+          <td><span class="marker">选择导出指标摘要</span></td>
+          <td><span class="component-badge">ExportDialog.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">17</td>
+          <td class="element-col">图表数据复选框</td>
+          <td><span class="marker">选择导出图表数据</span></td>
+          <td><span class="component-badge">ExportDialog.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">18</td>
+          <td class="element-col">明细表格复选框</td>
+          <td><span class="marker">选择导出明细表格</span></td>
+          <td><span class="component-badge">ExportDialog.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">19</td>
+          <td class="element-col">取消导出按钮</td>
+          <td><span class="marker">取消导出</span></td>
+          <td><span class="component-badge">ExportDialog.vue</span></td>
+        </tr>
+        <tr>
+          <td class="index-col">20</td>
+          <td class="element-col">确认导出按钮</td>
+          <td><span class="marker">确认导出选中内容</span></td>
+          <td><span class="component-badge">ExportDialog.vue</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="summary">
+      <strong>共计 20 个可交互元素标注</strong>，分布在 6 个 Vue 组件中。
+      最近更新：2026-05-04
+    </div>
+  </div>
+</body>
+</html>
