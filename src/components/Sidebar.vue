@@ -43,6 +43,12 @@
         >
           <span>Local ROI Report</span>
         </a-menu-item>
+        <a-menu-item
+          key="localAdPerformance"
+          data-marker="侧边栏菜单-Local Ad Performance"
+        >
+          <span>Local Ad Performance</span>
+        </a-menu-item>
       </a-sub-menu>
 
       <a-sub-menu key="iap-web-report" data-marker="侧边栏菜单-IAP Web Report">
@@ -77,13 +83,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
 
 const activeMenu = ref('dashboard')
 const openKeys = ref(['team-report'])
 
+watch(() => route.path, (path) => {
+  const menuKey = path.replace('/', '')
+  activeMenu.value = menuKey || 'dashboard'
+}, { immediate: true })
+
 const handleSelect = ({ key }) => {
   activeMenu.value = key
+  router.push('/' + key)
 }
 
 const handleOpenChange = (keys) => {

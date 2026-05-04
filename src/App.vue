@@ -2,12 +2,7 @@
   <div class="app-container">
     <Sidebar />
     <main class="main-content">
-      <FilterBar @filter-change="handleFilterChange" @open-export="handleOpenExport" />
-      <MetricCards :filters="currentFilters" />
-      <SalesCharts :filters="currentFilters" />
-      <OrderTable :filters="currentFilters" />
-      <ExportDialog ref="exportDialogRef" :filters="currentFilters" />
-      <InteractionGuide />
+      <router-view />
     </main>
     <div class="annotation-panel" :class="{ visible: panelVisible }">
       <div class="panel-header">
@@ -22,31 +17,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import Sidebar from './components/Sidebar.vue'
-import FilterBar from './components/FilterBar.vue'
-import MetricCards from './components/MetricCards.vue'
-import SalesCharts from './components/SalesCharts.vue'
-import OrderTable from './components/OrderTable.vue'
-import ExportDialog from './components/ExportDialog.vue'
-import InteractionGuide from './components/InteractionGuide.vue'
 
-const exportDialogRef = ref(null)
 const panelVisible = ref(false)
 const panelContent = ref('点击任意带标注的元素，查看需求详情。')
-
-const currentFilters = reactive({
-  dateRange: [],
-  regionPath: []
-})
-
-const handleFilterChange = (filters) => {
-  Object.assign(currentFilters, filters)
-}
-
-const handleOpenExport = () => {
-  exportDialogRef.value?.open()
-}
 
 const handleAnnotationClick = (e) => {
   const target = e.target.closest('[data-marker]')
@@ -55,12 +30,6 @@ const handleAnnotationClick = (e) => {
     panelVisible.value = true
   }
 }
-
-defineExpose({
-  openExportDialog: () => {
-    exportDialogRef.value?.open()
-  }
-})
 
 onMounted(() => {
   nextTick(() => {

@@ -85,7 +85,7 @@ const props = defineProps<{ data: MetricItem[] }>()
 
 // 格式化计算逻辑抽离
 const formatMetric = (val: number, type: 'amount' | 'rate' | 'count') => {
-  if (type === 'amount') return `${val.toFixed(type === 'amount' && props.data[0]?.code === 'avg' ? 2 : 0)} 万元`
+  if (type === 'amount') return `${val.toFixed(type === 'amount' && props.data[0]?.code === 'avg' ? 2 : 0)} `
   if (type === 'rate') return { value: val.toFixed(1) + '%', trend: val > 0 ? 'up' : 'down' }
   return val.toLocaleString()
 }
