@@ -1,7 +1,7 @@
 {
   "name": "sales-analysis-platform",
   "version": "1.0.0",
-  "description": "企业销售数据分析平台",
+  "description": "Hopemobi Mind",
   "type": "module",
   "scripts": {
     "dev": "vite",

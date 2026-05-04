@@ -2,20 +2,70 @@
   <aside class="sidebar">
     <div class="logo">
       <span class="logo-icon">📊</span>
-      <span class="logo-text">销售数据分析平台</span>
+      <span class="logo-text">Hopemobi Mind</span>
     </div>
-    <nav class="menu">
-      <a 
-        v-for="item in menuItems" 
-        :key="item.key"
-        :class="['menu-item', { active: activeMenu === item.key }]"
-        @click="activeMenu = item.key"
-        data-marker="侧边栏导航菜单"
+    <a-menu
+      mode="inline"
+      :open-keys="openKeys"
+      :selected-keys="[activeMenu]"
+      @open-change="handleOpenChange"
+      @select="handleSelect"
+      class="menu"
+    >
+      <a-menu-item
+        key="dashboard"
+        data-marker="侧边栏菜单-Dashboard"
       >
-        <span class="menu-icon">{{ item.icon }}</span>
-        <span class="menu-text">{{ item.label }}</span>
-      </a>
-    </nav>
+        <span class="menu-icon">📈</span>
+        <span>Dashboard</span>
+      </a-menu-item>
+
+      <a-sub-menu key="team-report" data-marker="侧边栏菜单-Team Report">
+        <template #title>
+          <span class="menu-icon">📊</span>
+          <span>Team Report</span>
+        </template>
+        <a-menu-item
+          key="event-returning-report"
+          data-marker="侧边栏菜单-Event Returning Report"
+        >
+          <span>Event Returning Report</span>
+        </a-menu-item>
+        <a-menu-item
+          key="local-overview-report"
+          data-marker="侧边栏菜单-Local Overview Report"
+        >
+          <span>Local Overview Report</span>
+        </a-menu-item>
+        <a-menu-item
+          key="local-roi-report"
+          data-marker="侧边栏菜单-Local ROI Report"
+        >
+          <span>Local ROI Report</span>
+        </a-menu-item>
+      </a-sub-menu>
+
+      <a-sub-menu key="iap-web-report" data-marker="侧边栏菜单-IAP Web Report">
+        <template #title>
+          <span class="menu-icon">🔍</span>
+          <span>IAP Web Report</span>
+        </template>
+        <a-menu-item
+          key="keyword-report"
+          data-marker="侧边栏菜单-Keyword Report"
+        >
+          <span>Keyword Report</span>
+        </a-menu-item>
+      </a-sub-menu>
+
+      <a-menu-item
+        key="system-settings"
+        data-marker="侧边栏菜单-System Settings"
+      >
+        <span class="menu-icon">⚙️</span>
+        <span>System Settings</span>
+      </a-menu-item>
+    </a-menu>
     <div class="user-info">
       <div class="avatar">👤</div>
       <div class="user-detail">
@@ -30,14 +80,15 @@
 import { ref } from 'vue'
 
 const activeMenu = ref('dashboard')
+const openKeys = ref(['team-report'])
 
-const menuItems = [
-  { key: 'dashboard', label: '数据看板', icon: '📈' },
-  { key: 'orders', label: '订单管理', icon: '📋' },
-  { key: 'regions', label: '区域分析', icon: '🌍' },
-  { key: 'reports', label: '报表中心', icon: '📊' },
-  { key: 'settings', label: '系统设置', icon: '⚙️' }
-]
+const handleSelect = ({ key }) => {
+  activeMenu.value = key
+}
+
+const handleOpenChange = (keys) => {
+  openKeys.value = keys
+}
 </script>
 
 <style scoped>
@@ -72,31 +123,11 @@ const menuItems = [
 
 .menu {
   flex: 1;
-  padding: 16px 0;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 24px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.menu-item.active {
-  background: #1677ff;
+  border: none;
 }
 
 .menu-icon {
-  font-size: 16px;
-  margin-right: 12px;
-}
-
-.menu-text {
+  margin-right: 8px;
   font-size: 14px;
 }
 

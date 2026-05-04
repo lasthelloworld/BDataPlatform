@@ -1,4 +1,4 @@
-# 销售数据分析看板 - 原型交互规范（Vue 3 架构版）
+# 数据分析看板 - 原型交互规范（Vue 3 架构版）
 
 > 📌 规范说明：本规范基于 PRD v1.0 提炼，严格遵循 Vue 3 `<script setup>` Composition API 范式，采用响应式状态驱动 UI 更新，全局筛选状态通过 `provide/inject` 或 Pinia 共享，组件内部逻辑通过自定义 Composables 抽离。
 
