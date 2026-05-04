@@ -54,28 +54,27 @@ const pagination = ref({
 
 const columns = [
   {
-    title: '订单号',
+    title: '订单号（来源：ODS订单主表）',
     dataIndex: 'id',
     key: 'id',
     width: 120,
-    title: '订单号',
     sorter: true
   },
   {
-    title: '下单时间',
+    title: '下单时间（格式：YYYY-MM-DD HH:mm:ss）',
     dataIndex: 'time',
     key: 'time',
     width: 160,
     sorter: true
   },
   {
-    title: '客户名称',
+    title: '客户名称（来源：DIM客户维度表）',
     dataIndex: 'customer',
     key: 'customer',
     width: 100
   },
   {
-    title: '订单金额（万元）',
+    title: '订单金额（来源：ODS订单事实表，单位：万元）',
     dataIndex: 'amount',
     key: 'amount',
     width: 120,
@@ -83,7 +82,7 @@ const columns = [
     sorter: (a, b) => a.amount - b.amount
   },
   {
-    title: '所属区域',
+    title: '所属区域（来源：DIM区域维度表，省-市二级）',
     dataIndex: 'region',
     key: 'region'
   }

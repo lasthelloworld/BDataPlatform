@@ -1,13 +1,13 @@
 <template>
   <div class="sales-charts">
-    <div class="chart-container line-chart">
+    <div class="chart-container line-chart" data-marker="月度销售趋势折线图容器">
       <div class="chart-header">
         <h3 class="chart-title">月度销售趋势</h3>
         <span class="chart-subtitle">单位：万元</span>
       </div>
       <div ref="lineChartRef" class="chart-content"></div>
     </div>
-    <div class="chart-container pie-chart">
+    <div class="chart-container pie-chart" data-marker="区域销售占比饼图容器">
       <div class="chart-header">
         <a-breadcrumb>
           <a-breadcrumb-item 

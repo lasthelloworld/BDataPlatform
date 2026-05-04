@@ -1,9 +1,10 @@
 <template>
   <div class="metric-cards">
-    <div 
-      v-for="metric in metrics" 
-      :key="metric.key" 
+    <div
+      v-for="metric in metrics"
+      :key="metric.key"
       class="metric-card"
+      :data-marker="metric.marker"
     >
       <div class="metric-header">
         <span class="metric-name">{{ metric.name }}</span>
@@ -38,6 +39,7 @@ const metrics = computed(() => [
   {
     key: 'totalSales',
     name: '总销售额',
+    marker: '核心指标-总销售额卡片',
     value: metricData.totalSales,
     unit: '万元',
     formattedValue: metricData.totalSales.toFixed(2),
@@ -49,6 +51,7 @@ const metrics = computed(() => [
   {
     key: 'orderCount',
     name: '订单量',
+    marker: '核心指标-订单量卡片',
     value: metricData.orderCount,
     formattedValue: metricData.orderCount.toLocaleString(),
     tooltip: '数据来源：ODS订单事实表，每日02:00更新',
@@ -59,6 +62,7 @@ const metrics = computed(() => [
   {
     key: 'avgOrderValue',
     name: '客单价',
+    marker: '核心指标-客单价卡片',
     value: metricData.avgOrderValue,
     unit: '万元',
     formattedValue: metricData.avgOrderValue.toFixed(2),
@@ -70,6 +74,7 @@ const metrics = computed(() => [
   {
     key: 'growthRate',
     name: '同比增长率',
+    marker: '核心指标-同比增长率卡片',
     value: metricData.growthRate,
     unit: '%',
     formattedValue: metricData.growthRate.toFixed(1),
