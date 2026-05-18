@@ -26,14 +26,20 @@ const routes = [
   {
     path: '/local-overview-report',
     name: 'LocalOverviewReport',
-    component: () => import('../App.vue'),
+    component: () => import('../views/Local_overview_Report/index.vue'),
     meta: { title: 'Local Overview Report' }
   },
   {
-    path: '/local-roi-report',
-    name: 'LocalRoiReport',
-    component: () => import('../App.vue'),
-    meta: { title: 'Local ROI Report' }
+    path: '/ai-analyses-task',
+    name: 'AIAnalysesTask',
+    component: () => import('../views/AIAnalysesTask/index.vue'),
+    meta: { title: 'AI Analyses Task' }
+  },
+  {
+    path: '/ai-analyses-task/:id',
+    name: 'AITaskDetail',
+    component: () => import('../views/AITaskDetail/index.vue'),
+    meta: { title: 'AI Task Detail' }
   },
   {
     path: '/keyword-report',

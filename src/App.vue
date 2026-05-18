@@ -13,12 +13,14 @@
         {{ panelContent }}
       </div>
     </div>
+    <AIWorkbench />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import Sidebar from './components/Sidebar.vue'
+import AIWorkbench from './components/AIWorkbench/index.vue'
 
 const panelVisible = ref(false)
 const panelContent = ref('点击任意带标注的元素，查看需求详情。')
@@ -56,7 +58,7 @@ onMounted(() => {
 
 .annotation-panel {
   position: fixed;
-  bottom: 24px;
+  bottom: 100px;
   right: 24px;
   width: 320px;
   background: #fff;
@@ -68,7 +70,7 @@ onMounted(() => {
   transform: translateY(10px);
   transition: opacity 0.3s, transform 0.3s;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 9998;
 }
 
 .annotation-panel.visible {

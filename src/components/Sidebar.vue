@@ -8,6 +8,7 @@
       mode="inline"
       :open-keys="openKeys"
       :selected-keys="[activeMenu]"
+      :default-open-keys="['team-report', 'ai-analyses']"
       @open-change="handleOpenChange"
       @select="handleSelect"
       class="menu"
@@ -48,6 +49,19 @@
           data-marker="侧边栏菜单-Local Ad Performance"
         >
           <span>Local Ad Performance</span>
+        </a-menu-item>
+      </a-sub-menu>
+
+      <a-sub-menu key="ai-analyses" data-marker="侧边栏菜单-AI Analyses">
+        <template #title>
+          <span class="menu-icon">🤖</span>
+          <span>AI analyses</span>
+        </template>
+        <a-menu-item
+          key="ai-analyses-task"
+          data-marker="侧边栏菜单-AI Analyses Task"
+        >
+          <span>AI analyses Task</span>
         </a-menu-item>
       </a-sub-menu>
 
