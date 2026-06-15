@@ -614,7 +614,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, h } from 'vue'
 import { message } from 'ant-design-vue'
 import { UpOutlined, DownOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons-vue'
 
@@ -647,10 +647,11 @@ const allMetrics = ref([
   { key: 'fillFailRate', title: 'Fill Fail Rate' },
   { key: 'reqPU', title: 'ReqPU' },
   { key: 'aipu', title: 'AIPU' },
-  { key: 'clickPU', title: 'ClickPU' }
+  { key: 'clickPU', title: 'ClickPU' },
+  { key: 'exposureEcpm', title: 'show_x_ecpm' }
 ])
 
-const visibleMetrics = ref(['dau', 'dnu', 'scene', 'show', 'click', 'sceneRate', 'showRate', 'clickRate', 'revenue', 'ecpm', 'darpu'])
+const visibleMetrics = ref(['dau', 'dnu', 'scene', 'show', 'click', 'sceneRate', 'showRate', 'clickRate', 'revenue', 'ecpm', 'darpu', 'exposureEcpm'])
 
 const handleMetricChange = (targetKeys) => {
   visibleMetrics.value = targetKeys
@@ -957,6 +958,27 @@ const metricColumns = [
     width: 100,
     sorter: true,
     customHeaderCell: () => ({ title: '人均点击数\nClick / DAU，保留2位小数' })
+  },
+  {
+    title: 'show_x_ecpm',
+    dataIndex: 'exposureEcpm',
+    key: 'exposureEcpm',
+    width: 200,
+    sorter: false,
+    customHeaderCell: () => ({ title: '第X次广告曝光ECPM\n按曝光次数分布的ECPM值' }),
+    slots: {
+      customRender: ({ record }) => {
+        const ecpmValues = [record.firstEcpm, record.secondEcpm, record.thirdEcpm, record.fourthEcpm, record.fifthEcpm]
+        return h('div', { class: 'exposure-ecpm-container' },
+          ecpmValues.map((value, index) =>
+            h('div', { key: index, class: 'ecpm-item' }, [
+              h('span', { class: 'ecpm-label' }, `${index + 1}次:`),
+              h('span', { class: 'ecpm-value' }, value || '--')
+            ])
+          )
+        )
+      }
+    }
   }
 ]
 
@@ -1051,7 +1073,12 @@ const generateMockData = () => {
       fillFailRate,
       reqPU: (request / dau).toFixed(2),
       aipu: (show / dau).toFixed(2),
-      clickPU: (click / dau).toFixed(2)
+      clickPU: (click / dau).toFixed(2),
+      firstEcpm: (Math.random() * 20 + 5).toFixed(2),
+      secondEcpm: (Math.random() * 15 + 4).toFixed(2),
+      thirdEcpm: (Math.random() * 12 + 3).toFixed(2),
+      fourthEcpm: (Math.random() * 10 + 2).toFixed(2),
+      fifthEcpm: (Math.random() * 8 + 1.5).toFixed(2)
     })
   }
   return data
@@ -1188,6 +1215,31 @@ onMounted(() => {
 
 .metric-cell.revenue {
   color: #52c41a;
+  font-weight: 500;
+}
+
+.exposure-ecpm-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ecpm-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.ecpm-label {
+  color: #999;
+}
+
+.ecpm-value {
+  color: #1890ff;
   font-weight: 500;
 }
 

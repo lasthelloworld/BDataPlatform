@@ -28,6 +28,20 @@ const panelContent = ref('点击任意带标注的元素，查看需求详情。
 const handleAnnotationClick = (e) => {
   const target = e.target.closest('[data-marker]')
   if (target) {
+    const tagName = target.tagName.toLowerCase()
+    const className = target.className.toLowerCase()
+    
+    if (tagName === 'button' || 
+        className.includes('ant-btn') || 
+        className.includes('menu-item') || 
+        className.includes('nav-item') ||
+        target.closest('button') ||
+        target.closest('.ant-btn') ||
+        target.closest('.menu-item') ||
+        target.closest('.nav-item')) {
+      return
+    }
+    
     panelContent.value = target.getAttribute('data-marker')
     panelVisible.value = true
   }
