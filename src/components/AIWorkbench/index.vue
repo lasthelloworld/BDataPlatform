@@ -247,6 +247,19 @@
                       <a-select-option value="Security">Security</a-select-option>
                     </a-select>
                   </a-form-item>
+                  <a-form-item label="基准版本号">
+                    <a-select
+                      v-model:value="sceneForm.versionBaseline"
+                      placeholder="选择基准版本"
+                      style="width: 150px"
+                      data-marker="ai_workbench_scene_version_baseline"
+                    >
+                      <a-select-option value="v1.9.0">v1.9.0</a-select-option>
+                      <a-select-option value="v1.8.0">v1.8.0</a-select-option>
+                      <a-select-option value="v1.7.5">v1.7.5</a-select-option>
+                      <a-select-option value="v1.7.0">v1.7.0</a-select-option>
+                    </a-select>
+                  </a-form-item>
                   <a-form-item label="对比版本号">
                     <a-select
                       v-model:value="sceneForm.version"
@@ -489,6 +502,7 @@ const sceneForm = reactive({
  metricType: '',
  version: [],
  versionProduct: 'PhoneRecover',
+ versionBaseline: '',
  versionDays: 7,
  versionUserType: 'new',
  versionDateRange: []
@@ -544,7 +558,7 @@ const executeScene = () => {
  'product-compare': `请帮我对比同品类下多个APP的Local Overview核心指标，包括DAU、ROI和金币复购率。\n\n基准产品：${sceneForm.baselineProduct || 'PhoneRecover'}\n对比产品：${sceneForm.compareProducts.length > 0 ? sceneForm.compareProducts.join('、') : '全部产品'}\n时间范围：${dateRangeStr}`,
  'dimension-compare': `请帮我按细分维度分析用户行为特征。\n\n基准产品：${sceneForm.dimensionBaselineProduct || 'PhoneRecover'}\n对比产品：${sceneForm.dimensionCompareProducts.length > 0 ? sceneForm.dimensionCompareProducts.join('、') : '全部产品'}\n细分维度：${dimensionLabels.length > 0 ? dimensionLabels.join('、') : '全部维度'}\n用户类型：${sceneForm.userType === 'new' ? '新用户' : sceneForm.userType === 'old' ? '老用户' : '全部用户'}\n时间范围：${dimensionDateRangeStr}`,
  'trend-compare': `请帮我分析产品指标的趋势变化。\n\n目标产品：${sceneForm.trendProduct || 'PhoneRecover'}\n环比日期：${trendDateStr}\n环比天数：${sceneForm.trendDays || 7}天\n\n请进行环比分析，对比当前周期与${sceneForm.trendDays || 7}天前的指标变化。`,
- 'version-compare': `请帮我分析产品版本对比。\n\n目标产品：${sceneForm.versionProduct || 'PhoneRecover'}\n对比版本：${sceneForm.version.length > 0 ? sceneForm.version.join(' vs ') : '全部版本'}\n发版窗口期：${sceneForm.versionDays || 7}天\n用户类型：${sceneForm.versionUserType === 'new' ? '新用户' : '老用户'}\n时间范围：${versionDateRangeStr}\n\n请分析不同版本发布后的核心指标变化，评估版本迭代效果。`
+ 'version-compare': `请帮我分析产品版本对比。\n\n目标产品：${sceneForm.versionProduct || 'PhoneRecover'}\n基准版本：${sceneForm.versionBaseline || '无'}\n对比版本：${sceneForm.version.length > 0 ? sceneForm.version.join(' vs ') : '全部版本'}\n发版窗口期：${sceneForm.versionDays || 7}天\n用户类型：${sceneForm.versionUserType === 'new' ? '新用户' : '老用户'}\n时间范围：${versionDateRangeStr}\n\n请分析不同版本发布后的核心指标变化，评估版本迭代效果。`
  };
  chatMessages.value.push({
  role: 'user',
