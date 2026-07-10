@@ -87,6 +87,18 @@
 
           <div class="scene-cards" v-if="currentMode === 'scene'" data-marker="ai_workbench_scene_cards">
             <div class="scene-title">📊 分析场景</div>
+            <div class="scene-category-selector">
+              <span class="category-label">场景分类：</span>
+              <a-select
+                v-model:value="sceneCategory"
+                style="width: 180px"
+                data-marker="ai_workbench_scene_category"
+              >
+                <a-select-option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </a-select-option>
+              </a-select>
+            </div>
             <a-space wrap>
               <a-button
                 v-for="scene in sceneCards"
@@ -98,6 +110,9 @@
                 {{ scene.icon }} {{ scene.label }}
               </a-button>
             </a-space>
+            <div v-if="sceneCards.length === 0" class="empty-scenes">
+              该分类下暂无分析场景
+            </div>
 
             <div class="scene-form" v-if="activeScene" data-marker="ai_workbench_scene_form">
               <a-form :model="sceneForm" layout="inline">
@@ -304,6 +319,43 @@
                     />
                   </a-form-item>
                 </template>
+                <template v-if="activeScene === 'cohort-gold-paid'">
+                  <a-form-item label="基准产品">
+                    <a-select
+                      v-model:value="sceneForm.baselineProduct"
+                      placeholder="选择基准产品"
+                      style="width: 150px"
+                      data-marker="ai_workbench_scene_cohort_baseline"
+                    >
+                      <a-select-option value="PhoneRecover">PhoneRecover</a-select-option>
+                      <a-select-option value="PhotoRescue">PhotoRescue</a-select-option>
+                      <a-select-option value="CleanMaster">CleanMaster</a-select-option>
+                      <a-select-option value="Security">Security</a-select-option>
+                    </a-select>
+                  </a-form-item>
+                  <a-form-item label="对比产品">
+                    <a-select
+                      v-model:value="sceneForm.cohortCompareProducts"
+                      placeholder="选择对比产品"
+                      style="width: 180px"
+                      mode="multiple"
+                      data-marker="ai_workbench_scene_cohort_compare_products"
+                    >
+                      <a-select-option value="PhoneRecover">PhoneRecover</a-select-option>
+                      <a-select-option value="PhotoRescue">PhotoRescue</a-select-option>
+                      <a-select-option value="CleanMaster">CleanMaster</a-select-option>
+                      <a-select-option value="Security">Security</a-select-option>
+                    </a-select>
+                  </a-form-item>
+                  <a-form-item label="对比日期">
+                    <a-range-picker
+                      v-model:value="sceneForm.cohortDateRange"
+                      format="MM/DD/YYYY"
+                      style="width: 220px"
+                      data-marker="ai_workbench_scene_cohort_date"
+                    />
+                  </a-form-item>
+                </template>
                 <a-button
                   type="primary"
                   @click="executeScene"
@@ -445,7 +497,7 @@
   </div>
 </template>
 
-<script setup>import { ref, reactive, computed, nextTick } from 'vue';
+<script setup>import { ref, reactive, computed, nextTick, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useAITaskStore } from '../../stores/aiTaskStore';
@@ -481,12 +533,23 @@ const historyTasks = ref([
  { id: 2, title: '用户留存趋势分析', time: '2026-05-17 14:32' },
  { id: 3, title: '版本迭代效果评估', time: '2026-05-16 11:20' }
 ]);
-const sceneCards = [
+const sceneCategory = ref('basic');
+const categoryOptions = [
+ { value: 'basic', label: '产品基础分析' },
+ { value: 'paid', label: '付费分析' }
+];
+const allScenes = {
+ basic: [
  { key: 'product-compare', label: '同品类多产品对比', icon: '📊' },
  { key: 'dimension-compare', label: '产品细分维度对比', icon: '🔍' },
  { key: 'trend-compare', label: '产品指标趋势对比', icon: '📈' },
  { key: 'version-compare', label: '产品版本对比', icon: '🔄' }
-];
+ ],
+ paid: [
+ { key: 'cohort-gold-paid', label: '同期群金币付费分析', icon: '💰' }
+ ]
+};
+const sceneCards = computed(() => allScenes[sceneCategory.value] || []);
 const sceneForm = reactive({
  baselineProduct: 'PhoneRecover',
  compareProducts: [],
@@ -501,6 +564,8 @@ const sceneForm = reactive({
  trendDays: 7,
  metricType: '',
  version: [],
+ cohortCompareProducts: [],
+ cohortDateRange: [],
  versionProduct: 'PhoneRecover',
  versionBaseline: '',
  versionDays: 7,
@@ -537,6 +602,9 @@ const selectHistoryTask = (task) => {
  }
  ];
 };
+watch(sceneCategory, () => {
+ activeScene.value = null;
+});
 const executeScene = () => {
  if (!activeScene.value)
  return;
@@ -554,11 +622,15 @@ const executeScene = () => {
  const versionDateRangeStr = sceneForm.versionDateRange.length > 0 
  ? `${sceneForm.versionDateRange[0].format('MM/DD/YYYY')} - ${sceneForm.versionDateRange[1].format('MM/DD/YYYY')}` 
  : '默认时间范围';
+ const cohortDateRangeStr = sceneForm.cohortDateRange.length > 0 
+ ? `${sceneForm.cohortDateRange[0].format('MM/DD/YYYY')} - ${sceneForm.cohortDateRange[1].format('MM/DD/YYYY')}` 
+ : '默认时间范围';
  const scenePrompts = {
  'product-compare': `请帮我对比同品类下多个APP的Local Overview核心指标，包括DAU、ROI和金币复购率。\n\n基准产品：${sceneForm.baselineProduct || 'PhoneRecover'}\n对比产品：${sceneForm.compareProducts.length > 0 ? sceneForm.compareProducts.join('、') : '全部产品'}\n时间范围：${dateRangeStr}`,
  'dimension-compare': `请帮我按细分维度分析用户行为特征。\n\n基准产品：${sceneForm.dimensionBaselineProduct || 'PhoneRecover'}\n对比产品：${sceneForm.dimensionCompareProducts.length > 0 ? sceneForm.dimensionCompareProducts.join('、') : '全部产品'}\n细分维度：${dimensionLabels.length > 0 ? dimensionLabels.join('、') : '全部维度'}\n用户类型：${sceneForm.userType === 'new' ? '新用户' : sceneForm.userType === 'old' ? '老用户' : '全部用户'}\n时间范围：${dimensionDateRangeStr}`,
  'trend-compare': `请帮我分析产品指标的趋势变化。\n\n目标产品：${sceneForm.trendProduct || 'PhoneRecover'}\n环比日期：${trendDateStr}\n环比天数：${sceneForm.trendDays || 7}天\n\n请进行环比分析，对比当前周期与${sceneForm.trendDays || 7}天前的指标变化。`,
- 'version-compare': `请帮我分析产品版本对比。\n\n目标产品：${sceneForm.versionProduct || 'PhoneRecover'}\n基准版本：${sceneForm.versionBaseline || '无'}\n对比版本：${sceneForm.version.length > 0 ? sceneForm.version.join(' vs ') : '全部版本'}\n发版窗口期：${sceneForm.versionDays || 7}天\n用户类型：${sceneForm.versionUserType === 'new' ? '新用户' : '老用户'}\n时间范围：${versionDateRangeStr}\n\n请分析不同版本发布后的核心指标变化，评估版本迭代效果。`
+ 'version-compare': `请帮我分析产品版本对比。\n\n目标产品：${sceneForm.versionProduct || 'PhoneRecover'}\n基准版本：${sceneForm.versionBaseline || '无'}\n对比版本：${sceneForm.version.length > 0 ? sceneForm.version.join(' vs ') : '全部版本'}\n发版窗口期：${sceneForm.versionDays || 7}天\n用户类型：${sceneForm.versionUserType === 'new' ? '新用户' : '老用户'}\n时间范围：${versionDateRangeStr}\n\n请分析不同版本发布后的核心指标变化，评估版本迭代效果。`,
+ 'cohort-gold-paid': `请帮我进行同期群金币付费分析。\n\n基准产品：${sceneForm.baselineProduct || 'PhoneRecover'}\n对比产品：${sceneForm.cohortCompareProducts.length > 0 ? sceneForm.cohortCompareProducts.join('、') : '全部产品'}\n时间范围：${cohortDateRangeStr}\n\n请分析不同同期群用户的金币付费行为，包括付费率、付费金额、复购周期等指标。`
  };
  chatMessages.value.push({
  role: 'user',
@@ -576,7 +648,8 @@ const executeScene = () => {
  'product-compare': generateProductCompareResponse(),
  'dimension-compare': generateDimensionCompareResponse(),
  'trend-compare': generateTrendCompareResponse(),
- 'version-compare': generateVersionCompareResponse()
+ 'version-compare': generateVersionCompareResponse(),
+ 'cohort-gold-paid': generateCohortGoldPaidResponse()
  };
  chatMessages.value.push({
  role: 'ai',
@@ -620,6 +693,28 @@ const generateTrendCompareResponse = () => {
 };
 const generateVersionCompareResponse = () => {
  return '**版本对比分析：**\n\n- v1.9.0 相比 v1.8.0，DAU提升了12%\n- 核心功能使用率提升了8%\n- 用户留存率(D7)提升了5个百分点';
+};
+const generateCohortGoldPaidResponse = () => {
+ const table = `
+ <div class="ant-table-wrapper">
+ <table>
+ <thead>
+ <tr><th>同期群</th><th>付费用户数</th><th>付费率</th><th>人均付费</th><th>复购周期</th></tr>
+ </thead>
+ <tbody>
+ <tr><td>第1周</td><td>1,230</td><td>8.5%</td><td>$12.30</td><td>4.2天</td></tr>
+ <tr><td>第2周</td><td>1,560</td><td>9.2%</td><td>$15.80</td><td>3.8天</td></tr>
+ <tr><td>第3周</td><td>1,890</td><td>10.1%</td><td>$18.50</td><td>3.5天</td></tr>
+ </tbody>
+ </table>
+ </div>
+ `;
+ chatMessages.value.push({
+ role: 'ai',
+ content: table,
+ type: 'table'
+ });
+ return '**同期群金币付费分析结论：**\n\n1. **付费率持续提升**：随同期群周次增长，付费率从8.5%提升至10.1%\n2. **人均付费增长显著**：第3周人均付费达到$18.50，环比增长17%\n3. **复购周期缩短**：用户复购频率增加，复购周期从4.2天缩短至3.5天';
 };
 const sendMessage = () => {
  if (!inputMessage.value.trim())
@@ -906,6 +1001,25 @@ const confirmSkillUpload = () => {
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 12px;
+}
+
+.scene-category-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.category-label {
+  font-size: 13px;
+  color: #666;
+}
+
+.empty-scenes {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 13px;
 }
 
 .scene-form {
