@@ -320,41 +320,93 @@
                   </a-form-item>
                 </template>
                 <template v-if="activeScene === 'cohort-gold-paid'">
-                  <a-form-item label="基准产品">
-                    <a-select
-                      v-model:value="sceneForm.baselineProduct"
-                      placeholder="选择基准产品"
-                      style="width: 150px"
-                      data-marker="ai_workbench_scene_cohort_baseline"
-                    >
-                      <a-select-option value="PhoneRecover">PhoneRecover</a-select-option>
-                      <a-select-option value="PhotoRescue">PhotoRescue</a-select-option>
-                      <a-select-option value="CleanMaster">CleanMaster</a-select-option>
-                      <a-select-option value="Security">Security</a-select-option>
-                    </a-select>
-                  </a-form-item>
-                  <a-form-item label="对比产品">
-                    <a-select
-                      v-model:value="sceneForm.cohortCompareProducts"
-                      placeholder="选择对比产品"
-                      style="width: 180px"
-                      mode="multiple"
-                      data-marker="ai_workbench_scene_cohort_compare_products"
-                    >
-                      <a-select-option value="PhoneRecover">PhoneRecover</a-select-option>
-                      <a-select-option value="PhotoRescue">PhotoRescue</a-select-option>
-                      <a-select-option value="CleanMaster">CleanMaster</a-select-option>
-                      <a-select-option value="Security">Security</a-select-option>
-                    </a-select>
-                  </a-form-item>
-                  <a-form-item label="对比日期">
-                    <a-range-picker
-                      v-model:value="sceneForm.cohortDateRange"
-                      format="MM/DD/YYYY"
-                      style="width: 220px"
-                      data-marker="ai_workbench_scene_cohort_date"
-                    />
-                  </a-form-item>
+                  <div class="cohort-form">
+                    <div class="cohort-row">
+                      <a-form-item label="基准产品">
+                        <a-select
+                          v-model:value="sceneForm.baselineProduct"
+                          placeholder="选择基准产品"
+                          style="width: 150px"
+                          data-marker="ai_workbench_scene_cohort_baseline"
+                        >
+                          <a-select-option value="PhoneRecover">PhoneRecover</a-select-option>
+                          <a-select-option value="PhotoRescue">PhotoRescue</a-select-option>
+                          <a-select-option value="CleanMaster">CleanMaster</a-select-option>
+                          <a-select-option value="Security">Security</a-select-option>
+                        </a-select>
+                      </a-form-item>
+                      <a-form-item label="基准产品起始日期">
+                        <a-date-picker
+                          v-model:value="sceneForm.cohortBaselineStartDate"
+                          format="MM/DD/YYYY"
+                          style="width: 180px"
+                          data-marker="ai_workbench_scene_cohort_baseline_date"
+                        />
+                      </a-form-item>
+                      <a-form-item label="同期群间隔天数">
+                        <a-input-number
+                          v-model:value="sceneForm.cohortIntervalDays"
+                          :min="1"
+                          :max="90"
+                          placeholder="输入天数"
+                          style="width: 120px"
+                          data-marker="ai_workbench_scene_cohort_interval"
+                        />
+                      </a-form-item>
+                    </div>
+                    <div class="cohort-table-section">
+                      <a-table
+                        :columns="cohortCompareColumns"
+                        :data-source="sceneForm.cohortCompareProducts"
+                        :pagination="false"
+                        :scroll="{ x: 600 }"
+                        data-marker="ai_workbench_scene_cohort_compare_table"
+                      >
+                        <template #bodyCell="{ column, record, index }">
+                          <template v-if="column.key === 'product'">
+                            <a-select
+                              v-model:value="sceneForm.cohortCompareProducts[index].product"
+                              placeholder="选择产品"
+                              style="width: 150px"
+                            >
+                              <a-select-option value="PhoneRecover">PhoneRecover</a-select-option>
+                              <a-select-option value="PhotoRescue">PhotoRescue</a-select-option>
+                              <a-select-option value="CleanMaster">CleanMaster</a-select-option>
+                              <a-select-option value="Security">Security</a-select-option>
+                            </a-select>
+                          </template>
+                          <template v-if="column.key === 'd0Date'">
+                            <a-date-picker
+                              v-model:value="sceneForm.cohortCompareProducts[index].d0Date"
+                              format="MM/DD/YYYY"
+                              style="width: 150px"
+                            />
+                          </template>
+                          <template v-if="column.key === 'actions'">
+                            <a-space>
+                              <a-button
+                                type="text"
+                                size="small"
+                                @click="addCohortCompareRow(index)"
+                                data-marker="ai_workbench_scene_cohort_add_row"
+                              >
+                                +
+                              </a-button>
+                              <a-button
+                                type="text"
+                                size="small"
+                                danger
+                                @click="removeCohortCompareRow(index)"
+                                data-marker="ai_workbench_scene_cohort_remove_row"
+                              >
+                                -
+                              </a-button>
+                            </a-space>
+                          </template>
+                        </template>
+                      </a-table>
+                    </div>
+                  </div>
                 </template>
                 <a-button
                   type="primary"
@@ -564,14 +616,54 @@ const sceneForm = reactive({
  trendDays: 7,
  metricType: '',
  version: [],
- cohortCompareProducts: [],
- cohortDateRange: [],
+ cohortBaselineStartDate: null,
+ cohortIntervalDays: 7,
+ cohortCompareProducts: [{ product: '', d0Date: null }],
  versionProduct: 'PhoneRecover',
  versionBaseline: '',
  versionDays: 7,
  versionUserType: 'new',
  versionDateRange: []
 });
+const cohortCompareColumns = [
+  {
+    title: '对比产品',
+    dataIndex: 'product',
+    key: 'product',
+    width: 180
+  },
+  {
+    title: '对比起始时间',
+    dataIndex: 'd0Date',
+    key: 'd0Date',
+    width: 180
+  },
+  {
+    title: '操作',
+    dataIndex: 'actions',
+    key: 'actions',
+    width: 100,
+    fixed: 'right'
+  }
+];
+const addCohortCompareRow = (index) => {
+  const newRow = {
+    product: '',
+    d0Date: null
+  };
+  if (index === -1) {
+    sceneForm.cohortCompareProducts.push(newRow);
+  } else {
+    sceneForm.cohortCompareProducts.splice(index + 1, 0, newRow);
+  }
+};
+const removeCohortCompareRow = (index) => {
+  if (sceneForm.cohortCompareProducts.length <= 1) {
+    message.warning('至少保留一行对比产品');
+    return;
+  }
+  sceneForm.cohortCompareProducts.splice(index, 1);
+};
 const skills = ref([
  { name: '数据分析技能.skill' },
  { name: '报告生成技能.skill' },
@@ -622,15 +714,19 @@ const executeScene = () => {
  const versionDateRangeStr = sceneForm.versionDateRange.length > 0 
  ? `${sceneForm.versionDateRange[0].format('MM/DD/YYYY')} - ${sceneForm.versionDateRange[1].format('MM/DD/YYYY')}` 
  : '默认时间范围';
- const cohortDateRangeStr = sceneForm.cohortDateRange.length > 0 
- ? `${sceneForm.cohortDateRange[0].format('MM/DD/YYYY')} - ${sceneForm.cohortDateRange[1].format('MM/DD/YYYY')}` 
- : '默认时间范围';
+ const cohortBaselineDateStr = sceneForm.cohortBaselineStartDate
+ ? sceneForm.cohortBaselineStartDate.format('MM/DD/YYYY')
+ : '未选择';
+ const cohortCompareStrs = sceneForm.cohortCompareProducts.map((item, idx) => {
+   const d0Str = item.d0Date ? item.d0Date.format('MM/DD/YYYY') : '未选择';
+   return `${idx + 1}. ${item.product || '未选择'} - D0起始时间: ${d0Str}`;
+ }).join('\n');
  const scenePrompts = {
  'product-compare': `请帮我对比同品类下多个APP的Local Overview核心指标，包括DAU、ROI和金币复购率。\n\n基准产品：${sceneForm.baselineProduct || 'PhoneRecover'}\n对比产品：${sceneForm.compareProducts.length > 0 ? sceneForm.compareProducts.join('、') : '全部产品'}\n时间范围：${dateRangeStr}`,
  'dimension-compare': `请帮我按细分维度分析用户行为特征。\n\n基准产品：${sceneForm.dimensionBaselineProduct || 'PhoneRecover'}\n对比产品：${sceneForm.dimensionCompareProducts.length > 0 ? sceneForm.dimensionCompareProducts.join('、') : '全部产品'}\n细分维度：${dimensionLabels.length > 0 ? dimensionLabels.join('、') : '全部维度'}\n用户类型：${sceneForm.userType === 'new' ? '新用户' : sceneForm.userType === 'old' ? '老用户' : '全部用户'}\n时间范围：${dimensionDateRangeStr}`,
  'trend-compare': `请帮我分析产品指标的趋势变化。\n\n目标产品：${sceneForm.trendProduct || 'PhoneRecover'}\n环比日期：${trendDateStr}\n环比天数：${sceneForm.trendDays || 7}天\n\n请进行环比分析，对比当前周期与${sceneForm.trendDays || 7}天前的指标变化。`,
  'version-compare': `请帮我分析产品版本对比。\n\n目标产品：${sceneForm.versionProduct || 'PhoneRecover'}\n基准版本：${sceneForm.versionBaseline || '无'}\n对比版本：${sceneForm.version.length > 0 ? sceneForm.version.join(' vs ') : '全部版本'}\n发版窗口期：${sceneForm.versionDays || 7}天\n用户类型：${sceneForm.versionUserType === 'new' ? '新用户' : '老用户'}\n时间范围：${versionDateRangeStr}\n\n请分析不同版本发布后的核心指标变化，评估版本迭代效果。`,
- 'cohort-gold-paid': `请帮我进行同期群金币付费分析。\n\n基准产品：${sceneForm.baselineProduct || 'PhoneRecover'}\n对比产品：${sceneForm.cohortCompareProducts.length > 0 ? sceneForm.cohortCompareProducts.join('、') : '全部产品'}\n时间范围：${cohortDateRangeStr}\n\n请分析不同同期群用户的金币付费行为，包括付费率、付费金额、复购周期等指标。`
+ 'cohort-gold-paid': `请帮我进行同期群金币付费分析。\n\n基准产品：${sceneForm.baselineProduct || 'PhoneRecover'}\n基准产品对比日期：${cohortBaselineDateStr}\n同期群间隔天数：${sceneForm.cohortIntervalDays || 7}天\n\n对比产品列表：\n${cohortCompareStrs || '无'}\n\n请按每个产品各自的时间区间进行核心指标对比，同期群间隔保持${sceneForm.cohortIntervalDays || 7}天一致，分析不同同期群用户的金币付费行为，包括付费率、付费金额、复购周期等指标。`
  };
  chatMessages.value.push({
  role: 'user',
@@ -1026,6 +1122,36 @@ const confirmSkillUpload = () => {
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid #f0f0f0;
+}
+
+.cohort-form {
+  width: 100%;
+}
+
+.cohort-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.cohort-table-section {
+  margin-top: 16px;
+}
+
+.cohort-table-section .ant-table {
+  font-size: 13px;
+}
+
+.cohort-table-section .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.cohort-table-section .ant-table-tbody > tr > td {
+  padding: 8px 12px;
 }
 
 .chat-container {
