@@ -48,6 +48,12 @@ const routes = [
     meta: { title: 'Keyword Report' }
   },
   {
+    path: '/user-segmentation-insights',
+    name: 'UserSegmentationInsights',
+    component: () => import('../views/UserSegmentationInsights/index.vue'),
+    meta: { title: 'User Segmentation Insights' }
+  },
+  {
     path: '/system-settings',
     name: 'SystemSettings',
     component: () => import('../App.vue'),

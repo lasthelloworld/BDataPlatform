@@ -76,6 +76,12 @@
         >
           <span>Keyword Report</span>
         </a-menu-item>
+        <a-menu-item
+          key="user-segmentation-insights"
+          data-marker="侧边栏菜单-User Segmentation Insights"
+        >
+          <span>User Segmentation Insights | 用户分层洞察</span>
+        </a-menu-item>
       </a-sub-menu>
 
       <a-menu-item
