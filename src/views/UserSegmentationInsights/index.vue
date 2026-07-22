@@ -55,7 +55,41 @@
       <div class="full">
         <div class="card"><div class="title">留存维度分析</div><div ref="retentionLine" class="chart tall"></div></div>
       </div>
+      <div class="full">
+        <div class="card">
+          <div class="title-row">
+            <span class="title">用户分层明细数据</span>
+            <div class="title-actions">
+              <a-button @click="showUserColumnModal = true">列设置</a-button>
+              <a-button type="primary" @click="exportUserTable">导出全量明细</a-button>
+            </div>
+          </div>
+          <a-table
+            :columns="userTableColumns"
+            :data-source="userTableData"
+            :pagination="userTablePagination"
+            :loading="userTableLoading"
+            :scroll="{x:1500}"
+            :locale="{emptyText:'暂无匹配明细数据'}"
+            @change="handleUserTableChange"
+          />
+        </div>
+      </div>
     </div>
+    <a-modal v-model:visible="showUserColumnModal" title="列设置" @ok="showUserColumnModal = false">
+      <a-checkbox-group v-model:value="userVisibleColumns">
+        <a-space :direction="'vertical'" :size="8">
+          <a-checkbox v-for="col in userAllColumns" :key="col.key" :value="col.key">{{col.title}}</a-checkbox>
+        </a-space>
+      </a-checkbox-group>
+    </a-modal>
+    <a-modal v-model:visible="showFuncColumnModal" title="列设置" @ok="showFuncColumnModal = false">
+      <a-checkbox-group v-model:value="funcVisibleColumns">
+        <a-space :direction="'vertical'" :size="8">
+          <a-checkbox v-for="col in funcAllColumns" :key="col.key" :value="col.key">{{col.title}}</a-checkbox>
+        </a-space>
+      </a-checkbox-group>
+    </a-modal>
     <div v-show="activeTab==='func'" class="tab-content">
       <div class="filter-bar">
         <div class="filter-item">
@@ -125,14 +159,34 @@
       <div class="full">
         <div class="card"><div class="title">各内容等级模版表现对比</div><div ref="templateLevel" class="chart tall"></div></div>
       </div>
+      <div class="full">
+        <div class="card">
+          <div class="title-row">
+            <span class="title">功能&模版明细数据</span>
+            <div class="title-actions">
+              <a-button @click="showFuncColumnModal = true">列设置</a-button>
+              <a-button type="primary" @click="exportFuncTable">导出全量明细</a-button>
+            </div>
+          </div>
+          <a-table
+            :columns="funcTableColumns"
+            :data-source="funcTableData"
+            :pagination="funcTablePagination"
+            :loading="funcTableLoading"
+            :scroll="{x:1500}"
+            :locale="{emptyText:'暂无匹配明细数据'}"
+            @change="handleFuncTableChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch, reactive } from 'vue';
+import { ref, onMounted, nextTick, watch, reactive, computed } from 'vue';
 import { chartRenderers } from './chartUtils';
-import { DatePicker, Select, Button, Space, FormItem } from 'ant-design-vue';
+import { DatePicker, Select, Button, Space, FormItem, Table, Modal, Checkbox } from 'ant-design-vue';
 const activeTab = ref('user');
 const dateRange = ref('30');
 const countryOptions = [
@@ -210,6 +264,250 @@ const funcDepth = ref<HTMLDivElement>();
 const templateFunnel = ref<HTMLDivElement>();
 const templateTrend = ref<HTMLDivElement>();
 const templateLevel = ref<HTMLDivElement>();
+watch(activeTab, () => {
+  nextTick(() => {
+    if(activeTab.value === 'user') loadUser();
+    else loadFunc();
+  });
+});
+
+const showUserColumnModal = ref(false);
+const showFuncColumnModal = ref(false);
+
+const userAllColumns = [
+  {key:'date',title:'统计日期'},
+  {key:'country',title:'国家'},
+  {key:'appType',title:'App类型'},
+  {key:'channel',title:'投放渠道'},
+  {key:'userType',title:'用户类型'},
+  {key:'memberType',title:'会员类型'},
+  {key:'contentLevel',title:'内容等级'},
+  {key:'dau',title:'DAU',defaultSortOrder:'descend'},
+  {key:'liteRate',title:'Lite会员占比'},
+  {key:'proRate',title:'Pro会员占比'},
+  {key:'maxRate',title:'Max会员占比'},
+  {key:'l0ReachRate',title:'L0触达占比'},
+  {key:'l2ReachRate',title:'L2触达占比'},
+  {key:'l3ReachRate',title:'L3触达占比'},
+  {key:'l0MemberConv',title:'L0会员转化率'},
+  {key:'l2MemberConv',title:'L2会员转化率'},
+  {key:'l3MemberConv',title:'L3会员转化率'},
+  {key:'reg0Day',title:'注册0天占比'},
+  {key:'reg1_3Day',title:'注册1-3天占比'},
+  {key:'reg4_7Day',title:'注册4-7天占比'},
+  {key:'reg8_30Day',title:'注册8-30天占比'},
+  {key:'reg31DayPlus',title:'注册31天+占比'},
+  {key:'d1Retention',title:'次留'},
+  {key:'d7Retention',title:'7留'},
+  {key:'d14Retention',title:'14留'},
+  {key:'d30Retention',title:'30留'},
+];
+const userVisibleColumns = ref(userAllColumns.map(c => c.key));
+const userTableColumns = computed(() => {
+  return userAllColumns.filter(c => userVisibleColumns.value.includes(c.key)).map(c => ({
+    ...c,
+    sorter: c.defaultSortOrder ? true : false,
+  }));
+});
+const userTableData = ref<any[]>([]);
+const userTableLoading = ref(false);
+const userTablePagination = reactive({
+  current: 1,
+  pageSize: 20,
+  pageSizeOptions: ['10', '20', '50'],
+  showTotal: (total: number) => `共 ${total} 条`,
+  total: 0,
+});
+const generateUserTableData = () => {
+  const data: any[] = [];
+  const dates = ['2026-07-15', '2026-07-16', '2026-07-17', '2026-07-18', '2026-07-19', '2026-07-20', '2026-07-21'];
+  const countries = ['美国', '中国', '日本', '韩国', '英国'];
+  const appTypes = ['游戏', '社交', '工具'];
+  const channels = ['Google', 'Apple', 'Facebook', 'TikTok'];
+  const userTypes = ['新用户', '老用户'];
+  const memberTypes = ['非会员', 'lite', 'pro', 'max'];
+  const contentLevels = ['L0', 'L2', 'L3'];
+  let id = 1;
+  dates.forEach(date => {
+    countries.forEach(country => {
+      appTypes.forEach(appType => {
+        channels.forEach(channel => {
+          userTypes.forEach(userType => {
+            memberTypes.forEach(memberType => {
+              contentLevels.forEach(contentLevel => {
+                data.push({
+                  key: id++,
+                  date,
+                  country,
+                  appType,
+                  channel,
+                  userType,
+                  memberType,
+                  contentLevel,
+                  dau: Math.floor(Math.random() * 50000) + 10000,
+                  liteRate: (Math.random() * 20).toFixed(2) + '%',
+                  proRate: (Math.random() * 15).toFixed(2) + '%',
+                  maxRate: (Math.random() * 10).toFixed(2) + '%',
+                  l0ReachRate: (Math.random() * 50).toFixed(2) + '%',
+                  l2ReachRate: (Math.random() * 40).toFixed(2) + '%',
+                  l3ReachRate: (Math.random() * 30).toFixed(2) + '%',
+                  l0MemberConv: (Math.random() * 30).toFixed(2) + '%',
+                  l2MemberConv: (Math.random() * 40).toFixed(2) + '%',
+                  l3MemberConv: (Math.random() * 50).toFixed(2) + '%',
+                  reg0Day: (Math.random() * 20).toFixed(2) + '%',
+                  reg1_3Day: (Math.random() * 25).toFixed(2) + '%',
+                  reg4_7Day: (Math.random() * 20).toFixed(2) + '%',
+                  reg8_30Day: (Math.random() * 20).toFixed(2) + '%',
+                  reg31DayPlus: (Math.random() * 15).toFixed(2) + '%',
+                  d1Retention: (Math.random() * 30 + 20).toFixed(2) + '%',
+                  d7Retention: (Math.random() * 20 + 10).toFixed(2) + '%',
+                  d14Retention: (Math.random() * 15 + 5).toFixed(2) + '%',
+                  d30Retention: (Math.random() * 10 + 2).toFixed(2) + '%',
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+  return data;
+};
+const loadUserTable = async () => {
+  userTableLoading.value = true;
+  userTablePagination.current = 1;
+  await new Promise(resolve => setTimeout(resolve, 500));
+  userTableData.value = generateUserTableData();
+  userTablePagination.total = userTableData.value.length;
+  userTableLoading.value = false;
+};
+const handleUserTableChange = (pagination: any) => {
+  userTablePagination.current = pagination.current;
+  userTablePagination.pageSize = pagination.pageSize;
+};
+const exportUserTable = () => {
+  const data = generateUserTableData();
+  const headers = userAllColumns.map(c => c.title).join('\t');
+  const rows = data.map(row => userAllColumns.map(c => row[c.key]).join('\t')).join('\n');
+  const content = headers + '\n' + rows;
+  const blob = new Blob(['\ufeff' + content], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `IAP_用户分层看板_${new Date().toISOString().split('T')[0]}_明细数据.xlsx`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+const funcAllColumns = [
+  {key:'date',title:'统计日期'},
+  {key:'country',title:'国家'},
+  {key:'appType',title:'App类型'},
+  {key:'channel',title:'投放渠道'},
+  {key:'userType',title:'用户类型'},
+  {key:'funcType',title:'功能类型'},
+  {key:'contentLevel',title:'内容等级'},
+  {key:'dau',title:'DAU',defaultSortOrder:'descend'},
+  {key:'makePenetration',title:'制作渗透率'},
+  {key:'avgUseCount',title:'人均使用次数'},
+  {key:'avgGoldSpend',title:'人均消耗金币'},
+  {key:'templateExposure',title:'模版曝光次数'},
+  {key:'templatePreview',title:'模版预览次数'},
+  {key:'templateMake',title:'模版制作次数'},
+  {key:'previewRate',title:'预览率'},
+  {key:'makeRate',title:'制作率'},
+  {key:'avgPreviewCount',title:'人均预览次数'},
+  {key:'avgMakeCount',title:'人均制作次数'},
+];
+const funcVisibleColumns = ref(funcAllColumns.map(c => c.key));
+const funcTableColumns = computed(() => {
+  return funcAllColumns.filter(c => funcVisibleColumns.value.includes(c.key)).map(c => ({
+    ...c,
+    sorter: c.defaultSortOrder ? true : false,
+  }));
+});
+const funcTableData = ref<any[]>([]);
+const funcTableLoading = ref(false);
+const funcTablePagination = reactive({
+  current: 1,
+  pageSize: 20,
+  pageSizeOptions: ['10', '20', '50'],
+  showTotal: (total: number) => `共 ${total} 条`,
+  total: 0,
+});
+const generateFuncTableData = () => {
+  const data: any[] = [];
+  const dates = ['2026-07-15', '2026-07-16', '2026-07-17', '2026-07-18', '2026-07-19', '2026-07-20', '2026-07-21'];
+  const countries = ['美国', '中国', '日本', '韩国', '英国'];
+  const appTypes = ['游戏', '社交', '工具'];
+  const channels = ['Google', 'Apple', 'Facebook', 'TikTok'];
+  const userTypes = ['新用户', '老用户'];
+  const funcTypes = ['社区发布', '素材拼接', '滤镜编辑', '模版制作', 'AI生成', '导出分享'];
+  const contentLevels = ['L0', 'L2', 'L3'];
+  let id = 1;
+  dates.forEach(date => {
+    countries.forEach(country => {
+      appTypes.forEach(appType => {
+        channels.forEach(channel => {
+          userTypes.forEach(userType => {
+            funcTypes.forEach(funcType => {
+              contentLevels.forEach(contentLevel => {
+                data.push({
+                  key: id++,
+                  date,
+                  country,
+                  appType,
+                  channel,
+                  userType,
+                  funcType,
+                  contentLevel,
+                  dau: Math.floor(Math.random() * 50000) + 10000,
+                  makePenetration: (Math.random() * 50).toFixed(2) + '%',
+                  avgUseCount: (Math.random() * 10 + 1).toFixed(2),
+                  avgGoldSpend: Math.floor(Math.random() * 100) + 10,
+                  templateExposure: Math.floor(Math.random() * 100000) + 10000,
+                  templatePreview: Math.floor(Math.random() * 50000) + 5000,
+                  templateMake: Math.floor(Math.random() * 10000) + 1000,
+                  previewRate: (Math.random() * 50).toFixed(2) + '%',
+                  makeRate: (Math.random() * 20).toFixed(2) + '%',
+                  avgPreviewCount: (Math.random() * 5 + 0.5).toFixed(2),
+                  avgMakeCount: (Math.random() * 2 + 0.1).toFixed(2),
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+  return data;
+};
+const loadFuncTable = async () => {
+  funcTableLoading.value = true;
+  funcTablePagination.current = 1;
+  await new Promise(resolve => setTimeout(resolve, 500));
+  funcTableData.value = generateFuncTableData();
+  funcTablePagination.total = funcTableData.value.length;
+  funcTableLoading.value = false;
+};
+const handleFuncTableChange = (pagination: any) => {
+  funcTablePagination.current = pagination.current;
+  funcTablePagination.pageSize = pagination.pageSize;
+};
+const exportFuncTable = () => {
+  const data = generateFuncTableData();
+  const headers = funcAllColumns.map(c => c.title).join('\t');
+  const rows = data.map(row => funcAllColumns.map(c => row[c.key]).join('\t')).join('\n');
+  const content = headers + '\n' + rows;
+  const blob = new Blob(['\ufeff' + content], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `IAP_功能&模版看板_${new Date().toISOString().split('T')[0]}_明细数据.xlsx`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 const loadUser = async () => {
   await nextTick();
   if(memberPie.value) chartRenderers.memberPie(memberPie.value);
@@ -217,6 +515,7 @@ const loadUser = async () => {
   if(registerPie.value) chartRenderers.registerPie(registerPie.value);
   if(registerStack.value) chartRenderers.registerStack(registerStack.value);
   if(retentionLine.value) chartRenderers.retentionLine(retentionLine.value);
+  await loadUserTable();
 };
 const loadFunc = async () => {
   await nextTick();
@@ -225,13 +524,9 @@ const loadFunc = async () => {
   if(templateFunnel.value) chartRenderers.templateFunnel(templateFunnel.value);
   if(templateTrend.value) chartRenderers.templateTrend(templateTrend.value);
   if(templateLevel.value) chartRenderers.templateLevel(templateLevel.value);
+  await loadFuncTable();
 };
-watch(activeTab, () => {
-  nextTick(() => {
-    if(activeTab.value === 'user') loadUser();
-    else loadFunc();
-  });
-});
+
 onMounted(() => { loadUser(); });
 </script>
 
@@ -259,4 +554,6 @@ onMounted(() => { loadUser(); });
 .title{font-size:15px;font-weight:600;margin-bottom:12px}
 .chart{width:100%;height:300px}
 .chart.tall{height:360px}
+.title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.title-actions{display:flex;gap:8px}
 </style>
