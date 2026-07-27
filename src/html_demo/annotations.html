@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>标注索引 | 用户分层洞察</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:#f0f2f5;color:#333;padding:24px}
+h1{font-size:20px;font-weight:600;margin-bottom:8px}
+.subtitle{color:#6b7280;font-size:14px;margin-bottom:24px}
+table{width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+th{background:#1890ff;color:white;padding:12px 16px;text-align:left;font-size:14px;font-weight:500}
+td{padding:10px 16px;border-bottom:1px solid #f3f4f6;font-size:13px}
+tr:hover td{background:#fafafa}
+.element-tag{background:#e6f4ff;color:#1890ff;padding:2px 8px;border-radius:4px;font-size:12px;font-family:monospace}
+.count{color:#6b7280;font-size:12px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<h1>📌 标注索引</h1>
+<p class="subtitle">页面：用户分层洞察 (user-segmentation-insights.html) — 共 47 个可交互元素已标注（含Apps筛选、PV/UV漏斗Tab等）</p>
+<p class="count">以下为页面中所有 data-marker 标注的汇总列表：</p>
+
+<table>
+<thead>
+<tr>
+<th style="width:120px">元素标识</th>
+<th style="width:400px">标注说明 (data-marker)</th>
+<th>所在位置</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><span class="element-tag">div</span></td><td>页面标题，展示项目名称</td><td>页面头部 / 全局</td></tr>
+<tr><td><span class="element-tag">div</span></td><td>展示数据更新时间</td><td>页面头部 / 全局</td></tr>
+<tr><td><span class="element-tag">div.tab</span></td><td>切换到用户分层看板Tab</td><td>Tab导航</td></tr>
+<tr><td><span class="element-tag">div.tab</span></td><td>切换到功能使用看板Tab</td><td>Tab导航</td></tr>
+<tr><td><span class="element-tag">input</span></td><td>用户看板-开始日期筛选</td><td>用户看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">input</span></td><td>用户看板-结束日期筛选</td><td>用户看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>用户看板-国家多选筛选</td><td>用户看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>用户看板-Apps多选筛选</td><td>用户看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>用户看板-投放渠道多选筛选</td><td>用户看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>用户看板-内容等级多选筛选</td><td>用户看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">button</span></td><td>重置用户看板所有筛选条件</td><td>用户看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">button</span></td><td>查询并刷新用户看板所有图表和表格</td><td>用户看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>DAU指标卡片，展示日活跃用户数及变化</td><td>用户看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>活跃会员指标卡片</td><td>用户看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>次日留存指标卡片</td><td>用户看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>7日留存指标卡片</td><td>用户看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>会员渗透率指标卡片</td><td>用户看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>会员维度分层饼图，展示非会员、Lite、Pro、Max会员占比</td><td>用户看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>内容等级分层柱状图，展示L0/L2/L3触达用户占比和会员占比</td><td>用户看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>注册时间维度饼图，展示不同注册时长用户占比</td><td>用户看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>各内容等级注册分布堆叠柱状图</td><td>用户看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>留存维度折线图，展示次留/7留/14留/30留趋势</td><td>用户看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">button</span></td><td>打开列设置弹窗，自定义表格列显示</td><td>用户看板 / 表格区</td></tr>
+<tr><td><span class="element-tag">button</span></td><td>导出当前用户看板全量明细数据为Excel</td><td>用户看板 / 表格区</td></tr>
+<tr><td><span class="element-tag">input</span></td><td>功能看板-开始日期筛选</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">input</span></td><td>功能看板-结束日期筛选</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>功能看板-国家多选筛选</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>功能看板-Apps多选筛选</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>功能看板-投放渠道多选筛选</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>功能看板-功能类型多选筛选</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">select</span></td><td>功能看板-用户类型单选筛选</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.multi-select</span></td><td>功能看板-内容等级多选筛选</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">button</span></td><td>重置功能看板所有筛选条件</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">button</span></td><td>查询并刷新功能看板所有图表和表格</td><td>功能看板 / 筛选栏</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>DAU指标卡片</td><td>功能看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>模版提交率指标卡片</td><td>功能看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>人均使用次数指标卡片</td><td>功能看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>模版预览率指标卡片</td><td>功能看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.kpi-card</span></td><td>模版转化率指标卡片</td><td>功能看板 / KPI区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>各功能渗透率横向柱状图</td><td>功能看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>人均使用次数柱状图</td><td>功能看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>模版使用转化漏斗图，支持PV/UV维度切换</td><td>功能看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>模版人均使用次数折线趋势图</td><td>功能看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">div.chart</span></td><td>各内容等级模版表现双轴图（预览率/制作率+人均次数）</td><td>功能看板 / 图表区</td></tr>
+<tr><td><span class="element-tag">button</span></td><td>打开列设置弹窗，自定义功能表格列显示</td><td>功能看板 / 表格区</td></tr>
+<tr><td><span class="element-tag">button</span></td><td>导出当前功能看板全量明细数据为Excel</td><td>功能看板 / 表格区</td></tr>
+</tbody>
+</table>
+
+</body>
+</html>

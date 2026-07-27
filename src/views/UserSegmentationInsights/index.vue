@@ -12,7 +12,9 @@
       <div class="filter-bar">
         <div class="filter-item">
           <span class="filter-label">日期：</span>
-          <a-date-picker v-model:value="globalFilters.dateRange" mode="range" style="width:250px" placeholder="选择日期范围" @change="handleGlobalFilterChange" />
+          <a-date-picker v-model:value="globalFilters.startDate" placeholder="开始日期" style="width:150px" @change="handleGlobalFilterChange" />
+          <span>-</span>
+          <a-date-picker v-model:value="globalFilters.endDate" placeholder="结束日期" style="width:150px" @change="handleGlobalFilterChange" />
         </div>
         <div class="filter-item">
           <span class="filter-label">国家：</span>
@@ -21,7 +23,7 @@
           </a-select>
         </div>
         <div class="filter-item">
-          <span class="filter-label">App类型：</span>
+          <span class="filter-label">Apps：</span>
           <a-select v-model:value="globalFilters.appTypes" mode="multiple" style="width:140px" placeholder="全部" @change="handleGlobalFilterChange">
             <a-select-option v-for="a in appTypeOptions" :key="a.value" :value="a.value">{{a.label}}</a-select-option>
           </a-select>
@@ -30,6 +32,14 @@
           <span class="filter-label">投放渠道：</span>
           <a-select v-model:value="globalFilters.channels" mode="multiple" style="width:140px" placeholder="全部" @change="handleGlobalFilterChange">
             <a-select-option v-for="ch in channelOptions" :key="ch.value" :value="ch.value">{{ch.label}}</a-select-option>
+          </a-select>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">内容等级：</span>
+          <a-select v-model:value="globalFilters.contentLevels" mode="multiple" style="width:140px" placeholder="全部" @change="handleGlobalFilterChange">
+            <a-select-option value="L0">L0</a-select-option>
+            <a-select-option value="L2">L2</a-select-option>
+            <a-select-option value="L3">L3</a-select-option>
           </a-select>
         </div>
         <div class="filter-actions">
@@ -94,7 +104,9 @@
       <div class="filter-bar">
         <div class="filter-item">
           <span class="filter-label">日期：</span>
-          <a-date-picker v-model:value="globalFilters.dateRange" mode="range" style="width:250px" placeholder="选择日期范围" @change="handleGlobalFilterChange" />
+          <a-date-picker v-model:value="globalFilters.startDate" placeholder="开始日期" style="width:150px" @change="handleGlobalFilterChange" />
+          <span>-</span>
+          <a-date-picker v-model:value="globalFilters.endDate" placeholder="结束日期" style="width:150px" @change="handleGlobalFilterChange" />
         </div>
         <div class="filter-item">
           <span class="filter-label">国家：</span>
@@ -103,7 +115,7 @@
           </a-select>
         </div>
         <div class="filter-item">
-          <span class="filter-label">App类型：</span>
+          <span class="filter-label">Apps：</span>
           <a-select v-model:value="globalFilters.appTypes" mode="multiple" style="width:140px" placeholder="全部" @change="handleGlobalFilterChange">
             <a-select-option v-for="a in appTypeOptions" :key="a.value" :value="a.value">{{a.label}}</a-select-option>
           </a-select>
@@ -143,17 +155,26 @@
       </div>
       <div class="kpi">
         <div class="kpi-card"><div>DAU</div><div class="val">128,456</div><div class="up">↑ 5.2%</div></div>
-        <div class="kpi-card"><div>制作渗透率</div><div class="val">28.5%</div><div class="up">↑ 2.3pct</div></div>
+        <div class="kpi-card"><div>模版提交率</div><div class="val">28.5%</div><div class="up">↑ 2.3pct</div></div>
         <div class="kpi-card"><div>人均使用次数</div><div class="val">3.6次</div><div class="up">↑ 0.4次</div></div>
         <div class="kpi-card"><div>模版预览率</div><div class="val">65.2%</div><div class="up">↑ 4.1pct</div></div>
         <div class="kpi-card"><div>模版转化率</div><div class="val">18.7%</div><div class="down">↓ 0.8pct</div></div>
       </div>
       <div class="grid">
-        <div class="card"><div class="title">各功能类型渗透率对比</div><div ref="funcPenetration" class="chart"></div></div>
-        <div class="card"><div class="title">人均使用次数 & 人均消耗金币</div><div ref="funcDepth" class="chart"></div></div>
+        <div class="card"><div class="title">各功能渗透率对比</div><div ref="funcPenetration" class="chart"></div></div>
+        <div class="card"><div class="title">人均使用次数</div><div ref="funcDepth" class="chart"></div></div>
       </div>
       <div class="grid">
-        <div class="card"><div class="title">模版使用转化漏斗</div><div ref="templateFunnel" class="chart"></div></div>
+        <div class="card">
+          <div class="title-row">
+            <span class="title">模版使用转化漏斗</span>
+            <div class="funnel-tabs">
+              <span :class="['funnel-tab', {active: funnelDimension === 'pv'}]" @click="switchFunnelDimension('pv')">PV</span>
+              <span :class="['funnel-tab', {active: funnelDimension === 'uv'}]" @click="switchFunnelDimension('uv')">UV</span>
+            </div>
+          </div>
+          <div ref="templateFunnel" class="chart"></div>
+        </div>
         <div class="card"><div class="title">模版人均使用次数趋势</div><div ref="templateTrend" class="chart"></div></div>
       </div>
       <div class="full">
@@ -223,10 +244,12 @@ const funcTypeOptions = [
   {value:'export_share',label:'导出分享'},
 ];
 const globalFilters = reactive({
-  dateRange: null as [Date, Date] | null,
+  startDate: null as Date | null,
+  endDate: null as Date | null,
   countries: [] as string[],
   appTypes: [] as string[],
   channels: [] as string[],
+  contentLevels: [] as string[],
 });
 const funcFilters = reactive({
   funcTypes: [] as string[],
@@ -238,17 +261,21 @@ const handleGlobalFilterChange = () => {
   else loadFunc();
 };
 const resetGlobalFilters = () => {
-  globalFilters.dateRange = null;
+  globalFilters.startDate = null;
+  globalFilters.endDate = null;
   globalFilters.countries = [];
   globalFilters.appTypes = [];
   globalFilters.channels = [];
+  globalFilters.contentLevels = [];
   handleGlobalFilterChange();
 };
 const resetFuncFilters = () => {
-  globalFilters.dateRange = null;
+  globalFilters.startDate = null;
+  globalFilters.endDate = null;
   globalFilters.countries = [];
   globalFilters.appTypes = [];
   globalFilters.channels = [];
+  globalFilters.contentLevels = [];
   funcFilters.funcTypes = [];
   funcFilters.userType = 'all';
   funcFilters.contentLevels = [];
@@ -264,6 +291,11 @@ const funcDepth = ref<HTMLDivElement>();
 const templateFunnel = ref<HTMLDivElement>();
 const templateTrend = ref<HTMLDivElement>();
 const templateLevel = ref<HTMLDivElement>();
+const funnelDimension = ref<'pv' | 'uv'>('pv');
+const switchFunnelDimension = (dim: 'pv' | 'uv') => {
+  funnelDimension.value = dim;
+  if(templateFunnel.value) chartRenderers.templateFunnel(templateFunnel.value, dim);
+};
 watch(activeTab, () => {
   nextTick(() => {
     if(activeTab.value === 'user') loadUser();
@@ -277,7 +309,7 @@ const showFuncColumnModal = ref(false);
 const userAllColumns = [
   {key:'date',title:'统计日期'},
   {key:'country',title:'国家'},
-  {key:'appType',title:'App类型'},
+  {key:'appType',title:'Apps'},
   {key:'channel',title:'投放渠道'},
   {key:'userType',title:'用户类型'},
   {key:'memberType',title:'会员类型'},
@@ -402,15 +434,14 @@ const exportUserTable = () => {
 const funcAllColumns = [
   {key:'date',title:'统计日期'},
   {key:'country',title:'国家'},
-  {key:'appType',title:'App类型'},
+  {key:'appType',title:'Apps'},
   {key:'channel',title:'投放渠道'},
   {key:'userType',title:'用户类型'},
   {key:'funcType',title:'功能类型'},
   {key:'contentLevel',title:'内容等级'},
   {key:'dau',title:'DAU',defaultSortOrder:'descend'},
-  {key:'makePenetration',title:'制作渗透率'},
+  {key:'makePenetration',title:'模版提交率'},
   {key:'avgUseCount',title:'人均使用次数'},
-  {key:'avgGoldSpend',title:'人均消耗金币'},
   {key:'templateExposure',title:'模版曝光次数'},
   {key:'templatePreview',title:'模版预览次数'},
   {key:'templateMake',title:'模版制作次数'},
@@ -418,8 +449,20 @@ const funcAllColumns = [
   {key:'makeRate',title:'制作率'},
   {key:'avgPreviewCount',title:'人均预览次数'},
   {key:'avgMakeCount',title:'人均制作次数'},
+  {key:'clickMakeRate',title:'模版点击制作率'},
+  {key:'submitMakeRate',title:'模版提交制作率'},
+  {key:'makeCompleteRate',title:'模版制作完成率'},
+  {key:'clickMakeUsers',title:'模版点击制作人数'},
+  {key:'clickMakeCount',title:'模版点击制作次数'},
+  {key:'submitMakeUsers',title:'模版提交制作人数'},
+  {key:'submitMakeCount',title:'模版提交制作次数'},
+  {key:'makeCompleteUsers',title:'模版制作完成人数'},
+  {key:'makeCompleteCount',title:'模版制作完成次数'},
+  {key:'downloadUsers',title:'模版下载人数'},
+  {key:'downloadCount',title:'模版下载次数'},
+  {key:'downloadRate',title:'模版下载率'},
 ];
-const funcVisibleColumns = ref(funcAllColumns.map(c => c.key));
+const funcVisibleColumns = ref(funcAllColumns.map(c => c.key).filter(k => !['clickMakeUsers','clickMakeCount','submitMakeUsers','submitMakeCount','makeCompleteUsers','makeCompleteCount','downloadUsers','downloadCount'].includes(k)));
 const funcTableColumns = computed(() => {
   return funcAllColumns.filter(c => funcVisibleColumns.value.includes(c.key)).map(c => ({
     ...c,
@@ -464,7 +507,6 @@ const generateFuncTableData = () => {
                   dau: Math.floor(Math.random() * 50000) + 10000,
                   makePenetration: (Math.random() * 50).toFixed(2) + '%',
                   avgUseCount: (Math.random() * 10 + 1).toFixed(2),
-                  avgGoldSpend: Math.floor(Math.random() * 100) + 10,
                   templateExposure: Math.floor(Math.random() * 100000) + 10000,
                   templatePreview: Math.floor(Math.random() * 50000) + 5000,
                   templateMake: Math.floor(Math.random() * 10000) + 1000,
@@ -472,6 +514,18 @@ const generateFuncTableData = () => {
                   makeRate: (Math.random() * 20).toFixed(2) + '%',
                   avgPreviewCount: (Math.random() * 5 + 0.5).toFixed(2),
                   avgMakeCount: (Math.random() * 2 + 0.1).toFixed(2),
+                  clickMakeRate: (Math.random() * 40 + 20).toFixed(2) + '%',
+                  submitMakeRate: (Math.random() * 30 + 10).toFixed(2) + '%',
+                  makeCompleteRate: (Math.random() * 20 + 5).toFixed(2) + '%',
+                  clickMakeUsers: Math.floor(Math.random() * 20000) + 2000,
+                  clickMakeCount: Math.floor(Math.random() * 50000) + 5000,
+                  submitMakeUsers: Math.floor(Math.random() * 10000) + 1000,
+                  submitMakeCount: Math.floor(Math.random() * 30000) + 3000,
+                  makeCompleteUsers: Math.floor(Math.random() * 5000) + 500,
+                  makeCompleteCount: Math.floor(Math.random() * 15000) + 1500,
+                  downloadUsers: Math.floor(Math.random() * 3000) + 300,
+                  downloadCount: Math.floor(Math.random() * 8000) + 800,
+                  downloadRate: (Math.random() * 15 + 3).toFixed(2) + '%',
                 });
               });
             });
@@ -555,5 +609,9 @@ onMounted(() => { loadUser(); });
 .chart{width:100%;height:300px}
 .chart.tall{height:360px}
 .title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.funnel-tabs{display:flex;gap:0;border:1px solid #d9d9d9;border-radius:6px;overflow:hidden}
+.funnel-tab{padding:4px 14px;font-size:13px;cursor:pointer;background:white;color:#6b7280;transition:all 0.2s}
+.funnel-tab:hover{color:#1890ff}
+.funnel-tab.active{background:#1890ff;color:white}
 .title-actions{display:flex;gap:8px}
 </style>

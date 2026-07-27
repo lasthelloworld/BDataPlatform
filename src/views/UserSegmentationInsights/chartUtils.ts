@@ -155,47 +155,61 @@ export const renderFuncDepth = (container: HTMLElement) => {
   const chart = echarts.init(container);
   const option: EChartsOption = {
     tooltip: { trigger: 'axis' },
-    legend: { top: 0, itemWidth: 12, itemHeight: 12, textStyle: { fontSize: 12 } },
-    grid: { left: '3%', right: '8%', bottom: '3%', top: '15%', containLabel: true },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
     xAxis: { type: 'category', data: ['AI生成', '模版制作', '滤镜编辑', '素材拼接', '导出分享'], axisLabel: { fontSize: 11 } },
-    yAxis: [
-      { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } },
-      { type: 'value', name: '人均金币', axisLabel: { fontSize: 11 } }
-    ],
+    yAxis: { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } },
     series: [
-      { name: '人均使用次数', type: 'bar', barWidth: 20, data: [5.2, 3.8, 4.5, 2.3, 1.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
-      { name: '人均消耗金币', type: 'line', yAxisIndex: 1, data: [120, 85, 45, 30, 0], itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 8 }
+      { name: '人均使用次数', type: 'bar', barWidth: 24, data: [5.2, 3.8, 4.5, 2.3, 1.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] }, label: { show: true, position: 'top', fontSize: 11 } }
     ]
   };
   chart.setOption(option);
   return chart;
 };
 
-export const renderTemplateFunnel = (container: HTMLElement) => {
+export const renderTemplateFunnel = (container: HTMLElement, dimension: 'pv' | 'uv' = 'pv') => {
   const chart = echarts.init(container);
+  const pvData = [
+    { value: 100, name: '模版曝光', itemStyle: { color: '#3b82f6' } },
+    { value: 72.5, name: '模版点击制作', itemStyle: { color: '#6366f1' } },
+    { value: 45.3, name: '模版提交制作', itemStyle: { color: '#8b5cf6' } },
+    { value: 28.6, name: '模版制作完成', itemStyle: { color: '#10b981' } },
+    { value: 15.2, name: '模版下载', itemStyle: { color: '#f59e0b' } }
+  ];
+  const uvData = [
+    { value: 100, name: '模版曝光', itemStyle: { color: '#3b82f6' } },
+    { value: 68.2, name: '模版点击制作', itemStyle: { color: '#6366f1' } },
+    { value: 40.1, name: '模版提交制作', itemStyle: { color: '#8b5cf6' } },
+    { value: 24.5, name: '模版制作完成', itemStyle: { color: '#10b981' } },
+    { value: 12.8, name: '模版下载', itemStyle: { color: '#f59e0b' } }
+  ];
+  const data = dimension === 'pv' ? pvData : uvData;
+  const label = dimension === 'pv' ? 'PV（页面浏览量）' : 'UV（独立访客数）';
   const option: EChartsOption = {
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-    legend: { bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { fontSize: 12 } },
+    tooltip: {
+      trigger: 'item',
+      formatter: (params: any) => `${label}<br/>${params.name}: ${params.value}%`
+    },
+    title: {
+      text: label,
+      left: 'center',
+      top: 0,
+      textStyle: { fontSize: 13, color: '#374151', fontWeight: 500 }
+    },
     series: [{
       type: 'funnel',
       left: '10%',
-      top: 20,
-      bottom: 40,
+      top: 30,
+      bottom: 20,
       width: '80%',
       min: 0,
       max: 100,
-      minSize: '30%',
+      minSize: '25%',
       maxSize: '100%',
       sort: 'descending',
       gap: 4,
       label: { show: true, position: 'inside', formatter: '{b}\n{c}%', fontSize: 12, color: '#fff' },
       itemStyle: { borderColor: '#fff', borderWidth: 2 },
-      data: [
-        { value: 100, name: '模版曝光', itemStyle: { color: '#3b82f6' } },
-        { value: 65.2, name: '模版预览', itemStyle: { color: '#8b5cf6' } },
-        { value: 28.5, name: '模版制作', itemStyle: { color: '#10b981' } },
-        { value: 18.7, name: '制作完成', itemStyle: { color: '#f59e0b' } }
-      ]
+      data
     }]
   };
   chart.setOption(option);

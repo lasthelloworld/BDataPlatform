@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户分层洞察 | User Segmentation Insights</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:#f0f2f5;color:#333}
+.page{min-height:100vh;background:#f0f2f5}
+.header{background:#1890ff;color:white;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;font-size:18px;font-weight:600}
+.header-right{font-size:12px;color:rgba(255,255,255,0.8)}
+.tabs{background:white;padding:0 24px;border-bottom:1px solid #e5e7eb;display:flex;gap:8px}
+.tab{padding:14px 20px;cursor:pointer;font-size:14px;color:#6b7280;border-bottom:2px solid transparent;user-select:none}
+.tab:hover{color:#1890ff}
+.tab.active{color:#1890ff;border-bottom-color:#1890ff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.filter-bar{background:#f5f5f5;padding:16px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.filter-item{display:flex;align-items:center;gap:8px}
+.filter-label{font-size:14px;color:#666;white-space:nowrap}
+.filter-item select,.filter-item input[type="date"]{padding:6px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:14px;background:white;outline:none;cursor:pointer}
+.filter-item select:hover,.filter-item input[type="date"]:hover{border-color:#4096ff}
+.filter-item select:focus,.filter-item input[type="date"]:focus{border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,0.1)}
+.filter-actions{margin-left:auto;display:flex;gap:8px}
+.btn{padding:6px 16px;border:1px solid #d9d9d9;border-radius:6px;background:white;cursor:pointer;font-size:14px;transition:all 0.2s}
+.btn:hover{border-color:#4096ff;color:#4096ff}
+.btn-primary{background:#1890ff;color:white;border-color:#1890ff}
+.btn-primary:hover{background:#4096ff;border-color:#4096ff;color:white}
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin:0 24px;padding-top:16px}
+.kpi-card{background:white;padding:16px 20px;border-radius:8px}
+.kpi-card div:first-child{font-size:13px;color:#6b7280;margin-bottom:8px}
+.kpi-card .val{font-size:24px;font-weight:700;color:#111827}
+.kpi-card .up{color:#10b981;font-size:13px;margin-top:4px}
+.kpi-card .down{color:#ef4444;font-size:13px;margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 24px}
+.full{display:grid;grid-template-columns:1fr;margin:16px 24px}
+.card{background:white;padding:20px;border-radius:8px}
+.title{font-size:15px;font-weight:600;margin-bottom:12px}
+.chart{width:100%;height:300px}
+.chart.tall{height:360px}
+.title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.title-row .title{margin-bottom:0}
+.funnel-tabs{display:flex;gap:0;border:1px solid #d9d9d9;border-radius:6px;overflow:hidden}
+.funnel-tab{padding:4px 14px;font-size:13px;cursor:pointer;background:white;color:#6b7280;transition:all 0.2s;user-select:none}
+.funnel-tab:hover{color:#1890ff}
+.funnel-tab.active{background:#1890ff;color:white}
+.title-actions{display:flex;gap:8px}
+.table-wrapper{overflow-x:auto}
+table.data-table{width:100%;border-collapse:collapse;font-size:13px}
+table.data-table th{background:#fafafa;padding:10px 12px;text-align:left;font-weight:500;color:#374151;border-bottom:1px solid #e5e7eb;cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0}
+table.data-table th:hover{background:#f0f0f0}
+table.data-table td{padding:10px 12px;border-bottom:1px solid #f3f4f6;white-space:nowrap}
+table.data-table tr:hover td{background:#fafafa}
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:16px;font-size:13px;color:#6b7280}
+.pagination button{padding:4px 10px;border:1px solid #d9d9d9;border-radius:4px;background:white;cursor:pointer}
+.pagination button:disabled{opacity:0.5;cursor:not-allowed}
+.pagination button.active{background:#1890ff;color:white;border-color:#1890ff}
+.pagination select{padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px}
+.pagination .total{margin-right:auto}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:1000}
+.modal-overlay.show{display:flex}
+.modal{background:white;border-radius:8px;padding:24px;min-width:400px;max-height:80vh;overflow:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal-body{max-height:400px;overflow-y:auto}
+.modal-body label{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:14px}
+.modal-body label:hover{background:#f5f5f5}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0}
+.multi-select{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid #d9d9d9;border-radius:6px;min-height:32px;min-width:140px;max-width:300px;cursor:pointer;background:white;align-items:center;position:relative}
+.multi-select-tags{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+.multi-select-tag{background:#e6f4ff;color:#1890ff;padding:2px 8px;border-radius:4px;font-size:12px;display:flex;align-items:center;gap:4px}
+.multi-select-tag .remove{cursor:pointer;color:#999;font-weight:bold}
+.multi-select-tag .remove:hover{color:#ef4444}
+.multi-select-placeholder{color:#bfbfbf;font-size:14px;padding:2px 4px}
+.multi-select-dropdown{position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #d9d9d9;border-radius:6px;margin-top:4px;max-height:200px;overflow-y:auto;display:none;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.multi-select-dropdown.show{display:block}
+.multi-select-option{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:14px}
+.multi-select-option:hover{background:#f5f5f5}
+.multi-select-option input{margin:0}
+.sort-icon{display:inline-block;margin-left:4px;font-size:10px;color:#ccc}
+th.sortable .sort-icon{color:#999}
+th.sortable.asc .sort-icon::before{content:'▲';color:#1890ff}
+th.sortable.desc .sort-icon::before{content:'▼';color:#1890ff}
+.table-card{position:relative}
+.empty-text{text-align:center;padding:40px;color:#999}
+.footer-annotations{background:white;margin:16px 24px;padding:16px 20px;border-radius:8px}
+.footer-annotations details{font-size:13px}
+.footer-annotations summary{cursor:pointer;font-weight:600;color:#374151}
+.footer-annotations ul{margin-top:8px;padding-left:20px;line-height:1.8}
+.footer-annotations li code{background:#f3f4f6;padding:2px 6px;border-radius:3px;color:#dc2626;font-size:12px}
+.annotation-panel{position:fixed;bottom:24px;right:24px;width:320px;background:white;border:1px solid #e5e7eb;box-shadow:0 4px 16px rgba(0,0,0,0.12);border-radius:8px;padding:12px;z-index:200;font-size:13px;transition:all 0.3s}
+.annotation-panel .ap-title{font-weight:600;color:#1890ff;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.annotation-panel .ap-title .close-btn{cursor:pointer;color:#999;font-size:16px;font-weight:normal}
+.annotation-panel .ap-content{color:#374151;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div data-marker="页面标题，展示项目名称">IAP项目组 · 数据看板</div>
+    <div class="header-right" data-marker="展示数据更新时间">数据更新时间：2026-07-20 10:00</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="user" data-marker="切换到用户分层看板Tab">👥 用户分层看板</div>
+    <div class="tab" data-tab="func" data-marker="切换到功能使用看板Tab">⚙️ 功能使用看板</div>
+  </div>
+
+  <!-- 用户分层看板 Tab -->
+  <div class="tab-content active" id="tab-user">
+    <div class="filter-bar">
+      <div class="filter-item">
+        <span class="filter-label">日期：</span>
+        <input type="date" id="user-date-start" data-marker="用户看板-开始日期筛选">
+        <span>-</span>
+        <input type="date" id="user-date-end" data-marker="用户看板-结束日期筛选">
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">国家：</span>
+        <div class="multi-select" id="user-country-ms" data-marker="用户看板-国家多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">Apps：</span>
+        <div class="multi-select" id="user-apptype-ms" data-marker="用户看板-Apps多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">投放渠道：</span>
+        <div class="multi-select" id="user-channel-ms" data-marker="用户看板-投放渠道多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">内容等级：</span>
+        <div class="multi-select" id="user-contentlevel-ms" data-marker="用户看板-内容等级多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn" onclick="resetUserFilters()" data-marker="重置用户看板所有筛选条件">重置</button>
+        <button class="btn btn-primary" onclick="loadUserAll()" data-marker="查询并刷新用户看板所有图表和表格">查询</button>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-card" data-marker="DAU指标卡片，展示日活跃用户数及变化"><div>DAU</div><div class="val">128,456</div><div class="up">↑ 5.2%</div></div>
+      <div class="kpi-card" data-marker="活跃会员指标卡片"><div>活跃会员</div><div class="val">45,832</div><div class="up">↑ 3.8%</div></div>
+      <div class="kpi-card" data-marker="次日留存指标卡片"><div>次日留存</div><div class="val">42.6%</div><div class="up">↑ 1.2pct</div></div>
+      <div class="kpi-card" data-marker="7日留存指标卡片"><div>7日留存</div><div class="val">21.3%</div><div class="down">↓ 0.5pct</div></div>
+      <div class="kpi-card" data-marker="会员渗透率指标卡片"><div>会员渗透率</div><div class="val">35.7%</div><div class="up">↑ 2.1pct</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="title">会员维度分层</div>
+        <div id="memberPie" class="chart" data-marker="会员维度分层饼图，展示非会员、Lite、Pro、Max会员占比"></div>
+      </div>
+      <div class="card">
+        <div class="title">内容等级分层</div>
+        <div id="contentBar" class="chart" data-marker="内容等级分层柱状图，展示L0/L2/L3触达用户占比和会员占比"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="title">注册时间维度分布</div>
+        <div id="registerPie" class="chart" data-marker="注册时间维度饼图，展示不同注册时长用户占比"></div>
+      </div>
+      <div class="card">
+        <div class="title">各内容等级注册分布对比</div>
+        <div id="registerStack" class="chart" data-marker="各内容等级注册分布堆叠柱状图"></div>
+      </div>
+    </div>
+
+    <div class="full">
+      <div class="card">
+        <div class="title">留存维度分析</div>
+        <div id="retentionLine" class="chart tall" data-marker="留存维度折线图，展示次留/7留/14留/30留趋势"></div>
+      </div>
+    </div>
+
+    <div class="full">
+      <div class="card table-card">
+        <div class="title-row">
+          <span class="title">用户分层明细数据</span>
+          <div class="title-actions">
+            <button class="btn" onclick="showColumnModal('user')" data-marker="打开列设置弹窗，自定义表格列显示">列设置</button>
+            <button class="btn btn-primary" onclick="exportUserTable()" data-marker="导出当前用户看板全量明细数据为Excel">导出全量明细</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table" id="user-table"></table>
+        </div>
+        <div class="pagination" id="user-pagination"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 功能使用看板 Tab -->
+  <div class="tab-content" id="tab-func">
+    <div class="filter-bar">
+      <div class="filter-item">
+        <span class="filter-label">日期：</span>
+        <input type="date" id="func-date-start" data-marker="功能看板-开始日期筛选">
+        <span>-</span>
+        <input type="date" id="func-date-end" data-marker="功能看板-结束日期筛选">
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">国家：</span>
+        <div class="multi-select" id="func-country-ms" data-marker="功能看板-国家多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">Apps：</span>
+        <div class="multi-select" id="func-apptype-ms" data-marker="功能看板-Apps多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">投放渠道：</span>
+        <div class="multi-select" id="func-channel-ms" data-marker="功能看板-投放渠道多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">功能类型：</span>
+        <div class="multi-select" id="func-functype-ms" data-marker="功能看板-功能类型多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">用户类型：</span>
+        <select id="func-user-type" data-marker="功能看板-用户类型单选筛选">
+          <option value="all">全部</option>
+          <option value="new">新用户</option>
+          <option value="old">老用户</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">内容等级：</span>
+        <div class="multi-select" id="func-contentlevel-ms" data-marker="功能看板-内容等级多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn" onclick="resetFuncFilters()" data-marker="重置功能看板所有筛选条件">重置</button>
+        <button class="btn btn-primary" onclick="loadFuncAll()" data-marker="查询并刷新功能看板所有图表和表格">查询</button>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-card" data-marker="DAU指标卡片"><div>DAU</div><div class="val">128,456</div><div class="up">↑ 5.2%</div></div>
+      <div class="kpi-card" data-marker="模版提交率指标卡片"><div>模版提交率</div><div class="val">28.5%</div><div class="up">↑ 2.3pct</div></div>
+      <div class="kpi-card" data-marker="人均使用次数指标卡片"><div>人均使用次数</div><div class="val">3.6次</div><div class="up">↑ 0.4次</div></div>
+      <div class="kpi-card" data-marker="模版预览率指标卡片"><div>模版预览率</div><div class="val">65.2%</div><div class="up">↑ 4.1pct</div></div>
+      <div class="kpi-card" data-marker="模版转化率指标卡片"><div>模版转化率</div><div class="val">18.7%</div><div class="down">↓ 0.8pct</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="title">各功能渗透率对比</div>
+        <div id="funcPenetration" class="chart" data-marker="各功能渗透率横向柱状图"></div>
+      </div>
+      <div class="card">
+        <div class="title">人均使用次数</div>
+        <div id="funcDepth" class="chart" data-marker="人均使用次数柱状图"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="title-row">
+          <span class="title">模版使用转化漏斗</span>
+          <div class="funnel-tabs">
+            <span class="funnel-tab active" data-funnel-dim="pv" onclick="switchFunnelDimension('pv')">PV</span>
+            <span class="funnel-tab" data-funnel-dim="uv" onclick="switchFunnelDimension('uv')">UV</span>
+          </div>
+        </div>
+        <div id="templateFunnel" class="chart" data-marker="模版使用转化漏斗图，支持PV/UV维度切换"></div>
+      </div>
+      <div class="card">
+        <div class="title">模版人均使用次数趋势</div>
+        <div id="templateTrend" class="chart" data-marker="模版人均使用次数折线趋势图"></div>
+      </div>
+    </div>
+
+    <div class="full">
+      <div class="card">
+        <div class="title">各内容等级模版表现对比</div>
+        <div id="templateLevel" class="chart tall" data-marker="各内容等级模版表现双轴图（预览率/制作率+人均次数）"></div>
+      </div>
+    </div>
+
+    <div class="full">
+      <div class="card table-card">
+        <div class="title-row">
+          <span class="title">功能&模版明细数据</span>
+          <div class="title-actions">
+            <button class="btn" onclick="showColumnModal('func')" data-marker="打开列设置弹窗，自定义功能表格列显示">列设置</button>
+            <button class="btn btn-primary" onclick="exportFuncTable()" data-marker="导出当前功能看板全量明细数据为Excel">导出全量明细</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table" id="func-table"></table>
+        </div>
+        <div class="pagination" id="func-pagination"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 交互说明折叠面板 -->
+  <div class="footer-annotations">
+    <details>
+      <summary>📌 交互说明</summary>
+      <div id="annotation-list"></div>
+    </details>
+  </div>
+</div>
+
+<!-- 列设置弹窗 -->
+<div class="modal-overlay" id="column-modal">
+  <div class="modal">
+    <div class="modal-title">列设置</div>
+    <div class="modal-body" id="column-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideColumnModal()">取消</button>
+      <button class="btn btn-primary" onclick="applyColumnModal()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 浮动标注面板 -->
+<div class="annotation-panel" id="annotation-panel">
+  <div class="ap-title">
+    <span>📌 标注说明</span>
+    <span class="close-btn" onclick="hideAnnotationPanel()">×</span>
+  </div>
+  <div class="ap-content" id="annotation-content">点击任意带标注的元素，查看需求详情。</div>
+</div>
+
+<script>
+const countryOptions = [
+  {value:'US',label:'美国'},{value:'CN',label:'中国'},{value:'JP',label:'日本'},
+  {value:'KR',label:'韩国'},{value:'GB',label:'英国'},{value:'DE',label:'德国'},
+  {value:'FR',label:'法国'},{value:'AU',label:'澳大利亚'}
+];
+const appTypeOptions = [
+  {value:'game',label:'游戏'},{value:'social',label:'社交'},{value:'tool',label:'工具'},
+  {value:'ecom',label:'电商'},{value:'content',label:'内容'}
+];
+const channelOptions = [
+  {value:'google',label:'Google'},{value:'apple',label:'Apple'},{value:'facebook',label:'Facebook'},
+  {value:'tiktok',label:'TikTok'},{value:'twitter',label:'Twitter'},{value:'other',label:'其他'}
+];
+const funcTypeOptions = [
+  {value:'community_post',label:'社区发布'},{value:'material_splice',label:'素材拼接'},
+  {value:'filter_edit',label:'滤镜编辑'},{value:'template_make',label:'模版制作'},
+  {value:'ai_generate',label:'AI生成'},{value:'export_share',label:'导出分享'}
+];
+const contentLevelOptions = [
+  {value:'L0',label:'L0'},{value:'L2',label:'L2'},{value:'L3',label:'L3'}
+];
+
+const userAllColumns = [
+  {key:'date',title:'统计日期',tooltip:'数据所属日期范围'},
+  {key:'country',title:'国家',tooltip:'用户所在国家/地区'},
+  {key:'appType',title:'Apps',tooltip:'应用分类：游戏/社交/工具等'},
+  {key:'channel',title:'投放渠道',tooltip:'用户获取渠道：Google/Apple等'},
+  {key:'userType',title:'用户类型',tooltip:'新用户/老用户'},
+  {key:'memberType',title:'会员类型',tooltip:'非会员/Lite/Pro/Max'},
+  {key:'contentLevel',title:'内容等级',tooltip:'内容分级：L0/L2/L3'},
+  {key:'dau',title:'DAU',tooltip:'日活跃用户数'},
+  {key:'liteRate',title:'Lite会员占比',tooltip:'Lite会员数/总活跃数'},
+  {key:'proRate',title:'Pro会员占比',tooltip:'Pro会员数/总活跃数'},
+  {key:'maxRate',title:'Max会员占比',tooltip:'Max会员数/总活跃数'},
+  {key:'l0ReachRate',title:'L0触达占比',tooltip:'L0等级内容触达用户占比'},
+  {key:'l2ReachRate',title:'L2触达占比',tooltip:'L2等级内容触达用户占比'},
+  {key:'l3ReachRate',title:'L3触达占比',tooltip:'L3等级内容触达用户占比'},
+  {key:'l0MemberConv',title:'L0会员转化率',tooltip:'L0用户→会员转化率'},
+  {key:'l2MemberConv',title:'L2会员转化率',tooltip:'L2用户→会员转化率'},
+  {key:'l3MemberConv',title:'L3会员转化率',tooltip:'L3用户→会员转化率'},
+  {key:'reg0Day',title:'注册0天占比',tooltip:'当天新注册用户占比'},
+  {key:'reg1_3Day',title:'注册1-3天占比',tooltip:'注册1-3天用户占比'},
+  {key:'reg4_7Day',title:'注册4-7天占比',tooltip:'注册4-7天用户占比'},
+  {key:'reg8_30Day',title:'注册8-30天占比',tooltip:'注册8-30天用户占比'},
+  {key:'reg31DayPlus',title:'注册31天+占比',tooltip:'注册31天以上用户占比'},
+  {key:'d1Retention',title:'次留',tooltip:'次日留存率'},
+  {key:'d7Retention',title:'7留',tooltip:'7日留存率'},
+  {key:'d14Retention',title:'14留',tooltip:'14日留存率'},
+  {key:'d30Retention',title:'30留',tooltip:'30日留存率'}
+];
+
+const funcAllColumns = [
+  {key:'date',title:'统计日期',tooltip:'数据所属日期范围'},
+  {key:'country',title:'国家',tooltip:'用户所在国家/地区'},
+  {key:'appType',title:'Apps',tooltip:'应用分类'},
+  {key:'channel',title:'投放渠道',tooltip:'用户获取渠道'},
+  {key:'userType',title:'用户类型',tooltip:'新用户/老用户'},
+  {key:'funcType',title:'功能类型',tooltip:'使用的功能：社区发布/素材拼接等'},
+  {key:'contentLevel',title:'内容等级',tooltip:'内容分级：L0/L2/L3'},
+  {key:'dau',title:'DAU',tooltip:'日活跃用户数'},
+  {key:'makePenetration',title:'模版提交率',tooltip:'使用模版提交功能的用户占比'},
+  {key:'avgUseCount',title:'人均使用次数',tooltip:'人均功能使用次数'},
+  {key:'templateExposure',title:'模版曝光次数',tooltip:'模版被展示的总次数'},
+  {key:'templatePreview',title:'模版预览次数',tooltip:'模版被预览的总次数'},
+  {key:'templateMake',title:'模版制作次数',tooltip:'基于模版制作的总次数'},
+  {key:'previewRate',title:'预览率',tooltip:'预览次数/曝光次数'},
+  {key:'makeRate',title:'制作率',tooltip:'制作次数/预览次数'},
+  {key:'avgPreviewCount',title:'人均预览次数',tooltip:'人均模版预览次数'},
+  {key:'avgMakeCount',title:'人均制作次数',tooltip:'人均模版制作次数'},
+  {key:'clickMakeRate',title:'模版点击制作率',tooltip:'点击制作用户占曝光用户的比例'},
+  {key:'submitMakeRate',title:'模版提交制作率',tooltip:'提交制作用户占点击制作用户的比例'},
+  {key:'makeCompleteRate',title:'模版制作完成率',tooltip:'制作完成用户占提交制作用户的比例'},
+  {key:'clickMakeUsers',title:'模版点击制作人数',tooltip:'点击制作的独立用户数（原子指标）'},
+  {key:'clickMakeCount',title:'模版点击制作次数',tooltip:'点击制作的总次数（原子指标）'},
+  {key:'submitMakeUsers',title:'模版提交制作人数',tooltip:'提交制作的独立用户数（原子指标）'},
+  {key:'submitMakeCount',title:'模版提交制作次数',tooltip:'提交制作的总次数（原子指标）'},
+  {key:'makeCompleteUsers',title:'模版制作完成人数',tooltip:'制作完成的独立用户数（原子指标）'},
+  {key:'makeCompleteCount',title:'模版制作完成次数',tooltip:'制作完成的总次数（原子指标）'},
+  {key:'downloadUsers',title:'模版下载人数',tooltip:'下载模版的独立用户数（原子指标）'},
+  {key:'downloadCount',title:'模版下载次数',tooltip:'下载模版的总次数（原子指标）'},
+  {key:'downloadRate',title:'模版下载率',tooltip:'模版下载率（原子指标）'}
+];
+
+const state = {
+  activeTab: 'user',
+  userFilters: { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], contentLevels:[] },
+  funcFilters: { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], funcTypes:[], userType:'all', contentLevels:[] },
+  userCharts: {},
+  funcCharts: {},
+  userTable: { data:[], page:1, pageSize:20, total:0, visibleColumns:userAllColumns.map(c=>c.key), sortKey:null, sortOrder:null },
+  funcTable: { data:[], page:1, pageSize:20, total:0, visibleColumns:funcAllColumns.map(c=>c.key).filter(function(k){return ['clickMakeUsers','clickMakeCount','submitMakeUsers','submitMakeCount','makeCompleteUsers','makeCompleteCount','downloadUsers','downloadCount'].indexOf(k)===-1}), sortKey:null, sortOrder:null },
+  modalTarget: null,
+  tempColumns: []
+};
+
+function getNested(obj, path) {
+  return path.split('.').reduce(function(o, k) { return o ? o[k] : undefined; }, obj);
+}
+
+function setNested(obj, path, value) {
+  var keys = path.split('.');
+  var last = keys.pop();
+  var target = keys.reduce(function(o, k) { return o[k] = o[k] || {}; }, obj);
+  target[last] = value;
+}
+
+function initMultiSelect(containerId, options, statePath) {
+  var container = document.getElementById(containerId);
+  var tags = container.querySelector('.multi-select-tags');
+  var placeholder = container.querySelector('.multi-select-placeholder');
+  var dropdown = container.querySelector('.multi-select-dropdown');
+
+  dropdown.innerHTML = options.map(function(o) {
+    return '<div class="multi-select-option"><input type="checkbox" value="' + o.value + '"><span>' + o.label + '</span></div>';
+  }).join('');
+
+  function getVal() { return getNested(state, statePath); }
+  function setVal(v) { setNested(state, statePath, v); }
+
+  function render() {
+    var vals = getVal();
+    tags.innerHTML = vals.map(function(v) {
+      var opt = options.find(function(o) { return o.value === v; });
+      return opt ? '<span class="multi-select-tag">' + opt.label + '<span class="remove" data-v="' + v + '">×</span></span>' : '';
+    }).join('');
+    placeholder.style.display = vals.length ? 'none' : 'inline';
+    dropdown.querySelectorAll('input').forEach(function(cb) { cb.checked = vals.indexOf(cb.value) >= 0; });
+  }
+
+  container.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove')) {
+      var v = e.target.getAttribute('data-v');
+      setVal(getVal().filter(function(x) { return x !== v; }));
+      render();
+      triggerFilterChange();
+      return;
+    }
+    dropdown.classList.toggle('show');
+  });
+
+  dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+
+  dropdown.querySelectorAll('input').forEach(function(cb) {
+    cb.addEventListener('change', function(e) {
+      var v = getVal();
+      if (e.target.checked) { if (v.indexOf(e.target.value) < 0) v.push(e.target.value); }
+      else { v = v.filter(function(x) { return x !== e.target.value; }); }
+      setVal(v);
+      render();
+      triggerFilterChange();
+    });
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!container.contains(e.target)) dropdown.classList.remove('show');
+  });
+
+  render();
+}
+
+function initAllMultiSelects() {
+  initMultiSelect('user-country-ms', countryOptions, 'userFilters.countries');
+  initMultiSelect('user-apptype-ms', appTypeOptions, 'userFilters.appTypes');
+  initMultiSelect('user-channel-ms', channelOptions, 'userFilters.channels');
+  initMultiSelect('user-contentlevel-ms', contentLevelOptions, 'userFilters.contentLevels');
+  initMultiSelect('func-country-ms', countryOptions, 'funcFilters.countries');
+  initMultiSelect('func-apptype-ms', appTypeOptions, 'funcFilters.appTypes');
+  initMultiSelect('func-channel-ms', channelOptions, 'funcFilters.channels');
+  initMultiSelect('func-functype-ms', funcTypeOptions, 'funcFilters.funcTypes');
+  initMultiSelect('func-contentlevel-ms', contentLevelOptions, 'funcFilters.contentLevels');
+}
+
+function generateDates() {
+  var dates = [];
+  for (var i = 29; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.push((d.getMonth() + 1) + '/' + d.getDate());
+  }
+  return dates;
+}
+
+function genRetention(base, variance) {
+  return generateDates().map(function() {
+    return +(base + (Math.random() - 0.5) * variance).toFixed(1);
+  });
+}
+
+function renderMemberPie(container) {
+  var chart = echarts.init(container);
+  chart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c}人 ({d}%)' },
+    legend: { bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { fontSize: 12 } },
+    series: [{
+      type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'],
+      avoidLabelOverlap: true,
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 12 },
+      data: [
+        { value: 82624, name: '非会员', itemStyle: { color: '#9ca3af' } },
+        { value: 23120, name: 'Lite会员', itemStyle: { color: '#3b82f6' } },
+        { value: 15680, name: 'Pro会员', itemStyle: { color: '#8b5cf6' } },
+        { value: 7032, name: 'Max会员', itemStyle: { color: '#f59e0b' } }
+      ]
+    }]
+  });
+  return chart;
+}
+
+function renderContentBar(container) {
+  var chart = echarts.init(container);
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { top: 0, itemWidth: 12, itemHeight: 12, textStyle: { fontSize: 12 } },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
+    xAxis: { type: 'category', data: ['L0', 'L2', 'L3'], axisLabel: { fontSize: 12 } },
+    yAxis: [
+      { type: 'value', name: '人数占比(%)', max: 100, axisLabel: { fontSize: 11 } },
+      { type: 'value', name: '会员占比(%)', max: 60, axisLabel: { fontSize: 11 } }
+    ],
+    series: [
+      { name: '触达用户占比', type: 'bar', barWidth: 24, data: [85.2, 62.3, 38.7], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
+      { name: '其中会员占比', type: 'bar', barWidth: 24, yAxisIndex: 1, data: [32.5, 41.8, 52.1], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } }
+    ]
+  });
+  return chart;
+}
+
+function renderRegisterPie(container) {
+  var chart = echarts.init(container);
+  chart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    legend: { bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { fontSize: 12 } },
+    series: [{
+      type: 'pie', radius: ['35%', '65%'], center: ['50%', '45%'],
+      itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 11 },
+      data: [
+        { value: 8, name: '注册0天', itemStyle: { color: '#ef4444' } },
+        { value: 18, name: '注册1-3天', itemStyle: { color: '#f59e0b' } },
+        { value: 22, name: '注册4-7天', itemStyle: { color: '#eab308' } },
+        { value: 32, name: '注册8-30天', itemStyle: { color: '#3b82f6' } },
+        { value: 20, name: '注册31天+', itemStyle: { color: '#10b981' } }
+      ]
+    }]
+  });
+  return chart;
+}
+
+function renderRegisterStack(container) {
+  var chart = echarts.init(container);
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { top: 0, itemWidth: 12, itemHeight: 12, textStyle: { fontSize: 11 } },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '18%', containLabel: true },
+    xAxis: { type: 'category', data: ['L0', 'L2', 'L3'], axisLabel: { fontSize: 12 } },
+    yAxis: { type: 'value', name: '占比(%)', max: 100, axisLabel: { fontSize: 11 } },
+    series: [
+      { name: '注册0天', type: 'bar', stack: 'total', data: [10, 7, 5], itemStyle: { color: '#ef4444' } },
+      { name: '注册1-3天', type: 'bar', stack: 'total', data: [20, 17, 14], itemStyle: { color: '#f59e0b' } },
+      { name: '注册4-7天', type: 'bar', stack: 'total', data: [24, 22, 20], itemStyle: { color: '#eab308' } },
+      { name: '注册8-30天', type: 'bar', stack: 'total', data: [30, 34, 36], itemStyle: { color: '#3b82f6' } },
+      { name: '注册31天+', type: 'bar', stack: 'total', data: [16, 20, 25], itemStyle: { color: '#10b981' } }
+    ]
+  });
+  return chart;
+}
+
+function renderRetentionLine(container) {
+  var chart = echarts.init(container);
+  var dates = generateDates();
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0, itemWidth: 16, itemHeight: 8, textStyle: { fontSize: 12 } },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '12%', containLabel: true },
+    xAxis: { type: 'category', boundaryGap: false, data: dates, axisLabel: { fontSize: 11, interval: 3 } },
+    yAxis: { type: 'value', name: '留存率(%)', axisLabel: { fontSize: 11 } },
+    series: [
+      { name: '次留', type: 'line', smooth: true, data: genRetention(42.5, 3), lineStyle: { width: 2 }, itemStyle: { color: '#3b82f6' }, areaStyle: { opacity: 0.1 } },
+      { name: '7留', type: 'line', smooth: true, data: genRetention(21.3, 2), lineStyle: { width: 2 }, itemStyle: { color: '#10b981' }, areaStyle: { opacity: 0.1 } },
+      { name: '14留', type: 'line', smooth: true, data: genRetention(14.2, 1.5), lineStyle: { width: 2 }, itemStyle: { color: '#f59e0b' }, areaStyle: { opacity: 0.1 } },
+      { name: '30留', type: 'line', smooth: true, data: genRetention(8.6, 1), lineStyle: { width: 2 }, itemStyle: { color: '#8b5cf6' }, areaStyle: { opacity: 0.1 } }
+    ]
+  });
+  return chart;
+}
+
+function renderFuncPenetration(container) {
+  var chart = echarts.init(container);
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: {c}%' },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '5%', containLabel: true },
+    xAxis: { type: 'value', name: '渗透率(%)', max: 50, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'category', data: ['AI生成', '模版制作', '滤镜编辑', '素材拼接', '导出分享', '社区发布'], axisLabel: { fontSize: 12 } },
+    series: [{
+      type: 'bar', barWidth: 18,
+      data: [42.5, 35.8, 28.3, 19.6, 45.2, 12.4],
+      itemStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+          { offset: 0, color: '#93c5fd' }, { offset: 1, color: '#3b82f6' }
+        ]),
+        borderRadius: [0, 4, 4, 0]
+      },
+      label: { show: true, position: 'right', formatter: '{c}%', fontSize: 11 }
+    }]
+  });
+  return chart;
+}
+
+function renderFuncDepth(container) {
+  var chart = echarts.init(container);
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+    xAxis: { type: 'category', data: ['AI生成', '模版制作', '滤镜编辑', '素材拼接', '导出分享'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } },
+    series: [
+      { name: '人均使用次数', type: 'bar', barWidth: 24, data: [5.2, 3.8, 4.5, 2.3, 1.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] }, label: { show: true, position: 'top', fontSize: 11 } }
+    ]
+  });
+  return chart;
+}
+
+function renderTemplateFunnel(container, dimension) {
+  dimension = dimension || 'pv';
+  var chart = echarts.init(container);
+  var pvData = [
+    { value: 100, name: '模版曝光', itemStyle: { color: '#3b82f6' } },
+    { value: 72.5, name: '模版点击制作', itemStyle: { color: '#6366f1' } },
+    { value: 45.3, name: '模版提交制作', itemStyle: { color: '#8b5cf6' } },
+    { value: 28.6, name: '模版制作完成', itemStyle: { color: '#10b981' } },
+    { value: 15.2, name: '模版下载', itemStyle: { color: '#f59e0b' } }
+  ];
+  var uvData = [
+    { value: 100, name: '模版曝光', itemStyle: { color: '#3b82f6' } },
+    { value: 68.2, name: '模版点击制作', itemStyle: { color: '#6366f1' } },
+    { value: 40.1, name: '模版提交制作', itemStyle: { color: '#8b5cf6' } },
+    { value: 24.5, name: '模版制作完成', itemStyle: { color: '#10b981' } },
+    { value: 12.8, name: '模版下载', itemStyle: { color: '#f59e0b' } }
+  ];
+  var data = dimension === 'pv' ? pvData : uvData;
+  var label = dimension === 'pv' ? 'PV（页面浏览量）' : 'UV（独立访客数）';
+  chart.setOption({
+    tooltip: {
+      trigger: 'item',
+      formatter: function(params) { return label + '<br/>' + params.name + ': ' + params.value + '%'; }
+    },
+    title: {
+      text: label,
+      left: 'center',
+      top: 0,
+      textStyle: { fontSize: 13, color: '#374151', fontWeight: 500 }
+    },
+    series: [{
+      type: 'funnel', left: '10%', top: 30, bottom: 20, width: '80%',
+      min: 0, max: 100, minSize: '25%', maxSize: '100%', sort: 'descending', gap: 4,
+      label: { show: true, position: 'inside', formatter: '{b}\n{c}%', fontSize: 12, color: '#fff' },
+      itemStyle: { borderColor: '#fff', borderWidth: 2 },
+      data: data
+    }]
+  });
+  return chart;
+}
+
+function switchFunnelDimension(dim) {
+  state.funnelDimension = dim;
+  document.querySelectorAll('.funnel-tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('data-funnel-dim') === dim);
+  });
+  if (state.funcCharts.templateFunnel) state.funcCharts.templateFunnel.dispose();
+  state.funcCharts.templateFunnel = renderTemplateFunnel(document.getElementById('templateFunnel'), dim);
+}
+
+function renderTemplateTrend(container) {
+  var chart = echarts.init(container);
+  var dates = generateDates();
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0, itemWidth: 12, itemHeight: 12, textStyle: { fontSize: 12 } },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
+    xAxis: { type: 'category', boundaryGap: false, data: dates, axisLabel: { fontSize: 11, interval: 4 } },
+    yAxis: { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } },
+    series: [
+      { name: '人均预览次数', type: 'line', smooth: true, data: genRetention(8.5, 1.2), lineStyle: { width: 2 }, itemStyle: { color: '#3b82f6' }, areaStyle: { opacity: 0.15 } },
+      { name: '人均制作次数', type: 'line', smooth: true, data: genRetention(2.3, 0.5), lineStyle: { width: 2 }, itemStyle: { color: '#10b981' }, areaStyle: { opacity: 0.15 } }
+    ]
+  });
+  return chart;
+}
+
+function renderTemplateLevel(container) {
+  var chart = echarts.init(container);
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { top: 0, itemWidth: 12, itemHeight: 12, textStyle: { fontSize: 12 } },
+    grid: { left: '3%', right: '6%', bottom: '3%', top: '10%', containLabel: true },
+    xAxis: { type: 'category', data: ['L0', 'L2', 'L3'], axisLabel: { fontSize: 13 } },
+    yAxis: [
+      { type: 'value', name: '比率(%)', max: 100, axisLabel: { fontSize: 11 } },
+      { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } }
+    ],
+    series: [
+      { name: '模版预览率', type: 'bar', barWidth: 20, data: [72.5, 65.3, 52.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
+      { name: '模版制作率', type: 'bar', barWidth: 20, data: [22.3, 19.8, 15.2], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } },
+      { name: '人均预览次数', type: 'line', yAxisIndex: 1, data: [9.8, 7.5, 5.2], itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 },
+      { name: '人均制作次数', type: 'line', yAxisIndex: 1, data: [2.8, 2.1, 1.5], itemStyle: { color: '#8b5cf6' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 }
+    ]
+  });
+  return chart;
+}
+
+function generateUserData() {
+  var data = [];
+  var dates = ['2026-07-15','2026-07-16','2026-07-17','2026-07-18','2026-07-19','2026-07-20','2026-07-21'];
+  var countries = ['美国','中国','日本','韩国','英国'];
+  var appTypes = ['游戏','社交','工具'];
+  var channels = ['Google','Apple','Facebook','TikTok'];
+  var userTypes = ['新用户','老用户'];
+  var memberTypes = ['非会员','lite','pro','max'];
+  var contentLevels = ['L0','L2','L3'];
+  var id = 1;
+  dates.forEach(function(date) {
+    countries.forEach(function(country) {
+      appTypes.forEach(function(appType) {
+        channels.forEach(function(channel) {
+          userTypes.forEach(function(userType) {
+            memberTypes.forEach(function(memberType) {
+              contentLevels.forEach(function(contentLevel) {
+                data.push({
+                  key: id++, date: date, country: country, appType: appType, channel: channel,
+                  userType: userType, memberType: memberType, contentLevel: contentLevel,
+                  dau: Math.floor(Math.random()*50000)+10000,
+                  liteRate:(Math.random()*20).toFixed(2)+'%', proRate:(Math.random()*15).toFixed(2)+'%', maxRate:(Math.random()*10).toFixed(2)+'%',
+                  l0ReachRate:(Math.random()*50).toFixed(2)+'%', l2ReachRate:(Math.random()*40).toFixed(2)+'%', l3ReachRate:(Math.random()*30).toFixed(2)+'%',
+                  l0MemberConv:(Math.random()*30).toFixed(2)+'%', l2MemberConv:(Math.random()*40).toFixed(2)+'%', l3MemberConv:(Math.random()*50).toFixed(2)+'%',
+                  reg0Day:(Math.random()*20).toFixed(2)+'%', reg1_3Day:(Math.random()*25).toFixed(2)+'%',
+                  reg4_7Day:(Math.random()*20).toFixed(2)+'%', reg8_30Day:(Math.random()*20).toFixed(2)+'%', reg31DayPlus:(Math.random()*15).toFixed(2)+'%',
+                  d1Retention:(Math.random()*30+20).toFixed(2)+'%', d7Retention:(Math.random()*20+10).toFixed(2)+'%',
+                  d14Retention:(Math.random()*15+5).toFixed(2)+'%', d30Retention:(Math.random()*10+2).toFixed(2)+'%'
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+  return data;
+}
+
+function generateFuncData() {
+  var data = [];
+  var dates = ['2026-07-15','2026-07-16','2026-07-17','2026-07-18','2026-07-19','2026-07-20','2026-07-21'];
+  var countries = ['美国','中国','日本','韩国','英国'];
+  var appTypes = ['游戏','社交','工具'];
+  var channels = ['Google','Apple','Facebook','TikTok'];
+  var userTypes = ['新用户','老用户'];
+  var funcTypes = ['社区发布','素材拼接','滤镜编辑','模版制作','AI生成','导出分享'];
+  var contentLevels = ['L0','L2','L3'];
+  var id = 1;
+  dates.forEach(function(date) {
+    countries.forEach(function(country) {
+      appTypes.forEach(function(appType) {
+        channels.forEach(function(channel) {
+          userTypes.forEach(function(userType) {
+            funcTypes.forEach(function(funcType) {
+              contentLevels.forEach(function(contentLevel) {
+                data.push({
+                  key: id++, date: date, country: country, appType: appType, channel: channel,
+                  userType: userType, funcType: funcType, contentLevel: contentLevel,
+                  dau: Math.floor(Math.random()*50000)+10000,
+                  makePenetration:(Math.random()*50).toFixed(2)+'%', avgUseCount:(Math.random()*10+1).toFixed(2),
+                  templateExposure:Math.floor(Math.random()*100000)+10000,
+                  templatePreview:Math.floor(Math.random()*50000)+5000, templateMake:Math.floor(Math.random()*10000)+1000,
+                  previewRate:(Math.random()*50).toFixed(2)+'%', makeRate:(Math.random()*20).toFixed(2)+'%',
+                  avgPreviewCount:(Math.random()*5+0.5).toFixed(2), avgMakeCount:(Math.random()*2+0.1).toFixed(2),
+                  clickMakeRate:(Math.random()*40+20).toFixed(2)+'%',
+                  submitMakeRate:(Math.random()*30+10).toFixed(2)+'%',
+                  makeCompleteRate:(Math.random()*20+5).toFixed(2)+'%',
+                  clickMakeUsers:Math.floor(Math.random()*20000)+2000,
+                  clickMakeCount:Math.floor(Math.random()*50000)+5000,
+                  submitMakeUsers:Math.floor(Math.random()*10000)+1000,
+                  submitMakeCount:Math.floor(Math.random()*30000)+3000,
+                  makeCompleteUsers:Math.floor(Math.random()*5000)+500,
+                  makeCompleteCount:Math.floor(Math.random()*15000)+1500,
+                  downloadUsers:Math.floor(Math.random()*3000)+300,
+                  downloadCount:Math.floor(Math.random()*8000)+800,
+                  downloadRate:(Math.random()*15+3).toFixed(2)+'%'
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+  return data;
+}
+
+function renderTable(type) {
+  var config = type === 'user'
+    ? { columns: userAllColumns, visible: state.userTable, id: 'user-table', pagId: 'user-pagination' }
+    : { columns: funcAllColumns, visible: state.funcTable, id: 'func-table', pagId: 'func-pagination' };
+
+  var tableData = config.visible.data;
+  var sortedData = tableData.slice();
+
+  if (config.visible.sortKey) {
+    var col = config.columns.find(function(c) { return c.key === config.visible.sortKey; });
+    if (col && col.sortable) {
+      sortedData.sort(function(a, b) {
+        var va = a[config.visible.sortKey], vb = b[config.visible.sortKey];
+        if (typeof va === 'string' && va.indexOf('%') >= 0) { va = parseFloat(va); vb = parseFloat(vb); }
+        return config.visible.sortOrder === 'asc' ? va - vb : vb - va;
+      });
+    }
+  }
+
+  config.visible.total = sortedData.length;
+  var start = (config.visible.page - 1) * config.visible.pageSize;
+  var pageData = sortedData.slice(start, start + config.visible.pageSize);
+  var visibleCols = config.columns.filter(function(c) { return config.visible.visibleColumns.indexOf(c.key) >= 0; });
+
+  var table = document.getElementById(config.id);
+  table.innerHTML = '';
+
+  var thead = document.createElement('thead');
+  var headerRow = document.createElement('tr');
+
+  visibleCols.forEach(function(col) {
+    var th = document.createElement('th');
+    th.textContent = col.title;
+    if (col.tooltip) th.setAttribute('title', col.tooltip);
+    if (col.sortable) {
+      th.classList.add('sortable');
+      if (config.visible.sortKey === col.key) th.classList.add(config.visible.sortOrder);
+      var icon = document.createElement('span');
+      icon.className = 'sort-icon';
+      th.appendChild(icon);
+      th.addEventListener('click', function() {
+        if (config.visible.sortKey === col.key) {
+          config.visible.sortOrder = config.visible.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+          config.visible.sortKey = col.key;
+          config.visible.sortOrder = 'asc';
+        }
+        renderTable(type);
+      });
+    }
+    headerRow.appendChild(th);
+  });
+
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  var tbody = document.createElement('tbody');
+  if (pageData.length === 0) {
+    var tr = document.createElement('tr');
+    var td = document.createElement('td');
+    td.colSpan = visibleCols.length;
+    td.className = 'empty-text';
+    td.textContent = '暂无匹配明细数据';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  } else {
+    pageData.forEach(function(row) {
+      var tr = document.createElement('tr');
+      visibleCols.forEach(function(col) {
+        var td = document.createElement('td');
+        td.textContent = row[col.key];
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+  table.appendChild(tbody);
+
+  renderPagination(type, config);
+}
+
+function renderPagination(type, config) {
+  var pag = document.getElementById(config.pagId);
+  var v = config.visible;
+  var totalPages = Math.ceil(v.total / v.pageSize);
+  pag.innerHTML = '';
+
+  var totalSpan = document.createElement('span');
+  totalSpan.className = 'total';
+  totalSpan.textContent = '共 ' + v.total + ' 条';
+  pag.appendChild(totalSpan);
+
+  var sizeSelect = document.createElement('select');
+  [10, 20, 50].forEach(function(s) {
+    var opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s + '条/页';
+    if (s === v.pageSize) opt.selected = true;
+    sizeSelect.appendChild(opt);
+  });
+  sizeSelect.addEventListener('change', function(e) {
+    v.pageSize = parseInt(e.target.value);
+    v.page = 1;
+    renderTable(type);
+  });
+  pag.appendChild(sizeSelect);
+
+  var prevBtn = document.createElement('button');
+  prevBtn.textContent = '上一页';
+  prevBtn.disabled = v.page <= 1;
+  prevBtn.addEventListener('click', function() { v.page--; renderTable(type); });
+  pag.appendChild(prevBtn);
+
+  var pageSpan = document.createElement('span');
+  pageSpan.textContent = v.page + ' / ' + (totalPages || 1);
+  pag.appendChild(pageSpan);
+
+  var nextBtn = document.createElement('button');
+  nextBtn.textContent = '下一页';
+  nextBtn.disabled = v.page >= totalPages;
+  nextBtn.addEventListener('click', function() { v.page++; renderTable(type); });
+  pag.appendChild(nextBtn);
+}
+
+function generateTableData() {
+  state.userTable.data = generateUserData();
+  state.userTable.total = state.userTable.data.length;
+  state.funcTable.data = generateFuncData();
+  state.funcTable.total = state.funcTable.data.length;
+}
+
+function showColumnModal(type) {
+  state.modalTarget = type;
+  var config = type === 'user'
+    ? { columns: userAllColumns, visible: state.userTable }
+    : { columns: funcAllColumns, visible: state.funcTable };
+  state.tempColumns = config.visible.visibleColumns.slice();
+
+  var body = document.getElementById('column-modal-body');
+  body.innerHTML = config.columns.map(function(col) {
+    return '<label><input type="checkbox" value="' + col.key + '" ' + (state.tempColumns.indexOf(col.key) >= 0 ? 'checked' : '') + '>' + col.title + '</label>';
+  }).join('');
+
+  body.querySelectorAll('input').forEach(function(cb) {
+    cb.addEventListener('change', function(e) {
+      if (e.target.checked) {
+        if (state.tempColumns.indexOf(e.target.value) < 0) state.tempColumns.push(e.target.value);
+      } else {
+        state.tempColumns = state.tempColumns.filter(function(x) { return x !== e.target.value; });
+      }
+    });
+  });
+
+  document.getElementById('column-modal').classList.add('show');
+}
+
+function hideColumnModal() {
+  document.getElementById('column-modal').classList.remove('show');
+}
+
+function applyColumnModal() {
+  if (state.modalTarget === 'user') {
+    state.userTable.visibleColumns = state.tempColumns.slice();
+    renderTable('user');
+  } else {
+    state.funcTable.visibleColumns = state.tempColumns.slice();
+    renderTable('func');
+  }
+  hideColumnModal();
+}
+
+function exportTable(type) {
+  var config = type === 'user'
+    ? { columns: userAllColumns, data: state.userTable.data, name: '用户分层看板' }
+    : { columns: funcAllColumns, data: state.funcTable.data, name: '功能&模版看板' };
+
+  var headers = config.columns.map(function(c) { return c.title; }).join('\t');
+  var rows = config.data.map(function(row) {
+    return config.columns.map(function(c) { return row[c.key] != null ? row[c.key] : ''; }).join('\t');
+  }).join('\n');
+  var content = headers + '\n' + rows;
+
+  var blob = new Blob(['\ufeff' + content], { type: 'application/vnd.ms-excel' });
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.href = url;
+  link.download = 'IAP_' + config.name + '_' + new Date().toISOString().split('T')[0] + '_明细数据.xlsx';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function exportUserTable() { exportTable('user'); }
+function exportFuncTable() { exportTable('func'); }
+
+function loadUserCharts() {
+  ['memberPie','contentBar','registerPie','registerStack','retentionLine'].forEach(function(id) {
+    if (state.userCharts[id]) state.userCharts[id].dispose();
+    state.userCharts[id] = null;
+  });
+  requestAnimationFrame(function() {
+    state.userCharts.memberPie = renderMemberPie(document.getElementById('memberPie'));
+    state.userCharts.contentBar = renderContentBar(document.getElementById('contentBar'));
+    state.userCharts.registerPie = renderRegisterPie(document.getElementById('registerPie'));
+    state.userCharts.registerStack = renderRegisterStack(document.getElementById('registerStack'));
+    state.userCharts.retentionLine = renderRetentionLine(document.getElementById('retentionLine'));
+  });
+}
+
+function loadFuncCharts() {
+  ['funcPenetration','funcDepth','templateFunnel','templateTrend','templateLevel'].forEach(function(id) {
+    if (state.funcCharts[id]) state.funcCharts[id].dispose();
+    state.funcCharts[id] = null;
+  });
+  requestAnimationFrame(function() {
+    state.funcCharts.funcPenetration = renderFuncPenetration(document.getElementById('funcPenetration'));
+    state.funcCharts.funcDepth = renderFuncDepth(document.getElementById('funcDepth'));
+    state.funcCharts.templateFunnel = renderTemplateFunnel(document.getElementById('templateFunnel'));
+    state.funcCharts.templateTrend = renderTemplateTrend(document.getElementById('templateTrend'));
+    state.funcCharts.templateLevel = renderTemplateLevel(document.getElementById('templateLevel'));
+  });
+}
+
+function loadUserAll() {
+  loadUserCharts();
+  renderTable('user');
+}
+
+function loadFuncAll() {
+  loadFuncCharts();
+  renderTable('func');
+}
+
+function resetUserFilters() {
+  document.getElementById('user-date-start').value = '';
+  document.getElementById('user-date-end').value = '';
+  state.userFilters = { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], contentLevels:[] };
+  ['user-country-ms','user-apptype-ms','user-channel-ms','user-contentlevel-ms'].forEach(function(id) {
+    var ms = document.getElementById(id);
+    ms.querySelector('.multi-select-tags').innerHTML = '';
+    ms.querySelector('.multi-select-placeholder').style.display = 'inline';
+    ms.querySelectorAll('input').forEach(function(cb) { cb.checked = false; });
+  });
+  loadUserAll();
+}
+
+function resetFuncFilters() {
+  document.getElementById('func-date-start').value = '';
+  document.getElementById('func-date-end').value = '';
+  state.funcFilters = { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], funcTypes:[], userType:'all', contentLevels:[] };
+  ['func-country-ms','func-apptype-ms','func-channel-ms','func-functype-ms','func-contentlevel-ms'].forEach(function(id) {
+    var ms = document.getElementById(id);
+    ms.querySelector('.multi-select-tags').innerHTML = '';
+    ms.querySelector('.multi-select-placeholder').style.display = 'inline';
+    ms.querySelectorAll('input').forEach(function(cb) { cb.checked = false; });
+  });
+  document.getElementById('func-user-type').value = 'all';
+  loadFuncAll();
+}
+
+function triggerFilterChange() {
+  if (state.activeTab === 'user') loadUserAll();
+  else loadFuncAll();
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.tab === tab); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'user' && !state.userCharts.memberPie) loadUserAll();
+  else if (tab === 'func' && !state.funcCharts.funcPenetration) loadFuncAll();
+  else if (tab === 'user') renderTable('user');
+  else renderTable('func');
+}
+
+function initTabs() {
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.addEventListener('click', function() { switchTab(t.dataset.tab); });
+  });
+}
+
+function initDateFilters() {
+  ['user-date-start','user-date-end','func-date-start','func-date-end'].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.addEventListener('change', function() {
+      var tab = id.startsWith('user') ? 'user' : 'func';
+      if (tab === 'user') {
+        state.userFilters.startDate = document.getElementById('user-date-start').value;
+        state.userFilters.endDate = document.getElementById('user-date-end').value;
+      } else {
+        state.funcFilters.startDate = document.getElementById('func-date-start').value;
+        state.funcFilters.endDate = document.getElementById('func-date-end').value;
+      }
+      triggerFilterChange();
+    });
+  });
+  var userTypeSelect = document.getElementById('func-user-type');
+  userTypeSelect.addEventListener('change', function(e) {
+    state.funcFilters.userType = e.target.value;
+    loadFuncAll();
+  });
+}
+
+function initResize() {
+  window.addEventListener('resize', function() {
+    Object.values(state.userCharts).forEach(function(c) { if (c) c.resize(); });
+    Object.values(state.funcCharts).forEach(function(c) { if (c) c.resize(); });
+  });
+}
+
+function hideAnnotationPanel() {
+  document.getElementById('annotation-panel').style.display = 'none';
+}
+
+function initAnnotationPanel() {
+  var panel = document.getElementById('annotation-panel');
+  var content = document.getElementById('annotation-content');
+
+  document.querySelectorAll('[data-marker]').forEach(function(el) {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var marker = el.getAttribute('data-marker');
+      var id = el.id || '(无ID)';
+      content.textContent = marker;
+      panel.style.display = 'block';
+    });
+  });
+}
+
+function buildAnnotationList() {
+  var list = document.getElementById('annotation-list');
+  var items = [];
+  document.querySelectorAll('[data-marker]').forEach(function(el) {
+    var marker = el.getAttribute('data-marker');
+    var tag = el.tagName.toLowerCase();
+    var id = el.id || '';
+    var key = tag + (id ? '#' + id : '');
+    if (items.indexOf(key + '|' + marker) < 0) {
+      items.push(key + '|' + marker);
+    }
+  });
+  list.innerHTML = items.map(function(item) {
+    var parts = item.split('|');
+    return '<li><code>' + parts[0] + '</code> — ' + parts[1] + '</li>';
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initAllMultiSelects();
+  initTabs();
+  initDateFilters();
+  generateTableData();
+  loadUserAll();
+  initResize();
+  initAnnotationPanel();
+  buildAnnotationList();
+});
+</script>
+</body>
+</html>
