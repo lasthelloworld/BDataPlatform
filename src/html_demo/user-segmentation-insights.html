@@ -148,6 +148,14 @@ th.sortable.desc .sort-icon::before{content:'▼';color:#1890ff}
           <div class="multi-select-dropdown"></div>
         </div>
       </div>
+      <div class="filter-item">
+        <span class="filter-label">会员类型：</span>
+        <div class="multi-select" id="user-membertype-ms" data-marker="用户看板-会员类型多选筛选">
+          <div class="multi-select-tags"></div>
+          <span class="multi-select-placeholder">全部</span>
+          <div class="multi-select-dropdown"></div>
+        </div>
+      </div>
       <div class="filter-actions">
         <button class="btn" onclick="resetUserFilters()" data-marker="重置用户看板所有筛选条件">重置</button>
         <button class="btn btn-primary" onclick="loadUserAll()" data-marker="查询并刷新用户看板所有图表和表格">查询</button>
@@ -383,6 +391,10 @@ const funcTypeOptions = [
 const contentLevelOptions = [
   {value:'L0',label:'L0'},{value:'L2',label:'L2'},{value:'L3',label:'L3'}
 ];
+const memberTypeOptions = [
+  {value:'pro',label:'Pro会员'},{value:'max',label:'Max会员'},
+  {value:'lite',label:'Lite会员'},{value:'none',label:'非会员'}
+];
 
 const userAllColumns = [
   {key:'date',title:'统计日期',tooltip:'数据所属日期范围'},
@@ -390,7 +402,7 @@ const userAllColumns = [
   {key:'appType',title:'Apps',tooltip:'应用分类：游戏/社交/工具等'},
   {key:'channel',title:'投放渠道',tooltip:'用户获取渠道：Google/Apple等'},
   {key:'userType',title:'用户类型',tooltip:'新用户/老用户'},
-  {key:'memberType',title:'会员类型',tooltip:'非会员/Lite/Pro/Max'},
+  {key:'memberType',title:'会员类型',tooltip:'Pro会员/Max会员/Lite会员/非会员'},
   {key:'contentLevel',title:'内容等级',tooltip:'内容分级：L0/L2/L3'},
   {key:'dau',title:'DAU',tooltip:'日活跃用户数'},
   {key:'liteRate',title:'Lite会员占比',tooltip:'Lite会员数/总活跃数'},
@@ -447,7 +459,7 @@ const funcAllColumns = [
 
 const state = {
   activeTab: 'user',
-  userFilters: { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], contentLevels:[] },
+  userFilters: { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], contentLevels:[], memberTypes:[] },
   funcFilters: { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], funcTypes:[], userType:'all', contentLevels:[] },
   userCharts: {},
   funcCharts: {},
@@ -527,6 +539,7 @@ function initAllMultiSelects() {
   initMultiSelect('user-apptype-ms', appTypeOptions, 'userFilters.appTypes');
   initMultiSelect('user-channel-ms', channelOptions, 'userFilters.channels');
   initMultiSelect('user-contentlevel-ms', contentLevelOptions, 'userFilters.contentLevels');
+  initMultiSelect('user-membertype-ms', memberTypeOptions, 'userFilters.memberTypes');
   initMultiSelect('func-country-ms', countryOptions, 'funcFilters.countries');
   initMultiSelect('func-apptype-ms', appTypeOptions, 'funcFilters.appTypes');
   initMultiSelect('func-channel-ms', channelOptions, 'funcFilters.channels');
@@ -780,7 +793,7 @@ function generateUserData() {
   var appTypes = ['游戏','社交','工具'];
   var channels = ['Google','Apple','Facebook','TikTok'];
   var userTypes = ['新用户','老用户'];
-  var memberTypes = ['非会员','lite','pro','max'];
+  var memberTypes = ['pro','max','lite','none'];
   var contentLevels = ['L0','L2','L3'];
   var id = 1;
   dates.forEach(function(date) {
@@ -1098,8 +1111,8 @@ function loadFuncAll() {
 function resetUserFilters() {
   document.getElementById('user-date-start').value = '';
   document.getElementById('user-date-end').value = '';
-  state.userFilters = { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], contentLevels:[] };
-  ['user-country-ms','user-apptype-ms','user-channel-ms','user-contentlevel-ms'].forEach(function(id) {
+  state.userFilters = { startDate:'', endDate:'', countries:[], appTypes:[], channels:[], contentLevels:[], memberTypes:[] };
+  ['user-country-ms','user-apptype-ms','user-channel-ms','user-contentlevel-ms','user-membertype-ms'].forEach(function(id) {
     var ms = document.getElementById(id);
     ms.querySelector('.multi-select-tags').innerHTML = '';
     ms.querySelector('.multi-select-placeholder').style.display = 'inline';

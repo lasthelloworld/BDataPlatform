@@ -42,6 +42,12 @@
             <a-select-option value="L3">L3</a-select-option>
           </a-select>
         </div>
+        <div class="filter-item">
+          <span class="filter-label">会员类型：</span>
+          <a-select v-model:value="globalFilters.memberTypes" mode="multiple" style="width:140px" placeholder="全部" @change="handleGlobalFilterChange">
+            <a-select-option v-for="m in memberTypeOptions" :key="m.value" :value="m.value">{{m.label}}</a-select-option>
+          </a-select>
+        </div>
         <div class="filter-actions">
           <a-button @click="resetGlobalFilters">重置</a-button>
           <a-button type="primary" @click="handleGlobalFilterChange">查询</a-button>
@@ -235,6 +241,12 @@ const channelOptions = [
   {value:'twitter',label:'Twitter'},
   {value:'other',label:'其他'},
 ];
+const memberTypeOptions = [
+  {value:'pro',label:'Pro会员'},
+  {value:'max',label:'Max会员'},
+  {value:'lite',label:'Lite会员'},
+  {value:'none',label:'非会员'},
+];
 const funcTypeOptions = [
   {value:'community_post',label:'社区发布'},
   {value:'material_splice',label:'素材拼接'},
@@ -250,6 +262,7 @@ const globalFilters = reactive({
   appTypes: [] as string[],
   channels: [] as string[],
   contentLevels: [] as string[],
+  memberTypes: [] as string[],
 });
 const funcFilters = reactive({
   funcTypes: [] as string[],
@@ -267,6 +280,7 @@ const resetGlobalFilters = () => {
   globalFilters.appTypes = [];
   globalFilters.channels = [];
   globalFilters.contentLevels = [];
+  globalFilters.memberTypes = [];
   handleGlobalFilterChange();
 };
 const resetFuncFilters = () => {
@@ -357,7 +371,7 @@ const generateUserTableData = () => {
   const appTypes = ['游戏', '社交', '工具'];
   const channels = ['Google', 'Apple', 'Facebook', 'TikTok'];
   const userTypes = ['新用户', '老用户'];
-  const memberTypes = ['非会员', 'lite', 'pro', 'max'];
+  const memberTypes = ['pro', 'max', 'lite', 'none'];
   const contentLevels = ['L0', 'L2', 'L3'];
   let id = 1;
   dates.forEach(date => {
