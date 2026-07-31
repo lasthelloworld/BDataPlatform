@@ -54,6 +54,39 @@ const routes = [
     meta: { title: 'User Segmentation Insights' }
   },
   {
+    path: '/event-monitoring',
+    name: 'EventMonitoring',
+    component: () => import('../views/EventMonitoring/index.vue'),
+    redirect: '/event-monitoring/dashboard',
+    meta: { title: 'Event Monitoring' },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'EventMonitoringDashboard',
+        component: () => import('../views/EventMonitoring/Dashboard.vue'),
+        meta: { title: '监控概览' }
+      },
+      {
+        path: 'rules',
+        name: 'EventMonitoringRules',
+        component: () => import('../views/EventMonitoring/Rules.vue'),
+        meta: { title: '规则管理' }
+      },
+      {
+        path: 'alerts',
+        name: 'EventMonitoringAlerts',
+        component: () => import('../views/EventMonitoring/Alerts.vue'),
+        meta: { title: '告警历史' }
+      },
+      {
+        path: 'fields',
+        name: 'EventMonitoringFields',
+        component: () => import('../views/EventMonitoring/Fields.vue'),
+        meta: { title: '字段管理' }
+      }
+    ]
+  },
+  {
     path: '/system-settings',
     name: 'SystemSettings',
     component: () => import('../App.vue'),

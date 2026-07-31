@@ -8,7 +8,7 @@
       mode="inline"
       :open-keys="openKeys"
       :selected-keys="[activeMenu]"
-      :default-open-keys="['team-report', 'ai-analyses']"
+      :default-open-keys="['team-report', 'ai-analyses', 'event-monitoring']"
       @open-change="handleOpenChange"
       @select="handleSelect"
       class="menu"
@@ -81,6 +81,37 @@
           data-marker="侧边栏菜单-User Segmentation Insights"
         >
           <span>User Segmentation Insights | 用户分层洞察</span>
+        </a-menu-item>
+      </a-sub-menu>
+
+      <a-sub-menu key="event-monitoring" data-marker="侧边栏菜单-Event Monitoring">
+        <template #title>
+          <span class="menu-icon">⚡</span>
+          <span>Event Monitoring</span>
+        </template>
+        <a-menu-item
+          key="event-monitoring/dashboard"
+          data-marker="侧边栏菜单-Event Monitoring Dashboard"
+        >
+          <span>监控概览</span>
+        </a-menu-item>
+        <a-menu-item
+          key="event-monitoring/rules"
+          data-marker="侧边栏菜单-Event Monitoring Rules"
+        >
+          <span>规则管理</span>
+        </a-menu-item>
+        <a-menu-item
+          key="event-monitoring/alerts"
+          data-marker="侧边栏菜单-Event Monitoring Alerts"
+        >
+          <span>告警历史</span>
+        </a-menu-item>
+        <a-menu-item
+          key="event-monitoring/fields"
+          data-marker="侧边栏菜单-Event Monitoring Fields"
+        >
+          <span>字段管理</span>
         </a-menu-item>
       </a-sub-menu>
 

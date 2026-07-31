@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WatchDog · 事件监控预警平台</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:#F8FAFC;color:#1E293B;font-size:14px}
+:root{--primary:#4F46E5;--primary-light:#6366F1;--primary-dark:#4338CA;--danger:#EF4444;--warning:#F59E0B;--success:#10B981;--bg:#F8FAFC;--surface:#FFFFFF;--border:#E2E8F0;--text:#1E293B;--text-secondary:#64748B;--text-muted:#94A3B8}
+.app{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{width:240px;background:#1E293B;color:#CBD5E1;display:flex;flex-direction:column;flex-shrink:0}
+.sidebar .logo{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #334155}
+.sidebar .logo-icon{width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.sidebar .logo-text{font-size:18px;font-weight:700;color:#fff}
+.sidebar .logo-sub{font-size:11px;color:#64748B;margin-top:2px}
+.sidebar .section-title{padding:16px 20px 8px;font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:1px}
+.sidebar .nav-item{padding:10px 20px;cursor:pointer;display:flex;align-items:center;gap:12px;font-size:14px;color:#CBD5E1;border-left:3px solid transparent;transition:all 0.15s}
+.sidebar .nav-item:hover{background:#334155;color:#fff}
+.sidebar .nav-item.active{background:#334155;color:#fff;border-left-color:var(--primary)}
+.sidebar .nav-item .icon{width:18px;text-align:center}
+.sidebar .project-list{padding:0 12px}
+.sidebar .project-item{padding:8px 12px;margin:2px 0;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;color:#94A3B8}
+.sidebar .project-item:hover{background:#334155;color:#fff}
+.sidebar .project-item .status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sidebar .project-item .status.green{background:var(--success)}
+.sidebar .project-item .status.yellow{background:var(--warning)}
+.sidebar .project-item .status.gray{background:#475569}
+.sidebar .project-item.current{background:#334155;color:#fff}
+.sidebar .system-status{margin-top:auto;padding:16px 20px;border-top:1px solid #334155;font-size:12px;color:#64748B;display:flex;align-items:center;justify-content:space-between}
+.sidebar .system-status .indicator{display:flex;align-items:center;gap:6px}
+.sidebar .system-status .dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:60px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px}
+.topbar .breadcrumb{font-size:14px;color:var(--text-secondary)}
+.topbar .breadcrumb .current{color:var(--text);font-weight:500}
+.topbar .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.topbar .search-box{position:relative}
+.topbar .search-box input{width:240px;padding:8px 12px 8px 36px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#F8FAFC;outline:none}
+.topbar .search-box input:focus{border-color:var(--primary);background:#fff}
+.topbar .search-box .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.btn{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:13px;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--primary);color:var(--primary)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-danger:hover{opacity:0.9;color:#fff}
+.btn-ghost{background:transparent;border:none;color:var(--text-secondary)}
+.btn-ghost:hover{background:#F1F5F9;color:var(--text)}
+.btn-sm{padding:4px 10px;font-size:12px}
+
+.content{flex:1;padding:24px;overflow-y:auto}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title{font-size:20px;font-weight:600;color:var(--text)}
+.page-desc{font-size:13px;color:var(--text-secondary);margin-top:4px}
+
+/* Cards */
+.card{background:#fff;border-radius:8px;border:1px solid var(--border);padding:20px}
+.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.kpi-card{background:#fff;border-radius:8px;border:1px solid var(--border);padding:20px;transition:box-shadow 0.2s;cursor:pointer}
+.kpi-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.kpi-card .label{font-size:13px;color:var(--text-secondary);margin-bottom:10px}
+.kpi-card .value{font-size:28px;font-weight:700;color:var(--text)}
+.kpi-card .value .unit{font-size:14px;color:var(--text-secondary);font-weight:400;margin-left:4px}
+.kpi-card .trend{font-size:12px;margin-top:8px;display:flex;align-items:center;gap:4px}
+.kpi-card .trend.up{color:var(--success)}
+.kpi-card .trend.down{color:var(--danger)}
+.kpi-card .trend .badge{background:#FEF2F2;color:var(--danger);padding:2px 8px;border-radius:4px;font-weight:600}
+.kpi-card .trend .badge.warn{background:#FFFBEB;color:var(--warning)}
+.kpi-card .trend .badge.ok{background:#ECFDF5;color:var(--success)}
+.kpi-card .sub{font-size:12px;color:var(--text-secondary);margin-top:6px}
+
+/* Layout grids */
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px}
+.chart-box{background:#fff;border-radius:8px;border:1px solid var(--border);padding:20px}
+.chart{width:100%;height:320px}
+.chart-sm{height:280px}
+
+/* Alert list */
+.alert-list{list-style:none}
+.alert-list .alert-item{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.alert-list .alert-item:last-child{border-bottom:none}
+.alert-list .alert-item .severity{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.alert-list .alert-item .severity.critical{background:var(--danger)}
+.alert-list .alert-item .severity.warning{background:var(--warning)}
+.alert-list .alert-item .severity.info{background:#3B82F6}
+.alert-list .alert-item .alert-info{flex:1;min-width:0}
+.alert-list .alert-item .alert-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alert-list .alert-item .alert-meta{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.alert-list .alert-item .alert-time{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.alert-list .view-all{display:block;text-align:center;padding:12px;color:var(--primary);font-size:13px;cursor:pointer;border-top:1px solid var(--border);margin-top:8px}
+.alert-list .view-all:hover{text-decoration:underline}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.toolbar-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar-right{display:flex;align-items:center;gap:12px}
+.toolbar .search-input{padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;width:220px;outline:none}
+.toolbar .search-input:focus{border-color:var(--primary)}
+.select{padding:7px 30px 7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;outline:none}
+.select:focus{border-color:var(--primary)}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{background:#F8FAFC;padding:12px 14px;text-align:left;font-weight:600;color:var(--text-secondary);border-bottom:1px solid var(--border);white-space:nowrap;font-size:12px}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table tr:hover td{background:#F8FAFC}
+.data-table .toggle{position:relative;width:38px;height:20px;background:#CBD5E1;border-radius:20px;cursor:pointer;transition:background 0.2s}
+.data-table .toggle.on{background:var(--primary)}
+.data-table .toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.data-table .toggle.on::after{transform:translateX(18px)}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.tag-red{background:#FEF2F2;color:var(--danger)}
+.tag-amber{background:#FFFBEB;color:var(--warning)}
+.tag-green{background:#ECFDF5;color:var(--success)}
+.tag-blue{background:#EFF6FF;color:#3B82F6}
+.tag-gray{background:#F1F5F9;color:var(--text-secondary)}
+.tag-indigo{background:#EEF2FF;color:var(--primary)}
+.table-actions{display:flex;gap:6px}
+.table-actions .btn{padding:4px 8px;font-size:12px;border:none;background:transparent}
+.table-actions .btn:hover{background:#F1F5F9}
+.expand-row{cursor:pointer;font-size:11px;color:var(--text-muted);transition:transform 0.2s;display:inline-block;width:14px}
+.expand-row.open{transform:rotate(90deg)}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:16px;font-size:13px;color:var(--text-secondary)}
+.pagination .total{margin-right:auto}
+.pagination button{padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer}
+.pagination button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pagination button:disabled{opacity:0.5;cursor:not-allowed}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.5);display:none;align-items:flex-start;justify-content:center;z-index:1000;padding:24px;overflow-y:auto;backdrop-filter:blur(2px)}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;width:960px;max-width:100%;max-height:calc(100vh - 48px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);margin:auto}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:17px;font-weight:600;color:var(--text)}
+.modal-close{width:28px;height:28px;border:none;background:transparent;cursor:pointer;border-radius:4px;font-size:18px;color:var(--text-muted)}
+.modal-close:hover{background:#F1F5F9}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+/* Form sections */
+.form-section{margin-bottom:24px}
+.form-section-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.form-section-title .dot{width:4px;height:16px;background:var(--primary);border-radius:2px}
+.form-section-sub{background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:6px;font-weight:500}
+.form-group label .required{color:var(--danger);margin-left:2px}
+.form-group input[type="text"],.form-group input[type="number"],.form-group textarea{width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;font-family:inherit}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,0.1)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-group select{width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.form-group .hint{font-size:12px;color:var(--text-muted);margin-top:4px}
+.form-group .inline-options{display:flex;gap:12px;flex-wrap:wrap}
+.form-group .inline-options label{display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer}
+.form-group .inline-options input[type="checkbox"]{width:16px;height:16px;accent-color:var(--primary)}
+
+/* Filter builder */
+.filter-group{border-radius:8px;padding:12px 16px;margin-bottom:10px;position:relative}
+.filter-group.and{background:#EFF6FF;border:1px solid #BFDBFE}
+.filter-group.or{background:#FFF7ED;border:1px solid #FED7AA}
+.filter-group-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.filter-group-title{font-size:12px;font-weight:600;text-transform:uppercase}
+.filter-group.and .filter-group-title{color:#1D4ED8}
+.filter-group.or .filter-group-title{color:#C2410C}
+.filter-group-actions{display:flex;gap:6px}
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.filter-row select,.filter-row input{padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;outline:none}
+.filter-row select{min-width:120px}
+.filter-row .remove-btn{width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);border-radius:4px}
+.filter-row .remove-btn:hover{background:#FEE2E2;color:var(--danger)}
+.filter-group .btn-add{font-size:12px;padding:4px 10px;border:1px dashed var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--text-secondary)}
+.filter-group .btn-add:hover{border-color:var(--primary);color:var(--primary)}
+.filter-group .btn-remove-group{font-size:12px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--danger)}
+
+/* Threshold preview */
+.threshold-preview{background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:12px;font-size:13px;color:#991B1B;margin-top:12px}
+.threshold-preview .label{font-size:11px;color:#B91C1C;margin-bottom:4px;font-weight:600;text-transform:uppercase}
+
+/* Drawer */
+.drawer-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.4);display:none;z-index:900}
+.drawer-overlay.show{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:480px;background:#fff;z-index:901;transform:translateX(100%);transition:transform 0.3s;display:flex;flex-direction:column;box-shadow:-4px 0 16px rgba(0,0,0,0.1)}
+.drawer.show{transform:translateX(0)}
+.drawer-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.drawer-title{font-size:16px;font-weight:600}
+.drawer-body{padding:16px 20px;overflow-y:auto;flex:1}
+.drawer-section{margin-bottom:20px}
+.drawer-section-title{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:8px}
+.drawer .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F1F5F9;font-size:13px}
+.drawer .kv .k{color:var(--text-secondary)}
+.drawer .kv .v{color:var(--text);font-weight:500}
+.drawer-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:24px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 24px;margin-bottom:16px}
+.stats-bar .stat{display:flex;flex-direction:column}
+.stats-bar .stat .val{font-size:22px;font-weight:700}
+.stats-bar .stat .val.red{color:var(--danger)}
+.stats-bar .stat .val.green{color:var(--success)}
+.stats-bar .stat .val.amber{color:var(--warning)}
+.stats-bar .stat-lbl{font-size:12px;color:var(--text-secondary);margin-top:2px}
+
+/* Empty state */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state .icon{font-size:48px;margin-bottom:12px;opacity:0.3}
+.empty-state .text{font-size:14px}
+
+/* Annotation panel */
+.annotation-panel{position:fixed;bottom:24px;right:24px;width:320px;background:#fff;border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,0.12);border-radius:8px;padding:12px;z-index:200;font-size:13px;transition:all 0.3s}
+.annotation-panel .ap-title{font-weight:600;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.annotation-panel .ap-title .close-btn{cursor:pointer;color:var(--text-muted);font-size:16px;font-weight:normal}
+.annotation-panel .ap-content{color:var(--text);line-height:1.5}
+
+/* Footer annotations */
+.footer-annotations{background:#fff;margin:16px 0;padding:16px 20px;border-radius:8px;border:1px solid var(--border)}
+.footer-annotations details{font-size:13px}
+.footer-annotations summary{cursor:pointer;font-weight:600;color:var(--text)}
+.footer-annotations ul{margin-top:8px;padding-left:20px;line-height:1.8}
+.footer-annotations li code{background:#F1F5F9;padding:2px 6px;border-radius:3px;color:var(--danger);font-size:12px}
+
+/* Field management specific */
+.index-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700}
+.index-s{background:#FEF2F2;color:var(--danger)}
+.index-a{background:#FFFBEB;color:var(--warning)}
+.index-b{background:#F1F5F9;color:var(--text-secondary)}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--text-secondary)}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+.sample-tag{display:inline-block;padding:2px 8px;background:#EEF2FF;color:var(--primary);border-radius:4px;font-size:12px;cursor:pointer}
+.sample-tag:hover{background:#E0E7FF}
+
+/* Misc */
+.hidden{display:none!important}
+.badge-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}
+.severity-critical{color:var(--danger)}
+.severity-warning{color:var(--warning)}
+.severity-info{color:#3B82F6}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon" data-marker="WatchDog品牌Logo">⚡</div>
+      <div>
+        <div class="logo-text">WatchDog</div>
+        <div class="logo-sub">事件监控预警平台</div>
+      </div>
+    </div>
+    <div class="section-title" data-marker="主导航菜单">主菜单</div>
+    <div class="nav-item active" data-page="dashboard" data-marker="切换到监控概览页面">
+      <span class="icon">📊</span> 监控概览
+    </div>
+    <div class="nav-item" data-page="rules" data-marker="切换到规则管理页面">
+      <span class="icon">📋</span> 规则管理
+    </div>
+    <div class="nav-item" data-page="alerts" data-marker="切换到告警历史页面">
+      <span class="icon">🔔</span> 告警历史
+    </div>
+    <div class="nav-item" data-page="fields" data-marker="切换到字段管理页面">
+      <span class="icon">🔧</span> 字段管理
+    </div>
+    <div class="section-title">项目组</div>
+    <div class="project-list">
+      <div class="project-item current" data-marker="项目组切换-广告聚合">
+        <span class="status green"></span> 广告聚合
+      </div>
+      <div class="project-item" data-marker="项目组切换-用户增长">
+        <span class="status yellow"></span> 用户增长
+      </div>
+      <div class="project-item" data-marker="项目组切换-内容中台">
+        <span class="status gray"></span> 内容中台
+      </div>
+    </div>
+    <div class="system-status">
+      <div class="indicator"><span class="dot"></span> 系统正常</div>
+      <div>v2.3.1</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb" id="breadcrumb">
+        Event Monitoring / <span class="current">监控概览</span>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box" data-marker="全局搜索框：搜索规则名称/项目组">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜索规则名称 / 项目组..." />
+        </div>
+        <button class="btn btn-primary" onclick="openRuleModal()" data-marker="新建规则按钮">
+          <span>+</span> 新建规则
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Dashboard Page -->
+      <div class="page" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-title">监控概览</div>
+            <div class="page-desc">实时监控事件吞吐量与异常趋势，快速掌握系统运行状态</div>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card" data-marker="监控规则总数KPI卡片">
+            <div class="label">监控规则总数</div>
+            <div class="value">48<span class="unit">条</span></div>
+            <div class="trend up">↑ 本周新增 6 条</div>
+          </div>
+          <div class="kpi-card" data-marker="今日告警数KPI卡片">
+            <div class="label">今日告警数</div>
+            <div class="value">23<span class="unit">条</span></div>
+            <div class="sub"><span class="badge" style="background:#FEF2F2;color:var(--danger)">8 条未处理</span></div>
+          </div>
+          <div class="kpi-card" data-marker="事件吞吐量KPI卡片">
+            <div class="label">事件吞吐量（近1小时）</div>
+            <div class="value">128.6<span class="unit">万</span></div>
+            <div class="trend up">↑ 12.3% vs 昨日同期</div>
+          </div>
+          <div class="kpi-card" data-marker="异常率KPI卡片">
+            <div class="label">异常率（近1小时）</div>
+            <div class="value">2.34<span class="unit">%</span></div>
+            <div class="trend down">↓ 0.52pct vs 昨日</div>
+          </div>
+        </div>
+
+        <!-- Chart + Alerts -->
+        <div class="grid-2-1">
+          <div class="chart-box" style="grid-column:1">
+            <div class="card-title">
+              <span>异常事件趋势（近1小时，每5分钟聚合）</span>
+              <div class="legend">
+                <div class="legend-item"><span class="legend-dot" style="background:var(--primary)"></span>异常事件数</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--danger)"></span>阈值参考线</div>
+              </div>
+            </div>
+            <div id="trendChart" class="chart"></div>
+          </div>
+          <div class="chart-box" style="grid-column:2">
+            <div class="card-title">
+              <span>最新告警</span>
+            </div>
+            <ul class="alert-list" id="latestAlerts"></ul>
+            <a class="view-all" onclick="switchPage('alerts')">查看全部 →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rules Page -->
+      <div class="page hidden" id="page-rules">
+        <div class="page-header">
+          <div>
+            <div class="page-title">规则管理</div>
+            <div class="page-desc">配置和管理所有监控规则，支持启用/停用、编辑、复制和删除</div>
+          </div>
+          <button class="btn btn-primary" onclick="openRuleModal()" data-marker="新建规则按钮-规则管理页">
+            <span>+</span> 新建规则
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <select class="select" id="ruleProjectFilter" data-marker="规则管理-项目组筛选">
+              <option value="">全部项目组</option>
+              <option value="ad">广告聚合</option>
+              <option value="growth">用户增长</option>
+              <option value="content">内容中台</option>
+            </select>
+            <select class="select" id="ruleStatusFilter" data-marker="规则管理-启用状态筛选">
+              <option value="">全部状态</option>
+              <option value="on">已启用</option>
+              <option value="off">已停用</option>
+            </select>
+          </div>
+          <div class="toolbar-right">
+            <input type="text" class="search-input" id="ruleSearch" placeholder="按规则名称搜索..." data-marker="规则管理-规则名称搜索" oninput="renderRulesTable()">
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="data-table" id="rulesTable">
+            <thead>
+              <tr>
+                <th style="width:200px">规则名称</th>
+                <th>项目组</th>
+                <th>计算因子</th>
+                <th>触发条件</th>
+                <th>时间窗口</th>
+                <th>执行频率</th>
+                <th>最近触发</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="rulesTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="rulesPagination"></div>
+      </div>
+
+      <!-- Alerts Page -->
+      <div class="page hidden" id="page-alerts">
+        <div class="page-header">
+          <div>
+            <div class="page-title">告警历史</div>
+            <div class="page-desc">查看所有历史告警记录，支持筛选、标记处理、忽略和导出</div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+          <div class="stat"><div class="val red">156</div><div class="stat-lbl">总告警数</div></div>
+          <div class="stat"><div class="val amber">23</div><div class="stat-lbl">未处理</div></div>
+          <div class="stat"><div class="val green">112</div><div class="stat-lbl">已恢复</div></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <select class="select" data-marker="告警历史-项目组筛选">
+              <option value="">全部项目组</option>
+              <option value="ad">广告聚合</option>
+              <option value="growth">用户增长</option>
+              <option value="content">内容中台</option>
+            </select>
+            <select class="select" data-marker="告警历史-告警状态筛选">
+              <option value="">全部状态</option>
+              <option value="pending">未处理</option>
+              <option value="ignored">已忽略</option>
+              <option value="resolved">已恢复</option>
+            </select>
+            <input type="date" class="select" style="padding:7px 12px" data-marker="告警历史-开始日期">
+            <span style="color:var(--text-muted)">—</span>
+            <input type="date" class="select" style="padding:7px 12px" data-marker="告警历史-结束日期">
+          </div>
+          <div class="toolbar-right">
+            <input type="text" class="search-input" placeholder="按规则名称搜索..." data-marker="告警历史-规则名称搜索">
+            <button class="btn btn-primary" data-marker="告警历史-导出明细">导出明细</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="data-table" id="alertsTable">
+            <thead>
+              <tr>
+                <th style="width:50px"><input type="checkbox" data-marker="全选告警"></th>
+                <th>触发时间</th>
+                <th>规则名称</th>
+                <th>项目组</th>
+                <th>计算值 / 阈值</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="alertsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span class="total">共 156 条</span>
+          <button>上一页</button>
+          <button class="active">1</button>
+          <button>2</button>
+          <button>3</button>
+          <button>下一页</button>
+        </div>
+      </div>
+
+      <!-- Fields Page -->
+      <div class="page hidden" id="page-fields">
+        <div class="page-header">
+          <div>
+            <div class="page-title">字段管理</div>
+            <div class="page-desc">管理标准字段与自定义字段的映射、索引分级（S/A/B）</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn" data-marker="字段管理-从样本探查">从样本探查</button>
+            <button class="btn btn-primary" data-marker="字段管理-添加自定义字段">+ 添加自定义字段</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="data-table" id="fieldsTable">
+            <thead>
+              <tr>
+                <th style="width:220px">字段路径</th>
+                <th>字段名称</th>
+                <th>数据类型</th>
+                <th>索引级别</th>
+                <th>所属项目组</th>
+                <th>最后更新时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="fieldsTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Legend -->
+        <div class="card" style="margin-top:16px">
+          <div class="card-title">索引级别说明</div>
+          <div class="legend" style="flex-wrap:wrap;gap:24px">
+            <div class="legend-item"><span class="index-badge index-s">S</span><span>S级：支持聚合（SUM/AVG）、分组，存入列式存储</span></div>
+            <div class="legend-item"><span class="index-badge index-a">A</span><span>A级：仅支持过滤（WHERE），不支持聚合</span></div>
+            <div class="legend-item"><span class="index-badge index-b">B</span><span>B级：仅用于明细展示，不参与计算</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer annotations -->
+      <div class="footer-annotations">
+        <details>
+          <summary>📌 交互说明</summary>
+          <ul id="footerAnnotationList"></ul>
+        </details>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Rule Modal -->
+<div class="modal-overlay" id="ruleModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="ruleModalTitle">新建规则</div>
+      <button class="modal-close" onclick="closeRuleModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Section 1: Basic Info -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot"></span>基本信息</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>规则名称<span class="required">*</span></label>
+            <input type="text" placeholder="请输入规则名称" data-marker="规则名称输入框" />
+          </div>
+          <div class="form-group">
+            <label>所属项目组<span class="required">*</span></label>
+            <select data-marker="规则所属项目组选择">
+              <option value="">请选择项目组</option>
+              <option value="ad">广告聚合</option>
+              <option value="growth">用户增长</option>
+              <option value="content">内容中台</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>规则描述（可选）</label>
+          <textarea placeholder="描述规则的监控目的和业务背景..."></textarea>
+        </div>
+      </div>
+
+      <!-- Section 2: Execution Plan -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot"></span>执行计划</div>
+        <div class="form-section-sub">
+          <div class="form-row">
+            <div class="form-group">
+              <label>执行频率<span class="required">*</span></label>
+              <select id="execFreq" onchange="onFreqChange()" data-marker="规则执行频率选择">
+                <option value="realtime">实时</option>
+                <option value="5min">每5分钟</option>
+                <option value="hourly">每小时</option>
+                <option value="daily">每日 T+1</option>
+              </select>
+              <div class="hint">选择频率后，系统会自动推荐时间窗口选项</div>
+            </div>
+            <div class="form-group">
+              <label>时间窗口<span class="required">*</span></label>
+              <select id="timeWindow" data-marker="规则时间窗口选择">
+                <option value="realtime">逐条（实时）</option>
+                <option value="5min">最近5分钟</option>
+                <option value="10min">最近10分钟</option>
+                <option value="15min">最近15分钟</option>
+              </select>
+              <div class="hint" id="timeWindowHint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Filter (WHERE) -->
+      <div class="form-section">
+        <div class="form-section-title">
+          <span class="dot"></span>条件过滤器 (WHERE)
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="addFilterRow('filter-root')" data-marker="添加条件按钮">+ 添加条件</button>
+            <button class="btn btn-sm" onclick="addFilterGroup('filter-root')" data-marker="添加条件组按钮">+ 添加条件组</button>
+          </div>
+        </div>
+        <div id="filterContainer"></div>
+      </div>
+
+      <!-- Section 4: Metric -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot"></span>计算因子 (Metric)</div>
+        <div class="form-section-sub">
+          <div class="form-row">
+            <div class="form-group">
+              <label>计算类型<span class="required">*</span></label>
+              <select id="metricType" onchange="onMetricTypeChange()" data-marker="计算类型选择">
+                <option value="agg">聚合值</option>
+                <option value="single">单条值</option>
+                <option value="nullrate">空值率</option>
+                <option value="ratio">占比</option>
+                <option value="sequence">顺序匹配</option>
+                <option value="conversion">转化率</option>
+              </select>
+            </div>
+            <div class="form-group" id="aggFuncGroup">
+              <label>聚合函数</label>
+              <select id="aggFunc" data-marker="聚合函数选择">
+                <option value="count">COUNT</option>
+                <option value="sum">SUM</option>
+                <option value="avg">AVG</option>
+                <option value="max">MAX</option>
+                <option value="min">MIN</option>
+                <option value="count_distinct">COUNT_DISTINCT</option>
+                <option value="p99">P99</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>目标字段</label>
+            <select data-marker="目标字段选择">
+              <option value="params.ecpm">params.ecpm</option>
+              <option value="params.account_id">params.account_id</option>
+              <option value="event_time">event_time</option>
+              <option value="delay">delay（派生字段）</option>
+            </select>
+          </div>
+          <!-- Null rate extra -->
+          <div class="form-group hidden" id="nullrateTargetGroup">
+            <label>指定字段（空值率）</label>
+            <select><option>account_id</option><option>user_id</option></select>
+          </div>
+          <!-- Sequence extra -->
+          <div class="form-group hidden" id="sequenceGroup">
+            <label>事件序列（有序事件ID，逗号分隔）</label>
+            <input type="text" placeholder="如：40601,40602,40605" />
+            <div class="hint">最大允许间隔（分钟）：<input type="number" value="30" style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:4px" /></div>
+          </div>
+          <!-- Conversion extra -->
+          <div class="form-group hidden" id="conversionGroup">
+            <label>步骤事件列表（每行一个事件ID）</label>
+            <textarea placeholder="40601&#10;40602&#10;40603" style="min-height:80px"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Threshold -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot" style="background:var(--danger)"></span>阈值触发</div>
+        <div class="form-section-sub" style="background:#FEF2F2;border-color:#FECACA">
+          <div class="form-row">
+            <div class="form-group">
+              <label>比较操作符</label>
+              <select data-marker="阈值比较操作符选择">
+                <option value=">">大于 (>)</option>
+                <option value="<">小于 (<)</option>
+                <option value=">=">大于等于 (≥)</option>
+                <option value="<=">小于等于 (≤)</option>
+                <option value="=">等于 (=)</option>
+                <option value="!=">不等于 (≠)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>阈值</label>
+              <input type="number" value="0.5" step="0.01" data-marker="阈值输入框" />
+              <div class="hint">根据计算类型，单位可能为：数值 / % / 毫秒</div>
+            </div>
+          </div>
+          <div class="threshold-preview" data-marker="阈值触发实时预览">
+            <div class="label">实时预览</div>
+            当 AVG(params.ecpm) < 0.5 时触发告警
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 6: Alert Actions -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot" style="background:var(--warning)"></span>告警动作</div>
+        <div class="form-section-sub">
+          <div class="form-group">
+            <label>通知渠道</label>
+            <div class="inline-options" data-marker="告警通知渠道复选框">
+              <label><input type="checkbox" checked /> 钉钉</label>
+              <label><input type="checkbox" checked /> 企业微信</label>
+              <label><input type="checkbox" /> 邮件</label>
+              <label><input type="checkbox" /> 飞书</label>
+              <label><input type="checkbox" /> 自定义Webhook</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>接收人</label>
+            <input type="text" placeholder="支持邮箱、手机号、钉钉ID，用逗号分隔" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>静默期（分钟）</label>
+              <input type="number" value="30" data-marker="告警静默期输入框" />
+              <div class="hint">同一规则在静默期内只发送一次告警</div>
+            </div>
+            <div class="form-group">
+              <label>告警收敛</label>
+              <div class="inline-options" style="flex-direction:column;align-items:flex-start">
+                <label><input type="checkbox" checked /> 防抖：连续触发时合并通知</label>
+                <label><input type="checkbox" checked /> 恢复通知：异常恢复后发送"已恢复"通知</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeRuleModal()" data-marker="取消按钮">取消</button>
+      <button class="btn btn-primary" data-marker="保存规则按钮">保存规则</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alert Detail Drawer -->
+<div class="drawer-overlay" id="alertDrawerOverlay" onclick="closeAlertDrawer()"></div>
+<div class="drawer" id="alertDrawer">
+  <div class="drawer-header">
+    <div class="drawer-title" data-marker="告警详情抽屉标题">告警详情</div>
+    <button class="modal-close" onclick="closeAlertDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-section">
+      <div class="drawer-section-title">规则配置快照</div>
+      <div class="kv"><span class="k">规则名称</span><span class="v">Ecpm低值监控</span></div>
+      <div class="kv"><span class="k">计算因子</span><span class="v">AVG(params.ecpm)</span></div>
+      <div class="kv"><span class="k">触发条件</span><span class="v" style="color:var(--danger)">< 0.5</span></div>
+      <div class="kv"><span class="k">执行频率</span><span class="v">每5分钟</span></div>
+      <div class="kv"><span class="k">时间窗口</span><span class="v">最近5分钟</span></div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">触发时的窗口范围</div>
+      <div class="kv"><span class="k">开始时间</span><span class="v">2026-07-31 14:30:00</span></div>
+      <div class="kv"><span class="k">结束时间</span><span class="v">2026-07-31 14:35:00</span></div>
+      <div class="kv"><span class="k">计算值</span><span class="v" style="color:var(--danger)">0.38</span></div>
+      <div class="kv"><span class="k">阈值</span><span class="v">0.5</span></div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">命中数据样本（最多10条）</div>
+      <table class="data-table" style="font-size:12px">
+        <thead>
+          <tr><th>event_id</th><th>user_id</th><th>ecpm</th><th>country</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>40601</td><td>u_10023</td><td>0.21</td><td>US</td></tr>
+          <tr><td>40601</td><td>u_10456</td><td>0.35</td><td>CN</td></tr>
+          <tr><td>40601</td><td>u_10891</td><td>0.18</td><td>JP</td></tr>
+          <tr><td>40601</td><td>u_11205</td><td>0.42</td><td>KR</td></tr>
+          <tr><td>40601</td><td>u_11876</td><td>0.29</td><td>US</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="drawer-footer">
+    <button class="btn" data-marker="告警详情-标记处理">标记处理</button>
+    <button class="btn" data-marker="告警详情-忽略">忽略</button>
+    <button class="btn btn-primary" data-marker="告警详情-导出明细">导出明细 (CSV)</button>
+  </div>
+</div>
+
+<!-- Annotation Panel -->
+<div class="annotation-panel" id="annotationPanel">
+  <div class="ap-title">📌 标注说明 <span class="close-btn" onclick="document.getElementById('annotationPanel').style.display='none'">✕</span></div>
+  <div class="ap-content" id="annotationContent">点击任意带标注的元素，查看需求详情。</div>
+</div>
+
+<script>
+// ============ State ============
+const state = {
+  currentPage: 'dashboard',
+  rules: [],
+  alerts: [],
+  fields: [],
+  filterGroups: {}
+};
+
+const breadcrumbs = {
+  dashboard: 'Event Monitoring / 监控概览',
+  rules: 'Event Monitoring / 规则管理',
+  alerts: 'Event Monitoring / 告警历史',
+  fields: 'Event Monitoring / 字段管理'
+};
+
+// ============ Mock Data ============
+function initRules() {
+  state.rules = [
+    {id:1,name:'Ecpm低值监控',project:'广告聚合',projectKey:'ad',factor:'AVG(params.ecpm)',condition:'< 0.5',window:'最近5分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:35',enabled:true},
+    {id:2,name:'空值率监控',project:'广告聚合',projectKey:'ad',factor:'NULL_RATE(account_id)',condition:'> 5%',window:'昨日全天',freq:'每日 T+1',freqKey:'daily',lastTrigger:'2026-07-31 01:00',enabled:true},
+    {id:3,name:'事件顺序异常',project:'用户增长',projectKey:'growth',factor:'SEQUENCE_MATCH',condition:'实时匹配',window:'逐条',freq:'实时',freqKey:'realtime',lastTrigger:'2026-07-31 14:32',enabled:true},
+    {id:4,name:'DAU骤降监控',project:'用户增长',projectKey:'growth',factor:'COUNT(DISTINCT user_id)',condition:'< 昨日-20%',window:'最近1小时',freq:'每小时',freqKey:'hourly',lastTrigger:'2026-07-31 13:00',enabled:true},
+    {id:5,name:'高延迟告警',project:'内容中台',projectKey:'content',factor:'P99(delay)',condition:'> 5000ms',window:'最近10分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:25',enabled:false},
+    {id:6,name:'转化漏斗异常',project:'广告聚合',projectKey:'ad',factor:'转化率(40601→40605)',condition:'< 10%',window:'最近15分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:30',enabled:true},
+    {id:7,name:'重复事件检测',project:'内容中台',projectKey:'content',factor:'COUNT(event_id)',condition:'> 1000/分钟',window:'逐条',freq:'实时',freqKey:'realtime',lastTrigger:'2026-07-31 14:33',enabled:true},
+    {id:8,name:'用户留存异常',project:'用户增长',projectKey:'growth',factor:'次日留存率',condition:'< 40%',window:'昨日全天',freq:'每日 T+1',freqKey:'daily',lastTrigger:'2026-07-31 01:00',enabled:false}
+  ];
+}
+
+function initAlerts() {
+  const rules = ['Ecpm低值监控','空值率监控','事件顺序异常','DAU骤降监控','转化漏斗异常','高延迟告警'];
+  const projects = ['广告聚合','用户增长','内容中台'];
+  const statuses = [{key:'pending',label:'未处理'},{key:'ignored',label:'已忽略'},{key:'resolved',label:'已恢复'}];
+  const severities = ['critical','warning','info'];
+  state.alerts = [];
+  for (let i = 0; i < 15; i++) {
+    const s = statuses[Math.floor(Math.random()*3)];
+    state.alerts.push({
+      id: i+1,
+      time: `2026-07-31 ${14-Math.floor(i/4)}:${String(60-i*3%60).padStart(2,'0')}:${String(i*7%60).padStart(2,'0')}`,
+      rule: rules[i % rules.length],
+      project: projects[i % projects.length],
+      value: (Math.random()*0.5+0.1).toFixed(2),
+      threshold: (Math.random()*0.3+0.3).toFixed(2),
+      status: s.key,
+      statusLabel: s.label,
+      severity: severities[i % 3]
+    });
+  }
+}
+
+function initFields() {
+  state.fields = [
+    {path:'event_id',name:'事件ID',type:'string',index:'S',projects:['广告聚合','用户增长'],'updated':'2026-07-28'},
+    {path:'user_pseudo_id',name:'用户伪ID',type:'string',index:'S',projects:['广告聚合','用户增长','内容中台'],'updated':'2026-07-28'},
+    {path:'country',name:'国家',type:'string',index:'S',projects:['广告聚合','用户增长'],'updated':'2026-07-25'},
+    {path:'event_time',name:'事件时间',type:'timestamp',index:'S',projects:['全部项目'],'updated':'2026-07-20'},
+    {path:'client_time',name:'客户端时间',type:'timestamp',index:'A',projects:['广告聚合'],'updated':'2026-07-20'},
+    {path:'params.ecpm',name:'eCPM',type:'double',index:'S',projects:['广告聚合'],'updated':'2026-07-30'},
+    {path:'params.account_id',name:'账户ID',type:'string',index:'S',projects:['广告聚合'],'updated':'2026-07-29'},
+    {path:'params.type1',name:'类型1',type:'string',index:'A',projects:['广告聚合','内容中台'],'updated':'2026-07-26'},
+    {path:'params.unit_id',name:'单元ID',type:'string',index:'A',projects:['广告聚合'],'updated':'2026-07-26'},
+    {path:'delay',name:'延迟（派生）',type:'integer',index:'S',projects:['内容中台'],'updated':'2026-07-31'},
+    {path:'params.channel',name:'投放渠道',type:'string',index:'A',projects:['广告聚合'],'updated':'2026-07-22'},
+    {path:'params.campaign_name',name:'活动名称',type:'string',index:'B',projects:['广告聚合'],'updated':'2026-07-22'},
+    {path:'params.device_model',name:'设备型号',type:'string',index:'B',projects:['用户增长'],'updated':'2026-07-18'},
+    {path:'params.app_version',name:'应用版本',type:'string',index:'B',projects:['全部项目'],'updated':'2026-07-18'}
+  ];
+}
+
+// ============ Navigation ============
+function switchPage(page) {
+  state.currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
+  document.querySelectorAll('.page').forEach(el => el.classList.add('hidden'));
+  document.getElementById('page-' + page).classList.remove('hidden');
+  document.getElementById('breadcrumb').innerHTML = breadcrumbs[page];
+  if (page === 'dashboard') renderTrendChart();
+  if (page === 'alerts') renderAlertsTable();
+  if (page === 'fields') renderFieldsTable();
+}
+
+// ============ Dashboard ============
+function renderTrendChart() {
+  const chart = echarts.init(document.getElementById('trendChart'));
+  const times = [];
+  const values = [];
+  for (let i = 0; i < 12; i++) {
+    const m = 30 + i*5;
+    times.push(`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`);
+    values.push(Math.floor(Math.random()*300 + 100));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E2E8F0',textStyle:{color:'#1E293B'}},
+    grid:{left:40,right:20,top:30,bottom:30},
+    xAxis:{type:'category',data:times,axisLine:{lineStyle:{color:'#E2E8F0'}},axisLabel:{color:'#64748B'}},
+    yAxis:{type:'value',splitLine:{lineStyle:{color:'#F1F5F9'}},axisLabel:{color:'#64748B'}},
+    series:[
+      {name:'异常事件数',type:'line',data:values,smooth:true,lineStyle:{color:'#4F46E5',width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(79,70,229,0.3)'},{offset:1,color:'rgba(79,70,229,0.02)'}]}},itemStyle:{color:'#4F46E5'},symbol:'circle',symbolSize:6},
+      {name:'阈值',type:'line',data:Array(12).fill(250),lineStyle:{color:'#EF4444',type:'dashed',width:1.5},itemStyle:{color:'#EF4444'},symbol:'none'}
+    ]
+  });
+}
+
+function renderLatestAlerts() {
+  const container = document.getElementById('latestAlerts');
+  const alerts = [
+    {name:'Ecpm低值监控',time:'2分钟前',project:'广告聚合',severity:'critical'},
+    {name:'事件顺序异常',time:'8分钟前',project:'用户增长',severity:'warning'},
+    {name:'高延迟告警',time:'15分钟前',project:'内容中台',severity:'critical'},
+    {name:'转化漏斗异常',time:'22分钟前',project:'广告聚合',severity:'info'},
+    {name:'重复事件检测',time:'35分钟前',project:'内容中台',severity:'warning'}
+  ];
+  container.innerHTML = alerts.map(a => {
+    const sevIcon = a.severity === 'critical' ? '🔴' : a.severity === 'warning' ? '🟡' : '🔵';
+    return `<li class="alert-item" data-marker="最新告警-${a.name}">
+      <span class="severity ${a.severity}"></span>
+      <div class="alert-info">
+        <div class="alert-name">${a.name}</div>
+        <div class="alert-meta">${a.project} · ${a.time}</div>
+      </div>
+      <div class="alert-time">${a.time}</div>
+    </li>`;
+  }).join('');
+}
+
+// ============ Rules Table ============
+function renderRulesTable() {
+  const tbody = document.getElementById('rulesTableBody');
+  const projectFilter = document.getElementById('ruleProjectFilter').value;
+  const statusFilter = document.getElementById('ruleStatusFilter').value;
+  const search = document.getElementById('ruleSearch').value.toLowerCase();
+
+  let filtered = state.rules.filter(r => {
+    if (projectFilter && r.projectKey !== projectFilter) return false;
+    if (statusFilter === 'on' && !r.enabled) return false;
+    if (statusFilter === 'off' && r.enabled) return false;
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td style="font-weight:500">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="toggle ${r.enabled ? 'on' : ''}" onclick="toggleRule(${r.id})" data-marker="规则启停开关-${r.name}"></div>
+          ${r.name}
+        </div>
+      </td>
+      <td>${r.project}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--primary)">${r.factor}</td>
+      <td>${r.condition}</td>
+      <td>${r.window}</td>
+      <td><span class="tag tag-blue">${r.freq}</span></td>
+      <td style="color:var(--text-secondary)">${r.lastTrigger}</td>
+      <td>
+        <div class="table-actions">
+          <button class="btn" onclick="openRuleModal(${r.id})" data-marker="编辑规则-${r.name}">编辑</button>
+          <button class="btn" data-marker="复制规则-${r.name}">复制</button>
+          <button class="btn" style="color:${r.enabled?'var(--warning)':'var(--success)'}" onclick="toggleRule(${r.id})">${r.enabled?'停用':'启用'}</button>
+          <button class="btn" style="color:var(--danger)" data-marker="删除规则-${r.name}">删除</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function toggleRule(id) {
+  const r = state.rules.find(x => x.id === id);
+  if (r) { r.enabled = !r.enabled; renderRulesTable(); }
+}
+
+// ============ Alerts Table ============
+function renderAlertsTable() {
+  const tbody = document.getElementById('alertsTableBody');
+  const statusTag = {
+    pending: '<span class="tag tag-red">未处理</span>',
+    ignored: '<span class="tag tag-gray">已忽略</span>',
+    resolved: '<span class="tag tag-green">已恢复</span>'
+  };
+  tbody.innerHTML = state.alerts.map(a => `
+    <tr>
+      <td><input type="checkbox"></td>
+      <td style="color:var(--text-secondary)">${a.time}</td>
+      <td style="font-weight:500">${a.rule}</td>
+      <td>${a.project}</td>
+      <td><span style="color:var(--danger);font-weight:600">${a.value}</span> / ${a.threshold}</td>
+      <td>${statusTag[a.status]}</td>
+      <td>
+        <div class="table-actions">
+          <button class="btn" onclick="openAlertDrawer()" data-marker="查看告警详情-${a.rule}">查看详情</button>
+          <button class="btn">标记处理</button>
+          <button class="btn">忽略</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ============ Fields Table ============
+function renderFieldsTable() {
+  const tbody = document.getElementById('fieldsTableBody');
+  const typeTag = {string:'tag-blue',double:'tag-indigo',integer:'tag-amber',timestamp:'tag-red'};
+  const idxTag = {S:'index-s',A:'index-a',B:'index-b'};
+  tbody.innerHTML = state.fields.map(f => `
+    <tr>
+      <td style="font-family:monospace;font-size:13px;color:var(--primary)">${f.path}</td>
+      <td>${f.name}</td>
+      <td><span class="tag ${typeTag[f.type]||'tag-gray'}">${f.type}</span></td>
+      <td><span class="index-badge ${idxTag[f.index]}">${f.index}</span></td>
+      <td style="font-size:12px">${f.projects.map(p=>`<span class="sample-tag" style="margin-right:4px">${p}</span>`).join('')}</td>
+      <td style="color:var(--text-secondary)">${f.updated}</td>
+      <td>
+        <div class="table-actions">
+          <button class="btn">编辑</button>
+          <button class="btn" style="color:var(--danger)">删除</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ============ Rule Modal ============
+function openRuleModal(id) {
+  document.getElementById('ruleModalTitle').textContent = id ? '编辑规则' : '新建规则';
+  document.getElementById('ruleModal').classList.add('show');
+  if (!document.getElementById('filterContainer').innerHTML.trim()) {
+    initFilterBuilder();
+  }
+}
+function closeRuleModal() {
+  document.getElementById('ruleModal').classList.remove('show');
+}
+function onFreqChange() {
+  const freq = document.getElementById('execFreq').value;
+  const window = document.getElementById('timeWindow');
+  const hint = document.getElementById('timeWindowHint');
+  window.innerHTML = '';
+  const options = {
+    realtime: [{v:'realtime',l:'逐条（实时）'}],
+    '5min': [{v:'5min',l:'最近5分钟'},{v:'10min',l:'最近10分钟'},{v:'15min',l:'最近15分钟'}],
+    hourly: [{v:'30min',l:'最近30分钟'},{v:'60min',l:'最近1小时'},{v:'120min',l:'最近2小时'}],
+    daily: [{v:'yesterday',l:'昨日全天（固定）'}]
+  };
+  (options[freq]||[]).forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.v; opt.textContent = o.l;
+    window.appendChild(opt);
+  });
+  if (freq === 'daily') hint.textContent = '计算时间：每日凌晨 01:00';
+  else hint.textContent = '';
+}
+function onMetricTypeChange() {
+  const type = document.getElementById('metricType').value;
+  document.getElementById('aggFuncGroup').style.display = type === 'agg' ? '' : 'none';
+  document.getElementById('nullrateTargetGroup').classList.toggle('hidden', type !== 'nullrate');
+  document.getElementById('sequenceGroup').classList.toggle('hidden', type !== 'sequence');
+  document.getElementById('conversionGroup').classList.toggle('hidden', type !== 'conversion');
+}
+
+// ============ Filter Builder ============
+function initFilterBuilder() {
+  const container = document.getElementById('filterContainer');
+  container.innerHTML = '';
+  const root = createFilterGroup('and', 'filter-root');
+  container.appendChild(root);
+  addFilterRow('filter-root');
+}
+
+function createFilterGroup(type, id) {
+  const group = document.createElement('div');
+  group.className = `filter-group ${type}`;
+  group.id = id;
+  const fields = ['event_id','user_pseudo_id','country','params.ecpm','params.account_id','event_time','delay'];
+  const ops = ['=','!=','>','<','>=','<=','IN','LIKE'];
+  group.innerHTML = `
+    <div class="filter-group-header">
+      <select class="filter-group-title" onchange="this.parentNode.parentNode.className='filter-group '+this.value">
+        <option value="and" ${type==='and'?'selected':''}>AND（全部满足）</option>
+        <option value="or" ${type==='or'?'selected':''}>OR（任一满足）</option>
+      </select>
+      <div class="filter-group-actions">
+        <button class="btn-add" onclick="addFilterRow('${id}')">+ 条件</button>
+        <button class="btn-add" onclick="addFilterGroup('${id}')">+ 组</button>
+        <button class="btn-remove-group" onclick="this.parentNode.parentNode.remove()">删除组</button>
+      </div>
+    </div>
+    <div class="filter-rows"></div>
+    <div style="margin-top:8px;display:flex;gap:6px">
+      <button class="btn-add" onclick="addFilterRow('${id}')">+ 添加条件</button>
+      <button class="btn-add" onclick="addFilterGroup('${id}')">+ 添加条件组</button>
+    </div>
+  `;
+  return group;
+}
+
+function addFilterRow(groupId) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  const rowsContainer = group.querySelector('.filter-rows');
+  const row = document.createElement('div');
+  row.className = 'filter-row';
+  const fields = [['event_id','事件ID'],['user_pseudo_id','用户伪ID'],['country','国家'],['params.ecpm','eCPM'],['params.account_id','账户ID'],['event_time','事件时间'],['delay','延迟(ms)']];
+  const ops = [['=','等于'],['!=','不等于'],['>','大于'],['<','小于'],['>=','大于等于'],['<=','小于等于'],['IN','属于'],['LIKE','模糊匹配']];
+  row.innerHTML = `
+    <select>${fields.map(f=>`<option value="${f[0]}">${f[1]}</option>`).join('')}</select>
+    <select>${ops.map(o=>`<option value="${o[0]}">${o[0]}</option>`).join('')}</select>
+    <input type="text" placeholder="输入值..." style="flex:1;min-width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;outline:none">
+    <button class="remove-btn" onclick="this.parentNode.remove()" data-marker="删除条件行">✕</button>
+  `;
+  rowsContainer.appendChild(row);
+}
+
+function addFilterGroup(parentId) {
+  const parent = document.getElementById(parentId);
+  if (!parent) return;
+  const group = createFilterGroup('or', 'fg-' + Date.now());
+  const rowsContainer = parent.querySelector('.filter-rows');
+  rowsContainer.appendChild(group);
+  addFilterRow(group.id);
+}
+
+// ============ Alert Drawer ============
+function openAlertDrawer() {
+  document.getElementById('alertDrawer').classList.add('show');
+  document.getElementById('alertDrawerOverlay').classList.add('show');
+}
+function closeAlertDrawer() {
+  document.getElementById('alertDrawer').classList.remove('show');
+  document.getElementById('alertDrawerOverlay').classList.remove('show');
+}
+
+// ============ Annotations ============
+function initAnnotations() {
+  const panels = document.querySelectorAll('[data-marker]');
+  const list = document.getElementById('footerAnnotationList');
+  const items = [];
+  panels.forEach(el => {
+    const marker = el.getAttribute('data-marker');
+    if (marker) {
+      el.addEventListener('click', (e) => {
+        const ap = document.getElementById('annotationPanel');
+        document.getElementById('annotationContent').textContent = marker;
+        ap.style.display = 'block';
+        e.stopPropagation();
+      });
+      items.push(marker);
+    }
+  });
+  list.innerHTML = items.map((m,i) => `<li><code>${i+1}</code> ${m}</li>`).join('');
+}
+
+// ============ Init ============
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => switchPage(el.dataset.page));
+});
+
+window.addEventListener('load', () => {
+  initRules();
+  initAlerts();
+  initFields();
+  switchPage('dashboard');
+  renderLatestAlerts();
+  initAnnotations();
+});
+
+window.addEventListener('resize', () => {
+  if (state.currentPage === 'dashboard') {
+    const chart = echarts.getInstanceByDom(document.getElementById('trendChart'));
+    if (chart) chart.resize();
+  }
+});
+</script>
+</body>
+</html>
