@@ -161,13 +161,13 @@
       </div>
       <div class="kpi">
         <div class="kpi-card"><div>DAU</div><div class="val">128,456</div><div class="up">↑ 5.2%</div></div>
-        <div class="kpi-card"><div>模版提交率</div><div class="val">28.5%</div><div class="up">↑ 2.3pct</div></div>
         <div class="kpi-card"><div>人均使用次数</div><div class="val">3.6次</div><div class="up">↑ 0.4次</div></div>
-        <div class="kpi-card"><div>模版预览率</div><div class="val">65.2%</div><div class="up">↑ 4.1pct</div></div>
-        <div class="kpi-card"><div>模版转化率</div><div class="val">18.7%</div><div class="down">↓ 0.8pct</div></div>
+        <div class="kpi-card"><div>模板曝光率</div><div class="val">65.2%</div><div class="up">↑ 4.1pct</div></div>
+        <div class="kpi-card"><div>模版提交制作率</div><div class="val">28.5%</div><div class="up">↑ 2.3pct</div></div>
+        <div class="kpi-card"><div>模版提交成功率</div><div class="val">18.7%</div><div class="down">↓ 0.8pct</div></div>
       </div>
       <div class="grid">
-        <div class="card"><div class="title">各功能渗透率对比</div><div ref="funcPenetration" class="chart"></div></div>
+        <div class="card"><div class="title">各功能制作率对比</div><div ref="funcPenetration" class="chart"></div></div>
         <div class="card"><div class="title">人均使用次数</div><div ref="funcDepth" class="chart"></div></div>
       </div>
       <div class="grid">
@@ -332,12 +332,12 @@ const userAllColumns = [
   {key:'liteRate',title:'Lite会员占比'},
   {key:'proRate',title:'Pro会员占比'},
   {key:'maxRate',title:'Max会员占比'},
-  {key:'l0ReachRate',title:'L0触达占比'},
-  {key:'l2ReachRate',title:'L2触达占比'},
-  {key:'l3ReachRate',title:'L3触达占比'},
-  {key:'l0MemberConv',title:'L0会员转化率'},
-  {key:'l2MemberConv',title:'L2会员转化率'},
-  {key:'l3MemberConv',title:'L3会员转化率'},
+  {key:'l0ReachRate',title:'L0用户触达率'},
+  {key:'l2ReachRate',title:'L2用户触达率'},
+  {key:'l3ReachRate',title:'L3用户触达率'},
+  {key:'l0MemberConv',title:'L0会员触达率'},
+  {key:'l2MemberConv',title:'L2会员触达率'},
+  {key:'l3MemberConv',title:'L3会员触达率'},
   {key:'reg0Day',title:'注册0天占比'},
   {key:'reg1_3Day',title:'注册1-3天占比'},
   {key:'reg4_7Day',title:'注册4-7天占比'},
@@ -454,17 +454,17 @@ const funcAllColumns = [
   {key:'funcType',title:'功能类型'},
   {key:'contentLevel',title:'内容等级'},
   {key:'dau',title:'DAU',defaultSortOrder:'descend'},
-  {key:'makePenetration',title:'模版提交率'},
   {key:'avgUseCount',title:'人均使用次数'},
   {key:'templateExposure',title:'模版曝光次数'},
   {key:'templatePreview',title:'模版预览次数'},
   {key:'templateMake',title:'模版制作次数'},
-  {key:'previewRate',title:'预览率'},
-  {key:'makeRate',title:'制作率'},
+  {key:'previewRate',title:'模版曝光率'},
+  {key:'makeRate',title:'模版提交成功率'},
   {key:'avgPreviewCount',title:'人均预览次数'},
   {key:'avgMakeCount',title:'人均制作次数'},
   {key:'clickMakeRate',title:'模版点击制作率'},
   {key:'submitMakeRate',title:'模版提交制作率'},
+  {key:'makePenetration',title:'模版提交成功率'},
   {key:'makeCompleteRate',title:'模版制作完成率'},
   {key:'clickMakeUsers',title:'模版点击制作人数'},
   {key:'clickMakeCount',title:'模版点击制作次数'},

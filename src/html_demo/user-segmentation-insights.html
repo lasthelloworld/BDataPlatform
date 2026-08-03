@@ -177,7 +177,7 @@ th.sortable.desc .sort-icon::before{content:'▼';color:#1890ff}
       </div>
       <div class="card">
         <div class="title">内容等级分层</div>
-        <div id="contentBar" class="chart" data-marker="内容等级分层柱状图，展示L0/L2/L3触达用户占比和会员占比"></div>
+        <div id="contentBar" class="chart" data-marker="内容等级分层柱状图，展示L0/L2/L3用户触达率和会员占比"></div>
       </div>
     </div>
 
@@ -281,16 +281,16 @@ th.sortable.desc .sort-icon::before{content:'▼';color:#1890ff}
 
     <div class="kpi">
       <div class="kpi-card" data-marker="DAU指标卡片"><div>DAU</div><div class="val">128,456</div><div class="up">↑ 5.2%</div></div>
-      <div class="kpi-card" data-marker="模版提交率指标卡片"><div>模版提交率</div><div class="val">28.5%</div><div class="up">↑ 2.3pct</div></div>
       <div class="kpi-card" data-marker="人均使用次数指标卡片"><div>人均使用次数</div><div class="val">3.6次</div><div class="up">↑ 0.4次</div></div>
-      <div class="kpi-card" data-marker="模版预览率指标卡片"><div>模版预览率</div><div class="val">65.2%</div><div class="up">↑ 4.1pct</div></div>
-      <div class="kpi-card" data-marker="模版转化率指标卡片"><div>模版转化率</div><div class="val">18.7%</div><div class="down">↓ 0.8pct</div></div>
+      <div class="kpi-card" data-marker="模板曝光率指标卡片"><div>模板曝光率</div><div class="val">65.2%</div><div class="up">↑ 4.1pct</div></div>
+      <div class="kpi-card" data-marker="模版提交制作率指标卡片"><div>模版提交制作率</div><div class="val">28.5%</div><div class="up">↑ 2.3pct</div></div>
+      <div class="kpi-card" data-marker="模版提交成功率指标卡片"><div>模版提交成功率</div><div class="val">18.7%</div><div class="down">↓ 0.8pct</div></div>
     </div>
 
     <div class="grid">
       <div class="card">
-        <div class="title">各功能渗透率对比</div>
-        <div id="funcPenetration" class="chart" data-marker="各功能渗透率横向柱状图"></div>
+        <div class="title">各功能制作率对比</div>
+        <div id="funcPenetration" class="chart" data-marker="各功能制作率横向柱状图"></div>
       </div>
       <div class="card">
         <div class="title">人均使用次数</div>
@@ -408,12 +408,12 @@ const userAllColumns = [
   {key:'liteRate',title:'Lite会员占比',tooltip:'Lite会员数/总活跃数'},
   {key:'proRate',title:'Pro会员占比',tooltip:'Pro会员数/总活跃数'},
   {key:'maxRate',title:'Max会员占比',tooltip:'Max会员数/总活跃数'},
-  {key:'l0ReachRate',title:'L0触达占比',tooltip:'L0等级内容触达用户占比'},
-  {key:'l2ReachRate',title:'L2触达占比',tooltip:'L2等级内容触达用户占比'},
-  {key:'l3ReachRate',title:'L3触达占比',tooltip:'L3等级内容触达用户占比'},
-  {key:'l0MemberConv',title:'L0会员转化率',tooltip:'L0用户→会员转化率'},
-  {key:'l2MemberConv',title:'L2会员转化率',tooltip:'L2用户→会员转化率'},
-  {key:'l3MemberConv',title:'L3会员转化率',tooltip:'L3用户→会员转化率'},
+  {key:'l0ReachRate',title:'L0用户触达率',tooltip:'L0等级内容用户触达率'},
+  {key:'l2ReachRate',title:'L2用户触达率',tooltip:'L2等级内容用户触达率'},
+  {key:'l3ReachRate',title:'L3用户触达率',tooltip:'L3等级内容用户触达率'},
+  {key:'l0MemberConv',title:'L0会员触达率',tooltip:'L0用户→会员触达率'},
+  {key:'l2MemberConv',title:'L2会员触达率',tooltip:'L2用户→会员触达率'},
+  {key:'l3MemberConv',title:'L3会员触达率',tooltip:'L3用户→会员触达率'},
   {key:'reg0Day',title:'注册0天占比',tooltip:'当天新注册用户占比'},
   {key:'reg1_3Day',title:'注册1-3天占比',tooltip:'注册1-3天用户占比'},
   {key:'reg4_7Day',title:'注册4-7天占比',tooltip:'注册4-7天用户占比'},
@@ -434,17 +434,17 @@ const funcAllColumns = [
   {key:'funcType',title:'功能类型',tooltip:'使用的功能：社区发布/素材拼接等'},
   {key:'contentLevel',title:'内容等级',tooltip:'内容分级：L0/L2/L3'},
   {key:'dau',title:'DAU',tooltip:'日活跃用户数'},
-  {key:'makePenetration',title:'模版提交率',tooltip:'使用模版提交功能的用户占比'},
   {key:'avgUseCount',title:'人均使用次数',tooltip:'人均功能使用次数'},
   {key:'templateExposure',title:'模版曝光次数',tooltip:'模版被展示的总次数'},
   {key:'templatePreview',title:'模版预览次数',tooltip:'模版被预览的总次数'},
   {key:'templateMake',title:'模版制作次数',tooltip:'基于模版制作的总次数'},
-  {key:'previewRate',title:'预览率',tooltip:'预览次数/曝光次数'},
-  {key:'makeRate',title:'制作率',tooltip:'制作次数/预览次数'},
+  {key:'previewRate',title:'模版曝光率',tooltip:'预览次数/曝光次数'},
+  {key:'makeRate',title:'模版提交成功率',tooltip:'制作次数/预览次数'},
   {key:'avgPreviewCount',title:'人均预览次数',tooltip:'人均模版预览次数'},
   {key:'avgMakeCount',title:'人均制作次数',tooltip:'人均模版制作次数'},
   {key:'clickMakeRate',title:'模版点击制作率',tooltip:'点击制作用户占曝光用户的比例'},
   {key:'submitMakeRate',title:'模版提交制作率',tooltip:'提交制作用户占点击制作用户的比例'},
+  {key:'makePenetration',title:'模版提交成功率',tooltip:'使用模版提交功能的用户占比'},
   {key:'makeCompleteRate',title:'模版制作完成率',tooltip:'制作完成用户占提交制作用户的比例'},
   {key:'clickMakeUsers',title:'模版点击制作人数',tooltip:'点击制作的独立用户数（原子指标）'},
   {key:'clickMakeCount',title:'模版点击制作次数',tooltip:'点击制作的总次数（原子指标）'},
@@ -596,8 +596,8 @@ function renderContentBar(container) {
       { type: 'value', name: '会员占比(%)', max: 60, axisLabel: { fontSize: 11 } }
     ],
     series: [
-      { name: '触达用户占比', type: 'bar', barWidth: 24, data: [85.2, 62.3, 38.7], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
-      { name: '其中会员占比', type: 'bar', barWidth: 24, yAxisIndex: 1, data: [32.5, 41.8, 52.1], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } }
+      { name: 'Lx用户触达率', type: 'bar', barWidth: 24, data: [85.2, 62.3, 38.7], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
+      { name: '会员触达率', type: 'bar', barWidth: 24, yAxisIndex: 1, data: [32.5, 41.8, 52.1], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } }
     ]
   });
   return chart;
@@ -777,8 +777,8 @@ function renderTemplateLevel(container) {
       { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } }
     ],
     series: [
-      { name: '模版预览率', type: 'bar', barWidth: 20, data: [72.5, 65.3, 52.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
-      { name: '模版制作率', type: 'bar', barWidth: 20, data: [22.3, 19.8, 15.2], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } },
+      { name: '模板曝光率', type: 'bar', barWidth: 20, data: [72.5, 65.3, 52.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
+      { name: '模版提交成功率', type: 'bar', barWidth: 20, data: [22.3, 19.8, 15.2], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } },
       { name: '人均预览次数', type: 'line', yAxisIndex: 1, data: [9.8, 7.5, 5.2], itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 },
       { name: '人均制作次数', type: 'line', yAxisIndex: 1, data: [2.8, 2.1, 1.5], itemStyle: { color: '#8b5cf6' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 }
     ]

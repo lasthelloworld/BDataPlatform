@@ -54,8 +54,8 @@ export const renderContentBar = (container: HTMLElement) => {
       { type: 'value', name: '会员占比(%)', max: 60, axisLabel: { fontSize: 11 } }
     ],
     series: [
-      { name: '触达用户占比', type: 'bar', barWidth: 24, data: [85.2, 62.3, 38.7], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
-      { name: '其中会员占比', type: 'bar', barWidth: 24, yAxisIndex: 1, data: [32.5, 41.8, 52.1], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } }
+      { name: 'Lx用户触达率', type: 'bar', barWidth: 24, data: [85.2, 62.3, 38.7], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
+      { name: '会员触达率', type: 'bar', barWidth: 24, yAxisIndex: 1, data: [32.5, 41.8, 52.1], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } }
     ]
   };
   chart.setOption(option);
@@ -246,8 +246,8 @@ export const renderTemplateLevel = (container: HTMLElement) => {
       { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } }
     ],
     series: [
-      { name: '模版预览率', type: 'bar', barWidth: 20, data: [72.5, 65.3, 52.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
-      { name: '模版制作率', type: 'bar', barWidth: 20, data: [22.3, 19.8, 15.2], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } },
+      { name: '模板曝光率', type: 'bar', barWidth: 20, data: [72.5, 65.3, 52.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
+      { name: '模版提交成功率', type: 'bar', barWidth: 20, data: [22.3, 19.8, 15.2], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } },
       { name: '人均预览次数', type: 'line', yAxisIndex: 1, data: [9.8, 7.5, 5.2], itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 },
       { name: '人均制作次数', type: 'line', yAxisIndex: 1, data: [2.8, 2.1, 1.5], itemStyle: { color: '#8b5cf6' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 }
     ]
