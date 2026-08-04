@@ -167,8 +167,8 @@
         <div class="kpi-card"><div>模版提交成功率</div><div class="val">18.7%</div><div class="down">↓ 0.8pct</div></div>
       </div>
       <div class="grid">
-        <div class="card"><div class="title">各功能制作率对比</div><div ref="funcPenetration" class="chart"></div></div>
-        <div class="card"><div class="title">人均使用次数</div><div ref="funcDepth" class="chart"></div></div>
+        <div class="card"><div class="title">功能类型制作率Top5</div><div ref="funcPenetration" class="chart"></div></div>
+        <div class="card"><div class="title">功能类型人均使用次数Top5</div><div ref="funcDepth" class="chart"></div></div>
       </div>
       <div class="grid">
         <div class="card">
