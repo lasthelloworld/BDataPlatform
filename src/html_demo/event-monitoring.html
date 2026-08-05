@@ -263,7 +263,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
     </div>
     <div class="section-title" data-marker="主导航菜单">主菜单</div>
     <div class="nav-item active" data-page="dashboard" data-marker="切换到监控概览页面">
-      <span class="icon">📊</span> 监控概览
+      <span class="icon">📊</span> 监控概览-暂无
     </div>
     <div class="nav-item" data-page="rules" data-marker="切换到规则管理页面">
       <span class="icon">📋</span> 规则管理
@@ -272,7 +272,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
       <span class="icon">🔔</span> 告警历史
     </div>
     <div class="nav-item" data-page="fields" data-marker="切换到字段管理页面">
-      <span class="icon">🔧</span> 字段管理
+      <span class="icon">🔧</span> 字段管理-暂无
     </div>
     <div class="section-title">项目组</div>
     <div class="project-list">
@@ -297,7 +297,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
     <!-- Topbar -->
     <div class="topbar">
       <div class="breadcrumb" id="breadcrumb">
-        Event Monitoring / <span class="current">监控概览</span>
+        Event Monitoring / <span class="current">监控概览-暂无</span>
       </div>
       <div class="topbar-right">
         <div class="search-box" data-marker="全局搜索框：搜索规则名称/项目组">
@@ -316,7 +316,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
       <div class="page" id="page-dashboard">
         <div class="page-header">
           <div>
-            <div class="page-title">监控概览</div>
+            <div class="page-title">监控概览-暂无</div>
             <div class="page-desc">实时监控事件吞吐量与异常趋势，快速掌握系统运行状态</div>
           </div>
         </div>
@@ -489,7 +489,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
       <div class="page hidden" id="page-fields">
         <div class="page-header">
           <div>
-            <div class="page-title">字段管理</div>
+            <div class="page-title">字段管理-暂无</div>
             <div class="page-desc">管理标准字段与自定义字段的映射、索引分级（S/A/B）</div>
           </div>
           <div style="display:flex;gap:10px">
@@ -569,7 +569,62 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
         </div>
       </div>
 
-      <!-- Section 2: Execution Plan -->
+      <!-- Section 2: Rule Dimension -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot"></span>规则维度</div>
+        <div class="form-section-sub">
+          <div class="form-row">
+            <div class="form-group">
+              <label>App<span class="required">*</span></label>
+              <select data-marker="规则维度-App单选">
+                <option value="">请选择App</option>
+                <option value="recover1">Phone Recover1</option>
+                <option value="recover2">Phone Recover2</option>
+                <option value="recover3">Phone Recover3</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>国家</label>
+              <select multiple size="4" data-marker="规则维度-国家多选">
+                <option value="us">美国</option>
+                <option value="jp">日本</option>
+                <option value="kr">韩国</option>
+                <option value="gb">英国</option>
+                <option value="de">德国</option>
+                <option value="fr">法国</option>
+                <option value="br">巴西</option>
+                <option value="id">印尼</option>
+              </select>
+              <div class="hint">按住 Ctrl/Cmd 进行多选</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>产品版本<span class="required">*</span></label>
+              <select data-marker="规则维度-产品版本单选">
+                <option value="">请选择产品版本</option>
+                <option value="v1.0">v1.0</option>
+                <option value="v2.0">v2.0</option>
+                <option value="v3.0">v3.0</option>
+                <option value="v4.0">v4.0</option>
+                <option value="latest">最新版本</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>投放渠道<span class="required">*</span></label>
+              <select data-marker="规则维度-投放渠道单选">
+                <option value="">请选择投放渠道</option>
+                <option value="organic">自然流量</option>
+                <option value="paid">付费投放</option>
+                <option value="cross">交叉推广</option>
+                <option value="partner">合作伙伴</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Execution Plan -->
       <div class="form-section">
         <div class="form-section-title"><span class="dot"></span>执行计划</div>
         <div class="form-section-sub">
@@ -598,7 +653,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
         </div>
       </div>
 
-      <!-- Section 3: Filter (WHERE) -->
+      <!-- Section 4: Filter (WHERE) -->
       <div class="form-section">
         <div class="form-section-title">
           <span class="dot"></span>条件过滤器 (WHERE)
@@ -610,7 +665,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
         <div id="filterContainer"></div>
       </div>
 
-      <!-- Section 4: Metric -->
+      <!-- Section 5: Metric -->
       <div class="form-section">
         <div class="form-section-title"><span class="dot"></span>计算因子 (Metric)</div>
         <div class="form-section-sub">
@@ -667,7 +722,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
         </div>
       </div>
 
-      <!-- Section 5: Threshold -->
+      <!-- Section 6: Threshold -->
       <div class="form-section">
         <div class="form-section-title"><span class="dot" style="background:var(--danger)"></span>阈值触发</div>
         <div class="form-section-sub" style="background:#FEF2F2;border-color:#FECACA">
@@ -696,7 +751,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
         </div>
       </div>
 
-      <!-- Section 6: Alert Actions -->
+      <!-- Section 7: Alert Actions -->
       <div class="form-section">
         <div class="form-section-title"><span class="dot" style="background:var(--warning)"></span>告警动作</div>
         <div class="form-section-sub">
@@ -801,10 +856,10 @@ const state = {
 };
 
 const breadcrumbs = {
-  dashboard: 'Event Monitoring / 监控概览',
+  dashboard: 'Event Monitoring / 监控概览-暂无',
   rules: 'Event Monitoring / 规则管理',
   alerts: 'Event Monitoring / 告警历史',
-  fields: 'Event Monitoring / 字段管理'
+  fields: 'Event Monitoring / 字段管理-暂无'
 };
 
 // ============ Mock Data ============

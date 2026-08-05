@@ -159,7 +159,7 @@ export const renderFuncDepth = (container: HTMLElement) => {
     xAxis: { type: 'category', data: ['AI生成', '模版制作', '滤镜编辑', '素材拼接', '导出分享'], axisLabel: { fontSize: 11 } },
     yAxis: { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } },
     series: [
-      { name: '人均使用次数', type: 'bar', barWidth: 24, data: [5.2, 3.8, 4.5, 2.3, 1.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] }, label: { show: true, position: 'top', fontSize: 11 } }
+      { name: '人均制作次数', type: 'bar', barWidth: 24, data: [5.2, 3.8, 4.5, 2.3, 1.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] }, label: { show: true, position: 'top', fontSize: 11 } }
     ]
   };
   chart.setOption(option);
@@ -226,7 +226,7 @@ export const renderTemplateTrend = (container: HTMLElement) => {
     xAxis: { type: 'category', boundaryGap: false, data: dates, axisLabel: { fontSize: 11, interval: 4 } },
     yAxis: { type: 'value', name: '人均次数', axisLabel: { fontSize: 11 } },
     series: [
-      { name: '人均预览次数', type: 'line', smooth: true, data: genRetention(8.5, 1.2), lineStyle: { width: 2 }, itemStyle: { color: '#3b82f6' }, areaStyle: { opacity: 0.15 } },
+      { name: '人均曝光次数', type: 'line', smooth: true, data: genRetention(8.5, 1.2), lineStyle: { width: 2 }, itemStyle: { color: '#3b82f6' }, areaStyle: { opacity: 0.15 } },
       { name: '人均制作次数', type: 'line', smooth: true, data: genRetention(2.3, 0.5), lineStyle: { width: 2 }, itemStyle: { color: '#10b981' }, areaStyle: { opacity: 0.15 } }
     ]
   };
@@ -248,7 +248,7 @@ export const renderTemplateLevel = (container: HTMLElement) => {
     series: [
       { name: '模板曝光率', type: 'bar', barWidth: 20, data: [72.5, 65.3, 52.8], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
       { name: '模版提交成功率', type: 'bar', barWidth: 20, data: [22.3, 19.8, 15.2], itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } },
-      { name: '人均预览次数', type: 'line', yAxisIndex: 1, data: [9.8, 7.5, 5.2], itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 },
+      { name: '人均曝光次数', type: 'line', yAxisIndex: 1, data: [9.8, 7.5, 5.2], itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 },
       { name: '人均制作次数', type: 'line', yAxisIndex: 1, data: [2.8, 2.1, 1.5], itemStyle: { color: '#8b5cf6' }, lineStyle: { width: 2 }, symbol: 'circle', symbolSize: 10 }
     ]
   };

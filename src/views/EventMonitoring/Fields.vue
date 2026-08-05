@@ -2,7 +2,7 @@
   <div class="em-fields">
     <div class="page-header">
       <div>
-        <div class="page-title">字段管理</div>
+        <div class="page-title">字段管理-暂无</div>
         <div class="page-desc">管理标准字段与自定义字段的映射、索引分级（S/A/B）</div>
       </div>
       <div style="display:flex;gap:10px">

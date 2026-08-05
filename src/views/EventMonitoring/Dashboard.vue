@@ -2,7 +2,7 @@
   <div class="em-dashboard">
     <div class="page-header">
       <div>
-        <div class="page-title">监控概览</div>
+        <div class="page-title">监控概览-暂无</div>
         <div class="page-desc">实时监控事件吞吐量与异常趋势，快速掌握系统运行状态</div>
       </div>
     </div>

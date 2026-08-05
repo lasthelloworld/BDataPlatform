@@ -93,7 +93,7 @@
           key="event-monitoring/dashboard"
           data-marker="侧边栏菜单-Event Monitoring Dashboard"
         >
-          <span>监控概览</span>
+          <span>监控概览-暂无</span>
         </a-menu-item>
         <a-menu-item
           key="event-monitoring/rules"
@@ -111,7 +111,7 @@
           key="event-monitoring/fields"
           data-marker="侧边栏菜单-Event Monitoring Fields"
         >
-          <span>字段管理</span>
+          <span>字段管理-暂无</span>
         </a-menu-item>
       </a-sub-menu>
 

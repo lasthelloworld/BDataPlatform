@@ -161,14 +161,14 @@
       </div>
       <div class="kpi">
         <div class="kpi-card"><div>DAU</div><div class="val">128,456</div><div class="up">↑ 5.2%</div></div>
-        <div class="kpi-card"><div>人均使用次数</div><div class="val">3.6次</div><div class="up">↑ 0.4次</div></div>
+        <div class="kpi-card"><div>人均制作次数</div><div class="val">3.6次</div><div class="up">↑ 0.4次</div></div>
         <div class="kpi-card"><div>模板曝光率</div><div class="val">65.2%</div><div class="up">↑ 4.1pct</div></div>
         <div class="kpi-card"><div>模版提交制作率</div><div class="val">28.5%</div><div class="up">↑ 2.3pct</div></div>
         <div class="kpi-card"><div>模版提交成功率</div><div class="val">18.7%</div><div class="down">↓ 0.8pct</div></div>
       </div>
       <div class="grid">
         <div class="card"><div class="title">功能类型制作率Top5</div><div ref="funcPenetration" class="chart"></div></div>
-        <div class="card"><div class="title">功能类型人均使用次数Top5</div><div ref="funcDepth" class="chart"></div></div>
+        <div class="card"><div class="title">功能类型人均制作次数Top5</div><div ref="funcDepth" class="chart"></div></div>
       </div>
       <div class="grid">
         <div class="card">
@@ -181,7 +181,7 @@
           </div>
           <div ref="templateFunnel" class="chart"></div>
         </div>
-        <div class="card"><div class="title">模版人均使用次数趋势</div><div ref="templateTrend" class="chart"></div></div>
+        <div class="card"><div class="title">模版人均制作次数趋势</div><div ref="templateTrend" class="chart"></div></div>
       </div>
       <div class="full">
         <div class="card"><div class="title">各内容等级模版表现对比</div><div ref="templateLevel" class="chart tall"></div></div>
@@ -454,17 +454,16 @@ const funcAllColumns = [
   {key:'funcType',title:'功能类型'},
   {key:'contentLevel',title:'内容等级'},
   {key:'dau',title:'DAU',defaultSortOrder:'descend'},
-  {key:'avgUseCount',title:'人均使用次数'},
+  {key:'avgUseCount',title:'人均制作次数'},
   {key:'templateExposure',title:'模版曝光次数'},
-  {key:'templatePreview',title:'模版预览次数'},
   {key:'templateMake',title:'模版制作次数'},
   {key:'previewRate',title:'模版曝光率'},
   {key:'makeRate',title:'模版提交成功率'},
-  {key:'avgPreviewCount',title:'人均预览次数'},
-  {key:'avgMakeCount',title:'人均制作次数'},
+  {key:'avgPreviewCount',title:'人均曝光次数'},
   {key:'clickMakeRate',title:'模版点击制作率'},
   {key:'submitMakeRate',title:'模版提交制作率'},
   {key:'makePenetration',title:'模版提交成功率'},
+  {key:'submitMakeSuccessUsers',title:'模版提交制作成功人数'},
   {key:'makeCompleteRate',title:'模版制作完成率'},
   {key:'clickMakeUsers',title:'模版点击制作人数'},
   {key:'clickMakeCount',title:'模版点击制作次数'},
@@ -476,7 +475,7 @@ const funcAllColumns = [
   {key:'downloadCount',title:'模版下载次数'},
   {key:'downloadRate',title:'模版下载率'},
 ];
-const funcVisibleColumns = ref(funcAllColumns.map(c => c.key).filter(k => !['clickMakeUsers','clickMakeCount','submitMakeUsers','submitMakeCount','makeCompleteUsers','makeCompleteCount','downloadUsers','downloadCount'].includes(k)));
+const funcVisibleColumns = ref(funcAllColumns.map(c => c.key).filter(k => !['clickMakeUsers','clickMakeCount','submitMakeUsers','submitMakeCount','makeCompleteUsers','makeCompleteCount','downloadUsers','downloadCount','submitMakeSuccessUsers'].includes(k)));
 const funcTableColumns = computed(() => {
   return funcAllColumns.filter(c => funcVisibleColumns.value.includes(c.key)).map(c => ({
     ...c,
@@ -520,6 +519,7 @@ const generateFuncTableData = () => {
                   contentLevel,
                   dau: Math.floor(Math.random() * 50000) + 10000,
                   makePenetration: (Math.random() * 50).toFixed(2) + '%',
+                  submitMakeSuccessUsers: Math.floor(Math.random() * 3000) + 300,
                   avgUseCount: (Math.random() * 10 + 1).toFixed(2),
                   templateExposure: Math.floor(Math.random() * 100000) + 10000,
                   templatePreview: Math.floor(Math.random() * 50000) + 5000,

@@ -33,7 +33,62 @@
       </a-form-item>
     </div>
 
-    <!-- Section 2: Execution Plan -->
+    <!-- Section 2: Rule Dimension -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="dot"></span>规则维度</div>
+      <div class="section-sub">
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="App" required>
+              <a-select v-model:value="form.app" placeholder="请选择App" data-marker="规则维度-App单选">
+                <a-select-option value="recover1">Phone Recover1</a-select-option>
+                <a-select-option value="recover2">Phone Recover2</a-select-option>
+                <a-select-option value="recover3">Phone Recover3</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="国家">
+              <a-select v-model:value="form.countries" mode="multiple" placeholder="请选择国家（可多选）" data-marker="规则维度-国家多选">
+                <a-select-option value="us">美国</a-select-option>
+                <a-select-option value="jp">日本</a-select-option>
+                <a-select-option value="kr">韩国</a-select-option>
+                <a-select-option value="gb">英国</a-select-option>
+                <a-select-option value="de">德国</a-select-option>
+                <a-select-option value="fr">法国</a-select-option>
+                <a-select-option value="br">巴西</a-select-option>
+                <a-select-option value="id">印尼</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="产品版本" required>
+              <a-select v-model:value="form.productVersion" placeholder="请选择产品版本" data-marker="规则维度-产品版本单选">
+                <a-select-option value="v1.0">v1.0</a-select-option>
+                <a-select-option value="v2.0">v2.0</a-select-option>
+                <a-select-option value="v3.0">v3.0</a-select-option>
+                <a-select-option value="v4.0">v4.0</a-select-option>
+                <a-select-option value="latest">最新版本</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="投放渠道" required>
+              <a-select v-model:value="form.channel" placeholder="请选择投放渠道" data-marker="规则维度-投放渠道单选">
+                <a-select-option value="organic">自然流量</a-select-option>
+                <a-select-option value="paid">付费投放</a-select-option>
+                <a-select-option value="cross">交叉推广</a-select-option>
+                <a-select-option value="partner">合作伙伴</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+      </div>
+    </div>
+
+    <!-- Section 3: Execution Plan -->
     <div class="form-section">
       <div class="form-section-title"><span class="dot"></span>执行计划</div>
       <div class="section-sub">
@@ -60,7 +115,7 @@
       </div>
     </div>
 
-    <!-- Section 3: Filter (WHERE) -->
+    <!-- Section 4: Filter (WHERE) -->
     <div class="form-section">
       <div class="form-section-title">
         <span class="dot"></span>条件过滤器 (WHERE)
@@ -72,7 +127,7 @@
       <div ref="filterContainerRef"></div>
     </div>
 
-    <!-- Section 4: Metric -->
+    <!-- Section 5: Metric -->
     <div class="form-section">
       <div class="form-section-title"><span class="dot"></span>计算因子 (Metric)</div>
       <div class="section-sub">
@@ -121,7 +176,7 @@
       </div>
     </div>
 
-    <!-- Section 5: Threshold -->
+    <!-- Section 6: Threshold -->
     <div class="form-section">
       <div class="form-section-title"><span class="dot danger"></span>阈值触发</div>
       <div class="section-sub threshold-sub">
@@ -152,7 +207,7 @@
       </div>
     </div>
 
-    <!-- Section 6: Alert Actions -->
+    <!-- Section 7: Alert Actions -->
     <div class="form-section">
       <div class="form-section-title"><span class="dot warn"></span>告警动作</div>
       <div class="section-sub">
@@ -211,6 +266,10 @@ const form = reactive({
   name: '',
   project: '',
   description: '',
+  app: '',
+  countries: [],
+  productVersion: '',
+  channel: '',
   freq: '5min',
   window: '5min',
   metricType: 'agg',
@@ -318,13 +377,17 @@ watch(() => props.visible, (v) => {
         name: props.rule.name || '',
         project: props.rule.projectKey || '',
         description: '',
+        app: '',
+        countries: [],
+        productVersion: '',
+        channel: '',
         freq: props.rule.freqKey || '5min',
         window: props.rule.window || '5min',
         metricType: 'agg',
         aggFunc: 'avg'
       })
     } else {
-      Object.assign(form, { name: '', project: '', description: '', freq: '5min', window: '5min', metricType: 'agg', aggFunc: 'avg' })
+      Object.assign(form, { name: '', project: '', description: '', app: '', countries: [], productVersion: '', channel: '', freq: '5min', window: '5min', metricType: 'agg', aggFunc: 'avg' })
     }
     nextTick(initFilterBuilder)
   }
