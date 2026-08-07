@@ -10,11 +10,17 @@
 
     <div class="toolbar">
       <div class="toolbar-left">
-        <a-select v-model:value="projectFilter" placeholder="全部项目组" style="width:160px" data-marker="规则管理-项目组筛选" allow-clear>
-          <a-select-option value="">全部项目组</a-select-option>
-          <a-select-option value="ad">广告聚合</a-select-option>
-          <a-select-option value="growth">用户增长</a-select-option>
-          <a-select-option value="content">内容中台</a-select-option>
+        <a-select v-model:value="productGroupFilter" placeholder="全部产品组" style="width:160px" data-marker="规则管理-产品组筛选" allow-clear>
+          <a-select-option value="">全部产品组</a-select-option>
+          <a-select-option value="pg1">产品1组</a-select-option>
+          <a-select-option value="pg2">产品2组</a-select-option>
+          <a-select-option value="pg3">产品3组</a-select-option>
+        </a-select>
+        <a-select v-model:value="levelFilter" placeholder="全部等级" style="width:140px" data-marker="规则管理-监控等级筛选" allow-clear>
+          <a-select-option value="">全部等级</a-select-option>
+          <a-select-option value="P0">P0 致命</a-select-option>
+          <a-select-option value="P1">P1 严重</a-select-option>
+          <a-select-option value="P2">P2 一般</a-select-option>
         </a-select>
         <a-select v-model:value="statusFilter" placeholder="全部状态" style="width:130px" data-marker="规则管理-启用状态筛选" allow-clear>
           <a-select-option value="">全部状态</a-select-option>
@@ -43,8 +49,15 @@
             {{ record.name }}
           </span>
         </template>
-        <template v-else-if="column.key === 'factor'">
+        <template v-else-if="column.key === 'level'">
+          <a-tag :color="levelColorMap[record.level]">{{ levelLabelMap[record.level] || record.level }}</a-tag>
+        </template>
+        <template v-else-if="column.key === 'dimension'">
+          <span class="dim-text">{{ record.dimensionText }}</span>
+        </template>
+        <template v-else-if="column.key === 'ruleDesc'">
           <code class="mono">{{ record.factor }}</code>
+          <span class="cond">{{ record.condition }}</span>
         </template>
         <template v-else-if="column.key === 'freq'">
           <a-tag color="blue">{{ record.freq }}</a-tag>
@@ -71,30 +84,36 @@ import { ref, computed, reactive } from 'vue'
 import { message } from 'ant-design-vue'
 import RuleModal from './RuleModal.vue'
 
-const projectFilter = ref('')
+const productGroupFilter = ref('')
 const statusFilter = ref('')
+const levelFilter = ref('')
 const searchText = ref('')
 const modalVisible = ref(false)
 const editingRule = ref(null)
 
 const pagination = reactive({ current: 1, pageSize: 20, total: 0 })
 
+// 监控等级映射
+const levelLabelMap = { P0: 'P0 致命', P1: 'P1 严重', P2: 'P2 一般' }
+const levelColorMap = { P0: 'red', P1: 'orange', P2: 'blue' }
+
 const rules = ref([
-  { id: 1, name: 'Ecpm低值监控', project: '广告聚合', projectKey: 'ad', factor: 'AVG(params.ecpm)', condition: '< 0.5', window: '最近5分钟', freq: '每5分钟', freqKey: '5min', lastTrigger: '2026-07-31 14:35', enabled: true },
-  { id: 2, name: '空值率监控', project: '广告聚合', projectKey: 'ad', factor: 'NULL_RATE(account_id)', condition: '> 5%', window: '昨日全天', freq: '每日 T+1', freqKey: 'daily', lastTrigger: '2026-07-31 01:00', enabled: true },
-  { id: 3, name: '事件顺序异常', project: '用户增长', projectKey: 'growth', factor: 'SEQUENCE_MATCH', condition: '实时匹配', window: '逐条', freq: '实时', freqKey: 'realtime', lastTrigger: '2026-07-31 14:32', enabled: true },
-  { id: 4, name: 'DAU骤降监控', project: '用户增长', projectKey: 'growth', factor: 'COUNT(DISTINCT user_id)', condition: '< 昨日-20%', window: '最近1小时', freq: '每小时', freqKey: 'hourly', lastTrigger: '2026-07-31 13:00', enabled: true },
-  { id: 5, name: '高延迟告警', project: '内容中台', projectKey: 'content', factor: 'P99(delay)', condition: '> 5000ms', window: '最近10分钟', freq: '每5分钟', freqKey: '5min', lastTrigger: '2026-07-31 14:25', enabled: false },
-  { id: 6, name: '转化漏斗异常', project: '广告聚合', projectKey: 'ad', factor: '转化率(40601→40605)', condition: '< 10%', window: '最近15分钟', freq: '每5分钟', freqKey: '5min', lastTrigger: '2026-07-31 14:30', enabled: true },
-  { id: 7, name: '重复事件检测', project: '内容中台', projectKey: 'content', factor: 'COUNT(event_id)', condition: '> 1000/分钟', window: '逐条', freq: '实时', freqKey: 'realtime', lastTrigger: '2026-07-31 14:33', enabled: true },
-  { id: 8, name: '用户留存异常', project: '用户增长', projectKey: 'growth', factor: '次日留存率', condition: '< 40%', window: '昨日全天', freq: '每日 T+1', freqKey: 'daily', lastTrigger: '2026-07-31 01:00', enabled: false }
+  { id: 1, name: 'Ecpm低值监控', level: 'P2', productGroups: ['pg1'], dimensionText: '产品1组 / Phone Recover1 / v1.0.0', factor: 'AVG(params.type1)', condition: '< 0.5', freq: '每小时 H+1', freqKey: 'hourly', window: '60min', lastTrigger: '2026-07-31 14:35', enabled: true },
+  { id: 2, name: '空值率监控', level: 'P1', productGroups: ['pg1'], dimensionText: '产品1组 / Phone Recover2', factor: 'NULL_RATE(account_id)', condition: '> 5%', freq: '每日 T+1', freqKey: 'daily', window: 'yesterday', lastTrigger: '2026-07-31 01:00', enabled: true },
+  { id: 3, name: '事件顺序异常', level: 'P1', productGroups: ['pg2'], dimensionText: '产品2组 / 全部App', factor: 'SEQUENCE_MATCH', condition: '顺序匹配', freq: '每小时 H+1', freqKey: 'hourly', window: '60min', lastTrigger: '2026-07-31 14:32', enabled: true },
+  { id: 4, name: 'DAU骤降监控', level: 'P0', productGroups: ['pg2'], dimensionText: '产品2组 / Phone Recover3 / 美国-us', factor: 'COUNT(DISTINCT user_pseudo_id)', condition: '< 昨日-20%', freq: '每小时 H+1', freqKey: 'hourly', window: '60min', lastTrigger: '2026-07-31 13:00', enabled: true },
+  { id: 5, name: '高延迟告警', level: 'P2', productGroups: ['pg3'], dimensionText: '产品3组 / 全部版本', factor: 'P99(delay)', condition: '> 5000ms', freq: '每小时 H+1', freqKey: 'hourly', window: '60min', lastTrigger: '2026-07-31 14:25', enabled: false },
+  { id: 6, name: '转化漏斗异常', level: 'P0', productGroups: ['pg1'], dimensionText: '产品1组 / Phone Recover1 / FB', factor: '转化率(40601→40605)', condition: '< 10%', freq: '每小时 H+1', freqKey: 'hourly', window: '60min', lastTrigger: '2026-07-31 14:30', enabled: true },
+  { id: 7, name: '重复事件检测', level: 'P2', productGroups: ['pg3'], dimensionText: '产品3组 / TikTok', factor: 'COUNT(event_id)', condition: '> 1000/分钟', freq: '每小时 H+1', freqKey: 'hourly', window: '60min', lastTrigger: '2026-07-31 14:33', enabled: true },
+  { id: 8, name: '用户留存异常', level: 'P1', productGroups: ['pg2'], dimensionText: '产品2组 / Google', factor: '次日留存率', condition: '< 40%', freq: '每日 T+1', freqKey: 'daily', window: 'yesterday', lastTrigger: '2026-07-31 01:00', enabled: false }
 ])
 
 const filteredRules = computed(() => {
   return rules.value.filter(r => {
-    if (projectFilter.value && r.projectKey !== projectFilter.value) return false
+    if (productGroupFilter.value && !(r.productGroups || []).includes(productGroupFilter.value)) return false
     if (statusFilter.value === 'on' && !r.enabled) return false
     if (statusFilter.value === 'off' && r.enabled) return false
+    if (levelFilter.value && r.level !== levelFilter.value) return false
     if (searchText.value && !r.name.toLowerCase().includes(searchText.value.toLowerCase())) return false
     return true
   })
@@ -102,12 +121,11 @@ const filteredRules = computed(() => {
 
 const columns = [
   { title: '规则名称', dataIndex: 'name', key: 'name', width: 200 },
-  { title: '项目组', dataIndex: 'project', key: 'project' },
-  { title: '计算因子', dataIndex: 'factor', key: 'factor' },
-  { title: '触发条件', dataIndex: 'condition', key: 'condition' },
-  { title: '时间窗口', dataIndex: 'window', key: 'window' },
-  { title: '执行频率', dataIndex: 'freq', key: 'freq', width: 100 },
-  { title: '最近触发', dataIndex: 'lastTrigger', key: 'lastTrigger' },
+  { title: '监控等级', dataIndex: 'level', key: 'level', width: 100 },
+  { title: '监控维度', dataIndex: 'dimensionText', key: 'dimension', width: 220 },
+  { title: '规则说明', key: 'ruleDesc' },
+  { title: '执行频率', dataIndex: 'freq', key: 'freq', width: 110 },
+  { title: '最近触发', dataIndex: 'lastTrigger', key: 'lastTrigger', width: 150 },
   { title: '操作', key: 'action', width: 240, fixed: 'right' }
 ]
 
@@ -150,9 +168,11 @@ const onRuleSaved = () => {
 .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
 .toolbar-left { display: flex; gap: 12px; flex-wrap: wrap; }
 .rule-name { display: flex; align-items: center; gap: 10px; }
+.dim-text { font-size: 12px; color: #475569; }
+.mono { font-family: monospace; font-size: 12px; color: #4F46E5; background: #EEF2FF; padding: 2px 6px; border-radius: 4px; }
+.cond { font-size: 12px; color: #EF4444; margin-left: 6px; }
 .toggle { position: relative; width: 38px; height: 20px; background: #CBD5E1; border-radius: 20px; cursor: pointer; transition: background 0.2s; }
 .toggle.on { background: #4F46E5; }
 .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 .toggle.on::after { transform: translateX(18px); }
-.mono { font-family: monospace; font-size: 12px; color: #4F46E5; background: #EEF2FF; padding: 2px 6px; border-radius: 4px; }
 </style>

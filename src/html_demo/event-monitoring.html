@@ -188,11 +188,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
 /* Threshold preview */
 .threshold-preview{background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:12px;font-size:13px;color:#991B1B;margin-top:12px}
 .threshold-preview .label{font-size:11px;color:#B91C1C;margin-bottom:4px;font-weight:600;text-transform:uppercase}
+.section-hint{font-size:12px;color:#94A3B8;font-weight:400;margin-left:8px}
+.refresh-tip{font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px}
+.refresh-tip .dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,0.5)}70%{box-shadow:0 0 0 6px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+.condition-item{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px}
+.condition-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.condition-flag{font-size:12px;font-weight:600;color:var(--primary)}
+.condition-fields{display:flex;flex-direction:column;gap:8px}
+.field-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.field-row select,.field-row input{padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px}
+.condition-threshold{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.condition-threshold select,.condition-threshold input{padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px}
 
 /* Drawer */
 .drawer-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.4);display:none;z-index:900}
 .drawer-overlay.show{display:block}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:480px;background:#fff;z-index:901;transform:translateX(100%);transition:transform 0.3s;display:flex;flex-direction:column;box-shadow:-4px 0 16px rgba(0,0,0,0.1)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:560px;background:#fff;z-index:901;transform:translateX(100%);transition:transform 0.3s;display:flex;flex-direction:column;box-shadow:-4px 0 16px rgba(0,0,0,0.1)}
 .drawer.show{transform:translateX(0)}
 .drawer-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .drawer-title{font-size:16px;font-weight:600}
@@ -381,11 +393,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
 
         <div class="toolbar">
           <div class="toolbar-left">
-            <select class="select" id="ruleProjectFilter" data-marker="规则管理-项目组筛选">
-              <option value="">全部项目组</option>
-              <option value="ad">广告聚合</option>
-              <option value="growth">用户增长</option>
-              <option value="content">内容中台</option>
+            <select class="select" id="ruleProductFilter" data-marker="规则管理-产品组筛选">
+              <option value="">全部产品组</option>
+              <option value="pg1">产品1组</option>
+              <option value="pg2">产品2组</option>
+              <option value="pg3">产品3组</option>
             </select>
             <select class="select" id="ruleStatusFilter" data-marker="规则管理-启用状态筛选">
               <option value="">全部状态</option>
@@ -403,10 +415,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
             <thead>
               <tr>
                 <th style="width:200px">规则名称</th>
-                <th>项目组</th>
-                <th>计算因子</th>
-                <th>触发条件</th>
-                <th>时间窗口</th>
+                <th>监控维度</th>
+                <th>规则说明</th>
                 <th>执行频率</th>
                 <th>最近触发</th>
                 <th>操作</th>
@@ -423,38 +433,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
         <div class="page-header">
           <div>
             <div class="page-title">告警历史</div>
-            <div class="page-desc">查看所有历史告警记录，支持筛选、标记处理、忽略和导出</div>
+            <div class="page-desc">查看所有历史告警记录，支持筛选、标记处理、查看命中明细与导出</div>
+          </div>
+          <div class="refresh-tip" data-marker="告警自动刷新提示">
+            <span class="dot pulse"></span>
+            每半小时系统自动刷新 · 上次刷新：<span id="lastRefresh">--:--:--</span>
           </div>
         </div>
 
         <!-- Stats -->
         <div class="stats-bar">
-          <div class="stat"><div class="val red">156</div><div class="stat-lbl">总告警数</div></div>
-          <div class="stat"><div class="val amber">23</div><div class="stat-lbl">未处理</div></div>
-          <div class="stat"><div class="val green">112</div><div class="stat-lbl">已恢复</div></div>
+          <div class="stat" data-marker="当日总告警数卡片"><div class="val red" id="statTotal">156</div><div class="stat-lbl">总告警数（当日）</div></div>
+          <div class="stat" data-marker="当日未处理数卡片"><div class="val amber" id="statPending">23</div><div class="stat-lbl">未处理数（当日）</div></div>
+          <div class="stat" data-marker="当日已处理数卡片"><div class="val green" id="statResolved">112</div><div class="stat-lbl">已处理数（当日）</div></div>
         </div>
 
         <!-- Filters -->
         <div class="toolbar">
           <div class="toolbar-left">
-            <select class="select" data-marker="告警历史-项目组筛选">
-              <option value="">全部项目组</option>
-              <option value="ad">广告聚合</option>
-              <option value="growth">用户增长</option>
-              <option value="content">内容中台</option>
+            <select class="select" id="alertProductFilter" data-marker="告警历史-产品组筛选">
+              <option value="">全部产品组</option>
+              <option value="pg1">产品1组</option>
+              <option value="pg2">产品2组</option>
+              <option value="pg3">产品3组</option>
             </select>
-            <select class="select" data-marker="告警历史-告警状态筛选">
+            <select class="select" id="alertStatusFilter" data-marker="告警历史-告警状态筛选">
               <option value="">全部状态</option>
               <option value="pending">未处理</option>
-              <option value="ignored">已忽略</option>
-              <option value="resolved">已恢复</option>
+              <option value="resolved">已处理</option>
             </select>
             <input type="date" class="select" style="padding:7px 12px" data-marker="告警历史-开始日期">
             <span style="color:var(--text-muted)">—</span>
             <input type="date" class="select" style="padding:7px 12px" data-marker="告警历史-结束日期">
           </div>
           <div class="toolbar-right">
-            <input type="text" class="search-input" placeholder="按规则名称搜索..." data-marker="告警历史-规则名称搜索">
+            <input type="text" class="search-input" id="alertSearch" placeholder="按规则名称搜索..." data-marker="告警历史-规则名称搜索">
             <button class="btn btn-primary" data-marker="告警历史-导出明细">导出明细</button>
           </div>
         </div>
@@ -463,11 +476,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
           <table class="data-table" id="alertsTable">
             <thead>
               <tr>
-                <th style="width:50px"><input type="checkbox" data-marker="全选告警"></th>
-                <th>触发时间</th>
+                <th>触发执行时间</th>
                 <th>规则名称</th>
-                <th>项目组</th>
-                <th>计算值 / 阈值</th>
+                <th>监控维度</th>
+                <th>规则说明</th>
                 <th>状态</th>
                 <th>操作</th>
               </tr>
@@ -545,88 +557,176 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
       <button class="modal-close" onclick="closeRuleModal()">✕</button>
     </div>
     <div class="modal-body">
-      <!-- Section 1: Basic Info -->
+      <!-- Section 1: 基本信息 -->
       <div class="form-section">
         <div class="form-section-title"><span class="dot"></span>基本信息</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>规则名称<span class="required">*</span></label>
-            <input type="text" placeholder="请输入规则名称" data-marker="规则名称输入框" />
-          </div>
-          <div class="form-group">
-            <label>所属项目组<span class="required">*</span></label>
-            <select data-marker="规则所属项目组选择">
-              <option value="">请选择项目组</option>
-              <option value="ad">广告聚合</option>
-              <option value="growth">用户增长</option>
-              <option value="content">内容中台</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>规则描述（可选）</label>
-          <textarea placeholder="描述规则的监控目的和业务背景..."></textarea>
-        </div>
-      </div>
-
-      <!-- Section 2: Rule Dimension -->
-      <div class="form-section">
-        <div class="form-section-title"><span class="dot"></span>规则维度</div>
         <div class="form-section-sub">
           <div class="form-row">
             <div class="form-group">
-              <label>App<span class="required">*</span></label>
-              <select data-marker="规则维度-App单选">
-                <option value="">请选择App</option>
+              <label>规则名称<span class="required">*</span></label>
+              <input type="text" placeholder="请输入规则名称" data-marker="规则名称输入框" />
+            </div>
+            <div class="form-group">
+              <label>规则描述</label>
+              <input type="text" placeholder="描述规则监控目的与业务背景（可选）" data-marker="规则描述输入框" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: 监控维度 -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot"></span>监控维度<span class="section-hint">产品组→app→app_version→国家→投放渠道</span></div>
+        <div class="form-section-sub">
+          <div class="form-row">
+            <div class="form-group">
+              <label>产品组<span class="required">*</span></label>
+              <select multiple size="3" data-marker="监控维度-产品组多选">
+                <option value="pg1">产品1组</option>
+                <option value="pg2">产品2组</option>
+                <option value="pg3">产品3组</option>
+              </select>
+              <div class="hint">多选必选，按住 Ctrl/Cmd 多选</div>
+            </div>
+            <div class="form-group">
+              <label>App</label>
+              <select multiple size="3" data-marker="监控维度-App多选">
                 <option value="recover1">Phone Recover1</option>
                 <option value="recover2">Phone Recover2</option>
                 <option value="recover3">Phone Recover3</option>
               </select>
-            </div>
-            <div class="form-group">
-              <label>国家</label>
-              <select multiple size="4" data-marker="规则维度-国家多选">
-                <option value="us">美国</option>
-                <option value="jp">日本</option>
-                <option value="kr">韩国</option>
-                <option value="gb">英国</option>
-                <option value="de">德国</option>
-                <option value="fr">法国</option>
-                <option value="br">巴西</option>
-                <option value="id">印尼</option>
-              </select>
-              <div class="hint">按住 Ctrl/Cmd 进行多选</div>
+              <div class="hint">可多选，非必选</div>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>产品版本<span class="required">*</span></label>
-              <select data-marker="规则维度-产品版本单选">
-                <option value="">请选择产品版本</option>
-                <option value="v1.0">v1.0</option>
-                <option value="v2.0">v2.0</option>
-                <option value="v3.0">v3.0</option>
-                <option value="v4.0">v4.0</option>
-                <option value="latest">最新版本</option>
+              <label>App版本</label>
+              <select multiple size="3" data-marker="监控维度-App版本多选">
+                <option value="v1.0.0">v1.0.0</option>
+                <option value="v1.1.0">v1.1.0</option>
+                <option value="v2.0.0">v2.0.0</option>
+                <option value="v2.1.0">v2.1.0</option>
               </select>
             </div>
             <div class="form-group">
-              <label>投放渠道<span class="required">*</span></label>
-              <select data-marker="规则维度-投放渠道单选">
-                <option value="">请选择投放渠道</option>
-                <option value="organic">自然流量</option>
-                <option value="paid">付费投放</option>
-                <option value="cross">交叉推广</option>
-                <option value="partner">合作伙伴</option>
+              <label>国家</label>
+              <select multiple size="3" data-marker="监控维度-国家多选">
+                <option value="us">美国-us</option>
+                <option value="jp">日本-jp</option>
+                <option value="kr">韩国-kr</option>
+                <option value="gb">英国-gb</option>
+                <option value="de">德国-de</option>
+                <option value="br">巴西-br</option>
+                <option value="id">印尼-id</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>投放渠道</label>
+              <select multiple size="3" data-marker="监控维度-投放渠道多选">
+                <option value="FB">Facebook</option>
+                <option value="Tiktok">TikTok</option>
+                <option value="google">Google</option>
+                <option value="Apple">Apple</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Section 3: Execution Plan -->
+      <!-- Section 3: 监控规则条件配置 -->
       <div class="form-section">
-        <div class="form-section-title"><span class="dot"></span>执行计划</div>
+        <div class="form-section-title">
+          <span class="dot"></span>监控规则条件配置
+          <div style="margin-left:auto"><button class="btn btn-sm btn-primary" data-marker="添加条件项按钮">+ 添加条件</button></div>
+        </div>
+        <div class="form-section-sub">
+          <div class="condition-item">
+            <div class="condition-head"><span class="condition-flag">条件 1</span><button class="btn btn-sm" style="color:var(--danger)">移除条件</button></div>
+            <div class="condition-fields">
+              <div class="field-row">
+                <select data-marker="字段选择器类型">
+                  <option value="event">事件选择器</option>
+                  <option value="param">自定义参数选择器</option>
+                  <option value="metric">指标选择器</option>
+                </select>
+                <select data-marker="字段值选择器">
+                  <option value="ad_click">ad_click 广告点击</option>
+                  <option value="ad_impression">ad_impression 广告曝光</option>
+                  <option value="40601">40601 启动事件</option>
+                  <option value="purchase">purchase 购买</option>
+                </select>
+                <select data-marker="聚合函数选择">
+                  <option value="">聚合（可选）</option>
+                  <option value="AVG">AVG</option>
+                  <option value="SUM">SUM</option>
+                  <option value="Count">Count</option>
+                  <option value="Max">Max</option>
+                  <option value="Min">Min</option>
+                </select>
+                <input type="text" placeholder="聚合目标值" data-marker="聚合目标值输入" style="width:120px" />
+                <button class="btn btn-sm" data-marker="添加串联字段按钮">+ 字段</button>
+              </div>
+            </div>
+            <div class="condition-threshold">
+              <select data-marker="比较操作符选择" style="width:170px">
+                <option value=">">大于</option>
+                <option value="<">小于</option>
+                <option value="in">In</option>
+                <option value="not in">Not In</option>
+                <option value="between">Between</option>
+                <option value="in range">In Range（最近多长时间）</option>
+                <option value="is null">Is Null</option>
+                <option value="is not null">Is Not Null</option>
+              </select>
+              <input type="text" placeholder="监控值阈值" data-marker="监控值阈值输入" style="flex:1" />
+            </div>
+          </div>
+          <div class="threshold-preview" data-marker="条件配置实时预览">
+            <div class="label">实时预览</div>
+            AVG(params.ecpm) > 0.5
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: 监控数据范围时间窗口 -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot"></span>监控数据范围时间窗口<span class="section-hint">非必选</span></div>
+        <div class="form-section-sub">
+          <div class="form-row">
+            <div class="form-group">
+              <label>方式</label>
+              <select data-marker="数据时间窗口方式">
+                <option value="">不限制</option>
+                <option value="interval">日期间隔</option>
+                <option value="range">日期区间</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>日期间隔</label>
+              <select data-marker="日期间隔选择" style="width:140px">
+                <option value="7">近7日</option>
+                <option value="custom">近X天</option>
+              </select>
+              <input type="number" placeholder="X" data-marker="近X天输入" style="width:80px;margin-left:8px" />
+              <span class="hint" style="margin-left:4px">天</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>日期区间</label>
+              <input type="date" data-marker="日期区间范围选择" style="padding:7px 12px" />
+              <span style="color:var(--text-muted)">—</span>
+              <input type="date" data-marker="日期区间范围选择" style="padding:7px 12px" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: 监控频率 -->
+      <div class="form-section">
+        <div class="form-section-title"><span class="dot"></span>监控频率</div>
         <div class="form-section-sub">
           <div class="form-row">
             <div class="form-group">
@@ -634,8 +734,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
               <select id="execFreq" onchange="onFreqChange()" data-marker="规则执行频率选择">
                 <option value="realtime">实时</option>
                 <option value="5min">每5分钟</option>
-                <option value="hourly">每小时</option>
-                <option value="daily">每日 T+1</option>
+                <option value="hourly">每小时（H+1）</option>
+                <option value="daily">每日（T+1）</option>
               </select>
               <div class="hint">选择频率后，系统会自动推荐时间窗口选项</div>
             </div>
@@ -653,107 +753,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
         </div>
       </div>
 
-      <!-- Section 4: Filter (WHERE) -->
+      <!-- Section 6: 监控告警 -->
       <div class="form-section">
-        <div class="form-section-title">
-          <span class="dot"></span>条件过滤器 (WHERE)
-          <div style="margin-left:auto;display:flex;gap:8px">
-            <button class="btn btn-sm" onclick="addFilterRow('filter-root')" data-marker="添加条件按钮">+ 添加条件</button>
-            <button class="btn btn-sm" onclick="addFilterGroup('filter-root')" data-marker="添加条件组按钮">+ 添加条件组</button>
-          </div>
-        </div>
-        <div id="filterContainer"></div>
-      </div>
-
-      <!-- Section 5: Metric -->
-      <div class="form-section">
-        <div class="form-section-title"><span class="dot"></span>计算因子 (Metric)</div>
-        <div class="form-section-sub">
-          <div class="form-row">
-            <div class="form-group">
-              <label>计算类型<span class="required">*</span></label>
-              <select id="metricType" onchange="onMetricTypeChange()" data-marker="计算类型选择">
-                <option value="agg">聚合值</option>
-                <option value="single">单条值</option>
-                <option value="nullrate">空值率</option>
-                <option value="ratio">占比</option>
-                <option value="sequence">顺序匹配</option>
-                <option value="conversion">转化率</option>
-              </select>
-            </div>
-            <div class="form-group" id="aggFuncGroup">
-              <label>聚合函数</label>
-              <select id="aggFunc" data-marker="聚合函数选择">
-                <option value="count">COUNT</option>
-                <option value="sum">SUM</option>
-                <option value="avg">AVG</option>
-                <option value="max">MAX</option>
-                <option value="min">MIN</option>
-                <option value="count_distinct">COUNT_DISTINCT</option>
-                <option value="p99">P99</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>目标字段</label>
-            <select data-marker="目标字段选择">
-              <option value="params.ecpm">params.ecpm</option>
-              <option value="params.account_id">params.account_id</option>
-              <option value="event_time">event_time</option>
-              <option value="delay">delay（派生字段）</option>
-            </select>
-          </div>
-          <!-- Null rate extra -->
-          <div class="form-group hidden" id="nullrateTargetGroup">
-            <label>指定字段（空值率）</label>
-            <select><option>account_id</option><option>user_id</option></select>
-          </div>
-          <!-- Sequence extra -->
-          <div class="form-group hidden" id="sequenceGroup">
-            <label>事件序列（有序事件ID，逗号分隔）</label>
-            <input type="text" placeholder="如：40601,40602,40605" />
-            <div class="hint">最大允许间隔（分钟）：<input type="number" value="30" style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:4px" /></div>
-          </div>
-          <!-- Conversion extra -->
-          <div class="form-group hidden" id="conversionGroup">
-            <label>步骤事件列表（每行一个事件ID）</label>
-            <textarea placeholder="40601&#10;40602&#10;40603" style="min-height:80px"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section 6: Threshold -->
-      <div class="form-section">
-        <div class="form-section-title"><span class="dot" style="background:var(--danger)"></span>阈值触发</div>
-        <div class="form-section-sub" style="background:#FEF2F2;border-color:#FECACA">
-          <div class="form-row">
-            <div class="form-group">
-              <label>比较操作符</label>
-              <select data-marker="阈值比较操作符选择">
-                <option value=">">大于 (>)</option>
-                <option value="<">小于 (<)</option>
-                <option value=">=">大于等于 (≥)</option>
-                <option value="<=">小于等于 (≤)</option>
-                <option value="=">等于 (=)</option>
-                <option value="!=">不等于 (≠)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>阈值</label>
-              <input type="number" value="0.5" step="0.01" data-marker="阈值输入框" />
-              <div class="hint">根据计算类型，单位可能为：数值 / % / 毫秒</div>
-            </div>
-          </div>
-          <div class="threshold-preview" data-marker="阈值触发实时预览">
-            <div class="label">实时预览</div>
-            当 AVG(params.ecpm) < 0.5 时触发告警
-          </div>
-        </div>
-      </div>
-
-      <!-- Section 7: Alert Actions -->
-      <div class="form-section">
-        <div class="form-section-title"><span class="dot" style="background:var(--warning)"></span>告警动作</div>
+        <div class="form-section-title"><span class="dot" style="background:var(--warning)"></span>监控告警<span class="section-hint">非必填，有监控日志但不一定告警</span></div>
         <div class="form-section-sub">
           <div class="form-group">
             <label>通知渠道</label>
@@ -767,7 +769,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
           </div>
           <div class="form-group">
             <label>接收人</label>
-            <input type="text" placeholder="支持邮箱、手机号、钉钉ID，用逗号分隔" />
+            <input type="text" placeholder="支持邮箱、手机号、企业微信ID，用逗号分隔" data-marker="告警接收人输入" />
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -800,41 +802,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
     <div class="drawer-title" data-marker="告警详情抽屉标题">告警详情</div>
     <button class="modal-close" onclick="closeAlertDrawer()">✕</button>
   </div>
-  <div class="drawer-body">
-    <div class="drawer-section">
-      <div class="drawer-section-title">规则配置快照</div>
-      <div class="kv"><span class="k">规则名称</span><span class="v">Ecpm低值监控</span></div>
-      <div class="kv"><span class="k">计算因子</span><span class="v">AVG(params.ecpm)</span></div>
-      <div class="kv"><span class="k">触发条件</span><span class="v" style="color:var(--danger)">< 0.5</span></div>
-      <div class="kv"><span class="k">执行频率</span><span class="v">每5分钟</span></div>
-      <div class="kv"><span class="k">时间窗口</span><span class="v">最近5分钟</span></div>
-    </div>
-    <div class="drawer-section">
-      <div class="drawer-section-title">触发时的窗口范围</div>
-      <div class="kv"><span class="k">开始时间</span><span class="v">2026-07-31 14:30:00</span></div>
-      <div class="kv"><span class="k">结束时间</span><span class="v">2026-07-31 14:35:00</span></div>
-      <div class="kv"><span class="k">计算值</span><span class="v" style="color:var(--danger)">0.38</span></div>
-      <div class="kv"><span class="k">阈值</span><span class="v">0.5</span></div>
-    </div>
-    <div class="drawer-section">
-      <div class="drawer-section-title">命中数据样本（最多10条）</div>
-      <table class="data-table" style="font-size:12px">
-        <thead>
-          <tr><th>event_id</th><th>user_id</th><th>ecpm</th><th>country</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>40601</td><td>u_10023</td><td>0.21</td><td>US</td></tr>
-          <tr><td>40601</td><td>u_10456</td><td>0.35</td><td>CN</td></tr>
-          <tr><td>40601</td><td>u_10891</td><td>0.18</td><td>JP</td></tr>
-          <tr><td>40601</td><td>u_11205</td><td>0.42</td><td>KR</td></tr>
-          <tr><td>40601</td><td>u_11876</td><td>0.29</td><td>US</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <div class="drawer-body" id="alertDrawerBody"></div>
   <div class="drawer-footer">
-    <button class="btn" data-marker="告警详情-标记处理">标记处理</button>
-    <button class="btn" data-marker="告警详情-忽略">忽略</button>
+    <button class="btn" id="drawerMarkBtn" data-marker="告警详情-标记处理">标记处理</button>
     <button class="btn btn-primary" data-marker="告警详情-导出明细">导出明细 (CSV)</button>
   </div>
 </div>
@@ -865,35 +835,38 @@ const breadcrumbs = {
 // ============ Mock Data ============
 function initRules() {
   state.rules = [
-    {id:1,name:'Ecpm低值监控',project:'广告聚合',projectKey:'ad',factor:'AVG(params.ecpm)',condition:'< 0.5',window:'最近5分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:35',enabled:true},
-    {id:2,name:'空值率监控',project:'广告聚合',projectKey:'ad',factor:'NULL_RATE(account_id)',condition:'> 5%',window:'昨日全天',freq:'每日 T+1',freqKey:'daily',lastTrigger:'2026-07-31 01:00',enabled:true},
-    {id:3,name:'事件顺序异常',project:'用户增长',projectKey:'growth',factor:'SEQUENCE_MATCH',condition:'实时匹配',window:'逐条',freq:'实时',freqKey:'realtime',lastTrigger:'2026-07-31 14:32',enabled:true},
-    {id:4,name:'DAU骤降监控',project:'用户增长',projectKey:'growth',factor:'COUNT(DISTINCT user_id)',condition:'< 昨日-20%',window:'最近1小时',freq:'每小时',freqKey:'hourly',lastTrigger:'2026-07-31 13:00',enabled:true},
-    {id:5,name:'高延迟告警',project:'内容中台',projectKey:'content',factor:'P99(delay)',condition:'> 5000ms',window:'最近10分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:25',enabled:false},
-    {id:6,name:'转化漏斗异常',project:'广告聚合',projectKey:'ad',factor:'转化率(40601→40605)',condition:'< 10%',window:'最近15分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:30',enabled:true},
-    {id:7,name:'重复事件检测',project:'内容中台',projectKey:'content',factor:'COUNT(event_id)',condition:'> 1000/分钟',window:'逐条',freq:'实时',freqKey:'realtime',lastTrigger:'2026-07-31 14:33',enabled:true},
-    {id:8,name:'用户留存异常',project:'用户增长',projectKey:'growth',factor:'次日留存率',condition:'< 40%',window:'昨日全天',freq:'每日 T+1',freqKey:'daily',lastTrigger:'2026-07-31 01:00',enabled:false}
+    {id:1,name:'Ecpm低值监控',productGroups:['pg1'],dimensionText:'产品1组 / Phone Recover1 / v1.0.0',factor:'AVG(params.ecpm)',condition:'< 0.5',window:'最近5分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:35',enabled:true},
+    {id:2,name:'空值率监控',productGroups:['pg1'],dimensionText:'产品1组 / Phone Recover2',factor:'NULL_RATE(account_id)',condition:'> 5%',window:'昨日全天',freq:'每日 T+1',freqKey:'daily',lastTrigger:'2026-07-31 01:00',enabled:true},
+    {id:3,name:'事件顺序异常',productGroups:['pg2'],dimensionText:'产品2组 / 全部App',factor:'SEQUENCE_MATCH',condition:'实时匹配',window:'逐条',freq:'实时',freqKey:'realtime',lastTrigger:'2026-07-31 14:32',enabled:true},
+    {id:4,name:'DAU骤降监控',productGroups:['pg2'],dimensionText:'产品2组 / Phone Recover3 / 美国-us',factor:'COUNT(DISTINCT user_id)',condition:'< 昨日-20%',window:'最近1小时',freq:'每小时 H+1',freqKey:'hourly',lastTrigger:'2026-07-31 13:00',enabled:true},
+    {id:5,name:'高延迟告警',productGroups:['pg3'],dimensionText:'产品3组 / 全部版本',factor:'P99(delay)',condition:'> 5000ms',window:'最近10分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:25',enabled:false},
+    {id:6,name:'转化漏斗异常',productGroups:['pg1'],dimensionText:'产品1组 / Phone Recover1 / FB',factor:'转化率(40601→40605)',condition:'< 10%',window:'最近15分钟',freq:'每5分钟',freqKey:'5min',lastTrigger:'2026-07-31 14:30',enabled:true},
+    {id:7,name:'重复事件检测',productGroups:['pg3'],dimensionText:'产品3组 / TikTok',factor:'COUNT(event_id)',condition:'> 1000/分钟',window:'逐条',freq:'实时',freqKey:'realtime',lastTrigger:'2026-07-31 14:33',enabled:true},
+    {id:8,name:'用户留存异常',productGroups:['pg2'],dimensionText:'产品2组 / Google',factor:'次日留存率',condition:'< 40%',window:'昨日全天',freq:'每日 T+1',freqKey:'daily',lastTrigger:'2026-07-31 01:00',enabled:false}
   ];
 }
 
 function initAlerts() {
   const rules = ['Ecpm低值监控','空值率监控','事件顺序异常','DAU骤降监控','转化漏斗异常','高延迟告警'];
-  const projects = ['广告聚合','用户增长','内容中台'];
-  const statuses = [{key:'pending',label:'未处理'},{key:'ignored',label:'已忽略'},{key:'resolved',label:'已恢复'}];
-  const severities = ['critical','warning','info'];
+  const dims = ['产品1组 / Phone Recover1 / v1.0.0','产品1组 / Phone Recover2','产品2组 / 全部App','产品2组 / Phone Recover3 / 美国-us','产品3组 / 全部版本','产品1组 / Phone Recover1 / FB'];
+  const factors = ['AVG(params.ecpm)','NULL_RATE(account_id)','SEQUENCE_MATCH','COUNT(DISTINCT user_id)','P99(delay)','转化率(40601→40605)'];
+  const conds = ['< 0.5','> 5%','实时匹配','< 昨日-20%','> 5000ms','< 10%'];
+  const productGroups = ['pg1','pg1','pg2','pg2','pg3','pg1'];
+  const statuses = [{key:'pending',label:'未处理'},{key:'resolved',label:'已处理'}];
   state.alerts = [];
   for (let i = 0; i < 15; i++) {
-    const s = statuses[Math.floor(Math.random()*3)];
+    const s = statuses[i % 2];
     state.alerts.push({
       id: i+1,
       time: `2026-07-31 ${14-Math.floor(i/4)}:${String(60-i*3%60).padStart(2,'0')}:${String(i*7%60).padStart(2,'0')}`,
       rule: rules[i % rules.length],
-      project: projects[i % projects.length],
-      value: (Math.random()*0.5+0.1).toFixed(2),
-      threshold: (Math.random()*0.3+0.3).toFixed(2),
+      dimension: dims[i % dims.length],
+      productGroup: productGroups[i % productGroups.length],
+      factor: factors[i % factors.length],
+      condition: conds[i % conds.length],
+      hitCount: Math.floor(Math.random()*8)+1,
       status: s.key,
-      statusLabel: s.label,
-      severity: severities[i % 3]
+      statusLabel: s.label
     });
   }
 }
@@ -925,6 +898,7 @@ function switchPage(page) {
   document.getElementById('page-' + page).classList.remove('hidden');
   document.getElementById('breadcrumb').innerHTML = breadcrumbs[page];
   if (page === 'dashboard') renderTrendChart();
+  if (page === 'rules') renderRulesTable();
   if (page === 'alerts') renderAlertsTable();
   if (page === 'fields') renderFieldsTable();
 }
@@ -976,12 +950,12 @@ function renderLatestAlerts() {
 // ============ Rules Table ============
 function renderRulesTable() {
   const tbody = document.getElementById('rulesTableBody');
-  const projectFilter = document.getElementById('ruleProjectFilter').value;
+  const productFilter = document.getElementById('ruleProductFilter').value;
   const statusFilter = document.getElementById('ruleStatusFilter').value;
   const search = document.getElementById('ruleSearch').value.toLowerCase();
 
   let filtered = state.rules.filter(r => {
-    if (projectFilter && r.projectKey !== projectFilter) return false;
+    if (productFilter && !(r.productGroups || []).includes(productFilter)) return false;
     if (statusFilter === 'on' && !r.enabled) return false;
     if (statusFilter === 'off' && r.enabled) return false;
     if (search && !r.name.toLowerCase().includes(search)) return false;
@@ -996,10 +970,8 @@ function renderRulesTable() {
           ${r.name}
         </div>
       </td>
-      <td>${r.project}</td>
-      <td style="font-family:monospace;font-size:12px;color:var(--primary)">${r.factor}</td>
-      <td>${r.condition}</td>
-      <td>${r.window}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${r.dimensionText}</td>
+      <td><code style="font-family:monospace;font-size:12px;color:var(--primary);background:#EEF2FF;padding:2px 6px;border-radius:4px">${r.factor}</code> <span style="color:var(--danger);font-size:12px;margin-left:6px">${r.condition}</span></td>
       <td><span class="tag tag-blue">${r.freq}</span></td>
       <td style="color:var(--text-secondary)">${r.lastTrigger}</td>
       <td>
@@ -1022,28 +994,52 @@ function toggleRule(id) {
 // ============ Alerts Table ============
 function renderAlertsTable() {
   const tbody = document.getElementById('alertsTableBody');
+  const productFilter = document.getElementById('alertProductFilter').value;
+  const statusFilter = document.getElementById('alertStatusFilter').value;
+  const search = document.getElementById('alertSearch').value.toLowerCase();
   const statusTag = {
     pending: '<span class="tag tag-red">未处理</span>',
-    ignored: '<span class="tag tag-gray">已忽略</span>',
-    resolved: '<span class="tag tag-green">已恢复</span>'
+    resolved: '<span class="tag tag-green">已处理</span>'
   };
-  tbody.innerHTML = state.alerts.map(a => `
+  let filtered = state.alerts.filter(a => {
+    if (productFilter && a.productGroup !== productFilter) return false;
+    if (statusFilter && a.status !== statusFilter) return false;
+    if (search && !a.rule.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  tbody.innerHTML = filtered.map(a => `
     <tr>
-      <td><input type="checkbox"></td>
       <td style="color:var(--text-secondary)">${a.time}</td>
       <td style="font-weight:500">${a.rule}</td>
-      <td>${a.project}</td>
-      <td><span style="color:var(--danger);font-weight:600">${a.value}</span> / ${a.threshold}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${a.dimension}</td>
+      <td><button class="btn" onclick="openRuleView(${a.id})" data-marker="查看规则说明-${a.rule}">查看</button></td>
       <td>${statusTag[a.status]}</td>
       <td>
         <div class="table-actions">
-          <button class="btn" onclick="openAlertDrawer()" data-marker="查看告警详情-${a.rule}">查看详情</button>
-          <button class="btn">标记处理</button>
-          <button class="btn">忽略</button>
+          <button class="btn" onclick="markAlertResolved(${a.id})" ${a.status==='resolved'?'disabled':''} data-marker="标记处理-${a.rule}">标记处理</button>
+          <button class="btn" onclick="openAlertDrawer(${a.id})" data-marker="查看告警详情-${a.rule}">查看详情</button>
         </div>
       </td>
     </tr>
   `).join('');
+  updateAlertStats();
+}
+
+function updateAlertStats() {
+  document.getElementById('statTotal').textContent = state.alerts.length;
+  document.getElementById('statPending').textContent = state.alerts.filter(a => a.status === 'pending').length;
+  document.getElementById('statResolved').textContent = state.alerts.filter(a => a.status === 'resolved').length;
+}
+
+function markAlertResolved(id) {
+  const a = state.alerts.find(x => x.id === id);
+  if (a && a.status !== 'resolved') { a.status = 'resolved'; a.statusLabel = '已处理'; renderAlertsTable(); }
+}
+
+function openRuleView(id) {
+  const a = state.alerts.find(x => x.id === id);
+  if (!a) return;
+  alert(`【规则说明】\n规则名称：${a.rule}\n监控维度：${a.dimension}\n计算因子：${a.factor}\n触发条件：${a.condition}`);
 }
 
 // ============ Fields Table ============
@@ -1073,9 +1069,6 @@ function renderFieldsTable() {
 function openRuleModal(id) {
   document.getElementById('ruleModalTitle').textContent = id ? '编辑规则' : '新建规则';
   document.getElementById('ruleModal').classList.add('show');
-  if (!document.getElementById('filterContainer').innerHTML.trim()) {
-    initFilterBuilder();
-  }
 }
 function closeRuleModal() {
   document.getElementById('ruleModal').classList.remove('show');
@@ -1170,7 +1163,38 @@ function addFilterGroup(parentId) {
 }
 
 // ============ Alert Drawer ============
-function openAlertDrawer() {
+let currentDrawerAlert = null;
+function openAlertDrawer(id) {
+  const a = state.alerts.find(x => x.id === id);
+  if (!a) return;
+  currentDrawerAlert = a;
+  const sampleRows = Array.from({length: Math.min(a.hitCount, 5)}, (_, i) => {
+    const eid = a.factor.includes('ecpm') ? 'ad_click' : '40601';
+    return `<tr><td>${eid}</td><td>u_${10000+i*23}</td><td>${['US','CN','JP','KR','BR'][i%5]}</td><td>${(Math.random()*0.5+0.1).toFixed(2)}</td></tr>`;
+  }).join('');
+  document.getElementById('alertDrawerBody').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">命中规则及规则快照</div>
+      <div class="kv"><span class="k">规则名称</span><span class="v">${a.rule}</span></div>
+      <div class="kv"><span class="k">监控维度</span><span class="v">${a.dimension}</span></div>
+      <div class="kv"><span class="k">计算因子</span><span class="v"><code style="font-family:monospace;font-size:12px;color:var(--primary);background:#EEF2FF;padding:2px 6px;border-radius:4px">${a.factor}</code></span></div>
+      <div class="kv"><span class="k">触发条件</span><span class="v" style="color:var(--danger)">${a.condition}</span></div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">触发窗口期范围与数据条数</div>
+      <div class="kv"><span class="k">触发执行时间</span><span class="v">${a.time}</span></div>
+      <div class="kv"><span class="k">命中数据条数</span><span class="v" style="color:var(--danger);font-weight:600">${a.hitCount} 条</span></div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">命中数据明细</div>
+      <table class="data-table" style="font-size:12px" data-marker="命中数据明细表格">
+        <thead><tr><th>event_id</th><th>user_id</th><th>country</th><th>命中值</th></tr></thead>
+        <tbody>${sampleRows}</tbody>
+      </table>
+    </div>`;
+  const markBtn = document.getElementById('drawerMarkBtn');
+  markBtn.disabled = a.status === 'resolved';
+  markBtn.onclick = function() { markAlertResolved(a.id); markBtn.disabled = true; };
   document.getElementById('alertDrawer').classList.add('show');
   document.getElementById('alertDrawerOverlay').classList.add('show');
 }
@@ -1204,13 +1228,29 @@ document.querySelectorAll('.nav-item').forEach(el => {
   el.addEventListener('click', () => switchPage(el.dataset.page));
 });
 
+function updateRefreshTime() {
+  const d = new Date();
+  const el = document.getElementById('lastRefresh');
+  if (el) el.textContent = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+}
+
 window.addEventListener('load', () => {
   initRules();
   initAlerts();
   initFields();
   switchPage('dashboard');
   renderLatestAlerts();
+  renderRulesTable();
   initAnnotations();
+  updateRefreshTime();
+  // 每半小时自动刷新（演示用 30s 间隔）
+  setInterval(updateRefreshTime, 30000);
+  // 告警筛选联动
+  ['alertProductFilter','alertStatusFilter','alertSearch'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', renderAlertsTable);
+    if (el) el.addEventListener('change', renderAlertsTable);
+  });
 });
 
 window.addEventListener('resize', () => {
