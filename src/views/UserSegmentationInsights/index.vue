@@ -474,8 +474,14 @@ const funcAllColumns = [
   {key:'downloadUsers',title:'模版下载人数'},
   {key:'downloadCount',title:'模版下载次数'},
   {key:'downloadRate',title:'模版下载率'},
+  {key:'templateExposureUsers',title:'模版曝光人数'},
+  {key:'submitMakeSuccessCount',title:'模版提交制作成功次数'},
+  {key:'homepageExposureUsers',title:'首页曝光人数'},
+  {key:'homepageExposureCount',title:'首页曝光次数'},
+  {key:'previewMakeClickUsers',title:'预览制作点击人数'},
+  {key:'previewMakeCount',title:'预览制作次数'},
 ];
-const funcVisibleColumns = ref(funcAllColumns.map(c => c.key).filter(k => !['clickMakeUsers','clickMakeCount','submitMakeUsers','submitMakeCount','makeCompleteUsers','makeCompleteCount','downloadUsers','downloadCount','submitMakeSuccessUsers'].includes(k)));
+const funcVisibleColumns = ref(funcAllColumns.map(c => c.key).filter(k => !['clickMakeUsers','clickMakeCount','submitMakeUsers','submitMakeCount','makeCompleteUsers','makeCompleteCount','downloadUsers','downloadCount','submitMakeSuccessUsers','templateExposureUsers','submitMakeSuccessCount','homepageExposureUsers','homepageExposureCount','previewMakeClickUsers','previewMakeCount'].includes(k)));
 const funcTableColumns = computed(() => {
   return funcAllColumns.filter(c => funcVisibleColumns.value.includes(c.key)).map(c => ({
     ...c,
@@ -540,6 +546,12 @@ const generateFuncTableData = () => {
                   downloadUsers: Math.floor(Math.random() * 3000) + 300,
                   downloadCount: Math.floor(Math.random() * 8000) + 800,
                   downloadRate: (Math.random() * 15 + 3).toFixed(2) + '%',
+                  templateExposureUsers: Math.floor(Math.random() * 40000) + 4000,
+                  submitMakeSuccessCount: Math.floor(Math.random() * 20000) + 2000,
+                  homepageExposureUsers: Math.floor(Math.random() * 60000) + 6000,
+                  homepageExposureCount: Math.floor(Math.random() * 200000) + 20000,
+                  previewMakeClickUsers: Math.floor(Math.random() * 15000) + 1500,
+                  previewMakeCount: Math.floor(Math.random() * 40000) + 4000,
                 });
               });
             });
