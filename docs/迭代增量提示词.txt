@@ -1,0 +1,20 @@
+
+当前项目是一个 Vue 3 + Ant Design Vue 的数据分析平台，已有销售看板页面（路由为 /dashboard）。
+请新增一个“AI-Chat”页面,并封装为独立的AI辅助分析对话框入口（对话框形式）。
+
+【需求说明】
+为上传的MD文档
+
+【技术与交互规范】
+请严格遵守其中的规范/docs/build.md文档；
+
+【标注要求】
+- 为新页面的所有交互元素添加 data-marker 属性
+- 页面底部添加折叠面板汇总标注
+
+请需求说明生成：
+1. 创建  src/views/AI-Chat.vue 组件
+2. 修改 router/index.js 添加路由
+3. 修改左侧菜单组件（通常为 src/components/LeftMenu.vue 或 src/layouts/MainLayout.vue 中的菜单部分，请你自动识别并修改）
+
+每一步完成后等待我确认。
