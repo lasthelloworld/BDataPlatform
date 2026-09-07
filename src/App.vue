@@ -8,6 +8,7 @@
       <div class="panel-header">
         <span class="panel-icon">📌</span>
         <span class="panel-title">标注说明</span>
+        <span class="panel-close" @click="panelVisible = false" title="关闭">×</span>
       </div>
       <div class="panel-content">
         {{ panelContent }}
@@ -108,6 +109,21 @@ onMounted(() => {
 .panel-title {
   font-size: 14px;
   font-weight: 600;
+  color: #333;
+  flex: 1;
+}
+
+.panel-close {
+  margin-left: 8px;
+  font-size: 18px;
+  line-height: 1;
+  color: #999;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.panel-close:hover {
   color: #333;
 }
 

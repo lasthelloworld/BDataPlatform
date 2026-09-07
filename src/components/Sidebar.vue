@@ -63,6 +63,12 @@
         >
           <span>AI analyses Task</span>
         </a-menu-item>
+        <a-menu-item
+          key="AI-Chat"
+          data-marker="侧边栏菜单-AI-Chat"
+        >
+          <span>AI-Chat</span>
+        </a-menu-item>
       </a-sub-menu>
 
       <a-sub-menu key="iap-web-report" data-marker="侧边栏菜单-IAP Web Report">

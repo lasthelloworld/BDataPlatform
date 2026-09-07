@@ -36,6 +36,12 @@ const routes = [
     meta: { title: 'AI Analyses Task' }
   },
   {
+    path: '/AI-Chat',
+    name: 'AIChat',
+    component: () => import('../views/AIAnalysesTask/AI-Chat.vue'),
+    meta: { title: 'AI-Chat' }
+  },
+  {
     path: '/ai-analyses-task/:id',
     name: 'AITaskDetail',
     component: () => import('../views/AITaskDetail/index.vue'),
