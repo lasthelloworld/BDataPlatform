@@ -84,7 +84,19 @@
 
     <!-- ============ 右侧对话主区域 ============ -->
     <section class="chat-main" data-marker="ai-chat-main">
-      <div class="main-topbar"></div>
+      <div class="main-topbar">
+        <button
+          class="spec-btn"
+          data-marker="btn-spec-examples"
+          @click="specModalVisible = true"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+          规范示例
+        </button>
+      </div>
 
       <div class="message-area" ref="messageAreaRef">
         <!-- 欢迎卡片 -->
@@ -313,6 +325,59 @@
           </div>
         </div>
       </a-drawer>
+
+      <!-- 规范示例弹窗 -->
+      <a-modal
+        v-model:open="specModalVisible"
+        title="规范示例"
+        :width="780"
+        :footer="null"
+        :closable="true"
+        :mask-closable="true"
+        data-marker="spec-modal"
+      >
+        <div class="spec-list">
+          <div
+            v-for="(item, i) in specExamples"
+            :key="i"
+            class="spec-card"
+          >
+            <div class="spec-card-head">
+              <span class="spec-card-title">{{ item.title }}</span>
+              <span class="spec-card-toggle" @click="item.expanded = !item.expanded">
+                {{ item.expanded ? '收起' : '展开' }}
+              </span>
+            </div>
+            <div class="spec-card-body">
+              <div class="spec-cols">
+                <div class="spec-col">
+                  <div class="spec-col-label">不规范</div>
+                  <div class="spec-bad">{{ item.bad }}</div>
+                </div>
+                <div class="spec-col">
+                  <div class="spec-col-label">规范</div>
+                  <div class="spec-good">{{ item.good || '（该案例未提供规范示例）' }}</div>
+                </div>
+              </div>
+              <template v-if="item.expanded">
+                <div class="spec-explain-label" @click="item.showExplain = !item.showExplain">
+                  {{ item.showExplain ? '收起错误说明' : '查看错误说明' }}
+                </div>
+                <div v-if="item.showExplain" class="spec-explain">
+                  <div class="spec-explain-item">
+                    <span class="explain-tag">错误示例:</span>
+                    <span class="explain-text">{{ item.badExplain }}</span>
+                  </div>
+                  <div class="spec-explain-item">
+                    <span class="explain-tag">正确规范:</span>
+                    <span class="explain-text">{{ item.goodExplain }}</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </a-modal>
     </section>
   </div>
 </template>
@@ -653,6 +718,37 @@ const dragOver = ref(false)
 const drawerVisible = ref(false)
 const expandedReasoningId = ref(null)
 const currentReasoning = ref(null)
+const specModalVisible = ref(false)
+
+const specExamples = reactive([
+  {
+    title: '指代不明，组内黑话',
+    expanded: true,
+    showExplain: true,
+    bad: '查看 onedrama 9-5 9-6 两天的新人用户漏斗',
+    good: '查看 onedrama 9-5 9-6 两天的新人引导漏斗事件情况。',
+    badExplain: '【新人用户漏斗】是组内业务黑话，存在含义指代不明，漏斗有很多，如"付费转化漏斗、广告链路漏斗"。',
+    goodExplain: '需指明业务名词含义，要求与实际产品组上报点位内容（事件类型/事件名称/事件备注等）保持一致。'
+  },
+  {
+    title: '判断线上行为，需指明数据判断条件',
+    expanded: true,
+    showExplain: false,
+    bad: '查一下所有的包中，哪些包是在灰度测试。',
+    good: 'Photo Recover 产品在 2026.8.15~2026.8.19 进行了全量灰度，灰度版本是 1.7.5.0，调整点改动：广告做了 webview 防护，防止网页下载 apk 文件，请环比灰度前 1.7.3.0 核心数据涨跌情况。',
+    badExplain: '未指明如何判断"灰度中"，是通过版本号、开关还是其他条件？',
+    goodExplain: '需给出明确的判断条件，如版本号范围、灰度开关状态、灰度时间区间等，让 AI 能据此构造正确的查询条件。'
+  },
+  {
+    title: '判断线上行为，需指明数据判断条件',
+    expanded: true,
+    showExplain: false,
+    bad: '目前有哪些应用正在灰度测试',
+    good: '',
+    badExplain: '"正在灰度测试"缺少判断依据，AI 无法识别哪些应用属于灰度状态。',
+    goodExplain: '需补充灰度的判断逻辑（如版本号规则、灰度标记字段等），否则无法正确查询。'
+  }
+])
 let attSeq = 0
 
 function toggleReasoning(msg) {
@@ -958,6 +1054,8 @@ const markerList = [
   { element: '重命名按钮', marker: 'history-item-edit-{id}', desc: 'hover 出现；点击进入 inline 重命名输入框' },
   { element: '重命名输入框', marker: 'history-item-rename-input-{id}', desc: '回车/失焦确认；ESC 取消' },
   { element: '侧边栏用户信息', marker: 'sidebar-user-info', desc: '当前登录用户账号信息' },
+  { element: '规范示例按钮', marker: 'btn-spec-examples', desc: '右上角入口，点击弹出规范示例弹窗' },
+  { element: '规范示例弹窗', marker: 'spec-modal', desc: '展示提问规范与正反例对比，支持展开/收起错误说明' },
   { element: '右侧主区域', marker: 'ai-chat-main', desc: '对话主区域容器' },
   { element: '欢迎卡片', marker: 'welcome-card', desc: '初始欢迎卡片，展示助手介绍与使用指引' },
   { element: '消息流列表', marker: 'message-list', desc: '用户与 AI 的问答消息流' },
@@ -1086,7 +1184,51 @@ const markerList = [
   padding: 12px 20px; border-bottom: 1px solid #f0f0f0;
   display: flex; align-items: center; justify-content: flex-end;
 }
+.spec-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border: 1px solid #e5e7eb; border-radius: 6px;
+  background: #fff; color: #4b5563; font-size: 13px; cursor: pointer;
+  transition: all 0.2s;
+}
+.spec-btn:hover { border-color: #1677ff; color: #1677ff; background: #f0f5ff; }
 .main-title { font-size: 16px; font-weight: 600; color: #1f2937; }
+
+/* ===== 规范示例弹窗 ===== */
+.spec-list { display: flex; flex-direction: column; gap: 16px; max-height: 68vh; overflow-y: auto; padding-right: 4px; }
+.spec-card {
+  border: 1px solid #eef0f4; border-radius: 8px; background: #fff; overflow: hidden;
+}
+.spec-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid #eef0f4; background: #fafbfc;
+}
+.spec-card-title { font-size: 14px; font-weight: 600; color: #1677ff; }
+.spec-card-toggle { font-size: 13px; color: #1677ff; cursor: pointer; user-select: none; }
+.spec-card-toggle:hover { text-decoration: underline; }
+.spec-card-body { padding: 14px 16px; }
+.spec-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
+.spec-col { display: flex; flex-direction: column; gap: 6px; }
+.spec-col-label { font-size: 13px; color: #6b7280; font-weight: 500; }
+.spec-bad {
+  flex: 1; padding: 10px 12px; background: #fff1f0; border: 1px solid #ffa39e; border-radius: 6px;
+  font-size: 13px; color: #cf1322; line-height: 1.6; word-break: break-word; min-height: 60px;
+}
+.spec-good {
+  flex: 1; padding: 10px 12px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px;
+  font-size: 13px; color: #389e0d; line-height: 1.6; word-break: break-word; min-height: 60px;
+}
+.spec-explain-label {
+  margin-top: 10px; font-size: 12px; color: #1677ff; cursor: pointer; user-select: none;
+  display: inline-block;
+}
+.spec-explain-label:hover { text-decoration: underline; }
+.spec-explain {
+  margin-top: 8px; padding: 12px; background: #f9fafb; border-radius: 6px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.spec-explain-item { font-size: 12px; line-height: 1.7; color: #1f2937; }
+.explain-tag { color: #1f2937; font-weight: 600; }
+.explain-text { color: #1f2937; }
 
 .message-area { flex: 1; overflow-y: auto; padding: 20px; }
 
