@@ -84,20 +84,6 @@
 
     <!-- ============ 右侧对话主区域 ============ -->
     <section class="chat-main" data-marker="ai-chat-main">
-      <div class="main-topbar">
-        <button
-          class="spec-btn"
-          data-marker="btn-spec-examples"
-          @click="specModalVisible = true"
-        >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-          </svg>
-          规范示例
-        </button>
-      </div>
-
       <div class="message-area" ref="messageAreaRef">
         <!-- 欢迎卡片 -->
         <div v-if="showWelcome" class="welcome-card" data-marker="welcome-card">
@@ -184,6 +170,81 @@
         </div>
       </div>
 
+      <!-- 推荐示例上滑面板 -->
+      <div
+        class="reco-panel"
+        :class="{ open: recommendPanelOpen }"
+        data-marker="recommend-panel"
+      >
+        <div class="reco-panel-inner">
+          <div class="reco-panel-title">
+            <span class="reco-panel-line"></span>
+            <span class="reco-panel-text">推荐示例</span>
+            <span class="reco-panel-line"></span>
+          </div>
+          <div class="reco-grid">
+            <div
+              v-for="(item, i) in featuredExamples"
+              :key="i"
+              class="reco-tile"
+              :class="'reco-tile-' + item.theme"
+              :data-marker="'recommend-tile-' + i"
+              @click="openRecoDetail(item)"
+            >
+              <span class="reco-tile-icon">
+                <svg v-if="item.icon === 'chart'" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/>
+                </svg>
+                <svg v-else-if="item.icon === 'debug'" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- 放大镜 -->
+                  <circle cx="10" cy="10" r="6.5"/>
+                  <path d="M15 15l6 6"/>
+                  <!-- 镜片内的扳手（问题排查） -->
+                  <g transform="translate(4.96,4.96) scale(0.42)">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </g>
+                </svg>
+                <svg v-else-if="item.icon === 'trend'" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 15l4-4 3 3 5-6"/>
+                </svg>
+                <svg v-else-if="item.icon === 'pie'" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                </svg>
+                <svg v-else-if="item.icon === 'wallet'" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
+                  <path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-2.4z"/>
+                </svg>
+              </span>
+              <div class="reco-tile-body">
+                <div class="reco-tile-title">{{ item.title }}</div>
+                <div class="reco-tile-desc">{{ item.desc }}</div>
+              </div>
+            </div>
+            <!-- 查看全部入口 -->
+            <div
+              v-if="recommendExamples.length > featuredExamples.length"
+              class="reco-tile reco-tile-more"
+              data-marker="recommend-library-open"
+              @click="openLibrary"
+            >
+              <span class="reco-tile-more-icon">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14.5v6M14.5 17.5h6"/>
+                </svg>
+              </span>
+              <div class="reco-tile-body">
+                <div class="reco-tile-title">查看全部示例</div>
+                <div class="reco-tile-desc">共 {{ recommendExamples.length }} 个分析场景，支持分类与搜索</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 底部输入操作区 -->
       <div
         class="input-area"
@@ -193,6 +254,34 @@
         @dragleave.prevent="dragOver = false"
         @drop.prevent="handleDrop"
       >
+        <!-- 顶部工具栏 -->
+        <div class="input-toolbar-top" data-marker="input-toolbar-top">
+          <button
+            class="spec-btn"
+            data-marker="btn-recommend-examples"
+            @click="toggleRecommendPanel"
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <!-- 圆角方框 -->
+              <rect x="3" y="3" width="18" height="18" rx="4"/>
+              <!-- 打开的书本 -->
+              <path d="M12 8.2c-1.3-1-2.9-1.4-4.5-1.2v8.6c1.6-.2 3.2.2 4.5 1.2"/>
+              <path d="M12 8.2c1.3-1 2.9-1.4 4.5-1.2v8.6c-1.6-.2-3.2.2-4.5 1.2"/>
+            </svg>
+            推荐示例
+          </button>
+          <button
+            class="spec-btn"
+            data-marker="btn-spec-examples"
+            @click="specModalVisible = true"
+          >
+            <svg viewBox="0 0 1024 1024" width="15" height="15" fill="currentColor">
+              <path d="M553.358222 154.282667v81.351111H181.020444a41.016889 41.016889 0 0 0-41.358222 40.561778v569.002666a40.96 40.96 0 0 0 41.358222 40.618667h579.242667c22.812444-0.056889 41.301333-18.204444 41.358222-40.618667V519.964444h82.773334v325.176889c0 67.356444-55.580444 121.912889-124.131556 121.912889H181.020444C112.469333 967.111111 56.888889 912.497778 56.888889 845.198222V276.195556c0-67.299556 55.580444-121.912889 124.131555-121.912889h372.337778z m267.605334 272.042666l10.24-22.983111a178.915556 178.915556 0 0 1 91.818666-91.420444l31.402667-13.767111A21.560889 21.560889 0 0 0 967.111111 278.584889a21.560889 21.560889 0 0 0-12.686222-19.569778l-29.696-12.970667a178.858667 178.858667 0 0 1-93.127111-94.492444l-10.524445-24.860444A20.992 20.992 0 0 0 801.621333 113.777778c-8.533333 0-16.213333 5.12-19.456 12.913778l-10.524444 24.803555a178.858667 178.858667 0 0 1-93.070222 94.549333l-29.696 12.970667a21.560889 21.560889 0 0 0-12.686223 19.569778c0 8.419556 4.949333 16.042667 12.686223 19.569778l31.402666 13.710222c41.187556 18.147556 73.955556 50.744889 91.875556 91.420444l10.183111 23.04c7.395556 16.839111 31.118222 16.839111 38.684444 0z m-140.515556-30.435555v100.465778H531.456v297.756444H430.990222V496.355556H282.168889V395.946667h398.222222z"/>
+            </svg>
+            示范
+          </button>
+        </div>
+
         <!-- 附件预览区 -->
         <div v-if="attachments.length" class="attachment-preview" data-marker="attachment-preview">
           <div
@@ -224,9 +313,13 @@
         ></textarea>
 
         <div class="input-toolbar">
-          <label class="upload-btn" :data-marker="btn-upload" title="上传图片或 Excel 文件">
+          <label class="upload-btn" data-marker="btn-upload" title="上传图片或 Excel 文件">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+              <!-- 托盘（顶部中间留口） -->
+              <path d="M7.5 10H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-3.5"/>
+              <!-- 向上箭头 -->
+              <path d="M12 17V4"/>
+              <path d="M7 9l5-5 5 5"/>
             </svg>
             <input
               type="file"
@@ -348,7 +441,7 @@
                 {{ item.expanded ? '收起' : '展开' }}
               </span>
             </div>
-            <div class="spec-card-body">
+            <div v-if="item.expanded" class="spec-card-body">
               <div class="spec-cols">
                 <div class="spec-col">
                   <div class="spec-col-label">不规范</div>
@@ -359,22 +452,160 @@
                   <div class="spec-good">{{ item.good || '（该案例未提供规范示例）' }}</div>
                 </div>
               </div>
-              <template v-if="item.expanded">
-                <div class="spec-explain-label" @click="item.showExplain = !item.showExplain">
-                  {{ item.showExplain ? '收起错误说明' : '查看错误说明' }}
+              <div class="spec-explain-label" @click="item.showExplain = !item.showExplain">
+                {{ item.showExplain ? '收起错误说明' : '查看错误说明' }}
+              </div>
+              <div v-if="item.showExplain" class="spec-explain">
+                <div class="spec-explain-item">
+                  <span class="explain-tag">错误示例:</span>
+                  <span class="explain-text">{{ item.badExplain }}</span>
                 </div>
-                <div v-if="item.showExplain" class="spec-explain">
-                  <div class="spec-explain-item">
-                    <span class="explain-tag">错误示例:</span>
-                    <span class="explain-text">{{ item.badExplain }}</span>
-                  </div>
-                  <div class="spec-explain-item">
-                    <span class="explain-tag">正确规范:</span>
-                    <span class="explain-text">{{ item.goodExplain }}</span>
-                  </div>
+                <div class="spec-explain-item">
+                  <span class="explain-tag">正确规范:</span>
+                  <span class="explain-text">{{ item.goodExplain }}</span>
                 </div>
-              </template>
+              </div>
             </div>
+          </div>
+        </div>
+      </a-modal>
+
+      <!-- 推荐示例·全量示例库弹窗 -->
+      <a-modal
+        v-model:open="libraryVisible"
+        title="全部推荐示例"
+        :width="880"
+        :footer="null"
+        :closable="true"
+        :mask-closable="true"
+        data-marker="recommend-library-modal"
+      >
+        <div class="lib-body">
+          <!-- 左侧分类 -->
+          <aside class="lib-aside">
+            <div
+              class="lib-cat"
+              :class="{ active: activeCategory === '全部' }"
+              data-marker="lib-cat-all"
+              @click="activeCategory = '全部'"
+            >
+              <span>全部</span><span class="lib-cat-count">{{ recommendExamples.length }}</span>
+            </div>
+            <div
+              v-for="cat in categories"
+              :key="cat.name"
+              class="lib-cat"
+              :class="{ active: activeCategory === cat.name }"
+              :data-marker="'lib-cat-' + cat.name"
+              @click="activeCategory = cat.name"
+            >
+              <span>{{ cat.name }}</span><span class="lib-cat-count">{{ cat.count }}</span>
+            </div>
+          </aside>
+          <!-- 右侧列表 -->
+          <section class="lib-main">
+            <div class="lib-search">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+              </svg>
+              <input
+                v-model="libKeyword"
+                class="lib-search-input"
+                placeholder="搜索场景名称、描述或关键词"
+                data-marker="lib-search"
+              />
+            </div>
+            <div class="lib-list">
+              <div
+                v-for="(item, i) in filteredExamples"
+                :key="i"
+                class="lib-row"
+                :data-marker="'lib-row-' + i"
+                @click="openRecoDetail(item)"
+              >
+                <span class="lib-row-icon" :class="'lib-icon-' + item.theme">
+                  <svg v-if="item.icon === 'chart'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/>
+                  </svg>
+                  <svg v-else-if="item.icon === 'debug'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/>
+                  </svg>
+                  <svg v-else-if="item.icon === 'trend'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 15l4-4 3 3 5-6"/>
+                  </svg>
+                  <svg v-else-if="item.icon === 'pie'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
+                    <path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>
+                  </svg>
+                </span>
+                <div class="lib-row-body">
+                  <div class="lib-row-title">{{ item.title }}</div>
+                  <div class="lib-row-desc">{{ item.desc }}</div>
+                </div>
+                <span class="lib-row-cat">{{ item.category }}</span>
+                <span class="lib-row-arrow">›</span>
+              </div>
+              <div v-if="filteredExamples.length === 0" class="lib-empty">未找到匹配的示例，换个关键词试试</div>
+            </div>
+          </section>
+        </div>
+      </a-modal>
+
+      <!-- 推荐示例·AI 对话详情弹窗 -->
+      <a-modal
+        v-model:open="recoDetailVisible"
+        :title="currentReco ? currentReco.title : 'AI 对话示例'"
+        :width="780"
+        :footer="null"
+        :closable="true"
+        :mask-closable="true"
+        wrap-class-name="reco-detail-wrap"
+        data-marker="recommend-detail-modal"
+      >
+        <div v-if="currentReco" class="reco-chat-dialog">
+          <div class="rcd-scroll">
+          <div
+            v-for="(round, ri) in currentReco.rounds"
+            :key="ri"
+            class="rcd-round"
+          >
+            <!-- 用户轮次 -->
+            <div v-if="round.role === 'user'" class="rcd-row rcd-row-user">
+              <span class="rcd-user-name">我</span>
+              <div class="rcd-bubble rcd-bubble-user">{{ round.text }}</div>
+            </div>
+            <!-- AI 轮次 -->
+            <div v-else class="rcd-row rcd-row-ai">
+              <span class="rcd-ai-avatar">🤖</span>
+              <div class="rcd-bubble rcd-bubble-ai">
+                <p v-for="(line, li) in round.lines" :key="li" class="rcd-line">{{ line }}</p>
+                <div v-if="round.table" class="rcd-table-wrap">
+                  <table class="rcd-table">
+                    <thead>
+                      <tr>
+                        <th v-for="(col, ci) in round.table.columns" :key="ci" :title="col.tip || col.label">{{ col.label }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(row, rwi) in round.table.rows" :key="rwi">
+                        <td v-for="(cell, rci) in row" :key="rci" :class="{ 'rcd-warn': round.table.warnCols && round.table.warnCols.includes(rci) }">{{ cell }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div v-if="round.note" class="rcd-note">{{ round.note }}</div>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div class="rcd-footer">
+            <span class="rcd-tip">点击下方按钮，将首轮提问填入输入框（不会自动发送）</span>
+            <button class="rcd-use-btn" data-marker="recommend-detail-use" @click="useRecommendQuestion(currentReco.question)">
+              使用此提问 ↵
+            </button>
           </div>
         </div>
       </a-modal>
@@ -719,6 +950,392 @@ const drawerVisible = ref(false)
 const expandedReasoningId = ref(null)
 const currentReasoning = ref(null)
 const specModalVisible = ref(false)
+const recommendPanelOpen = ref(true)
+
+function toggleRecommendPanel() {
+  recommendPanelOpen.value = !recommendPanelOpen.value
+}
+
+const recoDetailVisible = ref(false)
+const currentReco = ref(null)
+
+/* 全量示例库 */
+const libraryVisible = ref(false)
+const activeCategory = ref('全部')
+const libKeyword = ref('')
+
+function openLibrary() {
+  activeCategory.value = '全部'
+  libKeyword.value = ''
+  libraryVisible.value = true
+}
+
+function openRecoDetail(item) {
+  currentReco.value = item
+  recoDetailVisible.value = true
+}
+
+/* 面板精选：按 hot 升序取前 3 个（第 4 格固定为「查看全部」入口） */
+const featuredExamples = computed(() =>
+  [...recommendExamples].sort((a, b) => (a.hot ?? 99) - (b.hot ?? 99)).slice(0, 3)
+)
+
+/* 分类聚合（按首次出现顺序） */
+const categories = computed(() => {
+  const map = new Map()
+  recommendExamples.forEach(item => {
+    map.set(item.category, (map.get(item.category) || 0) + 1)
+  })
+  return Array.from(map, ([name, count]) => ({ name, count }))
+})
+
+/* 分类 + 关键词过滤 */
+const filteredExamples = computed(() => {
+  const kw = libKeyword.value.trim().toLowerCase()
+  return recommendExamples.filter(item => {
+    const matchCat = activeCategory.value === '全部' || item.category === activeCategory.value
+    if (!matchCat) return false
+    if (!kw) return true
+    const hay = [item.title, item.desc, item.category, ...(item.keywords || [])]
+      .join(' ').toLowerCase()
+    return hay.includes(kw)
+  })
+})
+
+const recommendExamples = [
+  {
+    theme: 'blue',
+    icon: 'chart',
+    category: '日常巡检',
+    hot: 1,
+    keywords: ['DAU', '留存', '大盘', '新增', '广告收入', '巡检', '环比'],
+    title: '【日常巡检】宏观数据表现分析',
+    desc: '巡检产品整体 DAU、留存、收入等宏观指标表现，快速掌握大盘趋势',
+    question: '请对 onedrama 近 7 天的宏观数据进行日常巡检，分析 DAU、新增用户、留存率、广告收入等核心指标的环比趋势，标注异常波动并生成可视化分析报告。',
+    rounds: [
+      {
+        role: 'user',
+        text: '请对 onedrama 近 7 天（2026-09-09~09-15）的宏观数据做日常巡检，核心指标包括 DAU、新增用户、次日留存率、广告收入，按天给出环比趋势并标注异常。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '已完成 onedrama 近 7 天宏观数据巡检，整体结论：大盘运行平稳，仅 09-14 出现一次 DAU 波动，需重点关注。',
+          '① 09-13 前 DAU 稳步上升（12.8w → 14.2w），周末效应明显；',
+          '② 09-14 DAU 环比下跌 8.6%，次日留存同步下降 3.2pct，属于异常点；',
+          '③ 广告收入周环比 +6.4%，仍保持增长。明细如下：'
+        ],
+        table: {
+          columns: [
+            { label: '日期' }, { label: 'DAU(万)' }, { label: '新增(万)' },
+            { label: 'DAU环比' }, { label: '次日留存' }, { label: '广告收入($)' }
+          ],
+          warnCols: [3, 4],
+          rows: [
+            ['09-09', '12.8', '1.31', '—', '38.5%', '21,430'],
+            ['09-10', '13.1', '1.34', '+2.3%', '39.1%', '22,080'],
+            ['09-11', '13.6', '1.42', '+3.8%', '39.6%', '23,150'],
+            ['09-12', '14.0', '1.45', '+2.9%', '40.2%', '24,360'],
+            ['09-13', '14.2', '1.48', '+1.4%', '40.8%', '25,020'],
+            ['09-14', '13.0', '1.29', '-8.6%', '37.6%', '22,870'],
+            ['09-15', '13.9', '1.40', '+6.9%', '40.1%', '24,610']
+          ]
+        },
+        note: '注：红色列为异常波动项；09-14 为美国地区工作日，需进一步下钻确认是否为版本或渠道因素。'
+      },
+      {
+        role: 'user',
+        text: '09-14 的 DAU 下跌，帮我按国家和渠道拆一下，看看主要是哪里掉的。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '已按国家 × 渠道下钻 09-14 DAU 下跌贡献度：',
+          '① 美国地区贡献了整体跌幅的 71%，其中 Admob 渠道单日 DAU 减少 0.62w；',
+          '② 对应版本 1.7.5.0 在 09-14 推送了灰度扩量，该版本在美国 Admob 的启动崩溃率升至 1.8%（前版本 0.6%）；',
+          '③ 初步判定为版本灰度引发的启动崩溃导致用户流失，而非投放量下降（当日 Admob 展示量基本持平）。'
+        ]
+      },
+      {
+        role: 'user',
+        text: '给出后续处理建议。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '建议如下：',
+          '1. 立即暂停 1.7.5.0 在美国 Admob 的灰度扩量，回滚至崩溃率正常的 1.7.4.2；',
+          '2. 联系客户端排查 09-14 灰度包启动崩溃堆栈，重点关注新增的 SDK 初始化逻辑；',
+          '3. 修复后以 5%→20%→50% 小步灰度，每档观察 24 小时崩溃率与留存；',
+          '4. 后续巡检增加「版本发布后 48h 崩溃率/留存联动监控」自动告警，避免同类问题复发。'
+        ]
+      }
+    ]
+  },
+  {
+    theme: 'green',
+    icon: 'debug',
+    category: '日常排查',
+    hot: 2,
+    keywords: ['IAA', 'eCPM', 'ARPDAU', '填充率', '广告', '变现', 'Admob', '底价'],
+    title: '【日常排查】IAA 广告投放与变现日常问题排查',
+    desc: '排查 IAA 广告填充、展示、eCPM、ARPDAU 等变现链路异常，定位大盘收入涨跌根因',
+    question: '请排查 Photo Recover 近 3 天 IAA 广告投放与变现情况，从填充率、展示率、eCPM、ARPDAU 等指标逐层定位异常环节，并给出可能原因与优化建议。',
+    rounds: [
+      {
+        role: 'user',
+        text: '排查 Photo Recover 近 3 天（09-13~09-15）IAA 广告变现情况，按广告漏斗（请求→填充→展示→点击→收入）逐层看，定位异常环节。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '已完成 IAA 变现链路排查，核心结论：收入下跌发生在「填充→展示」和「单价」两个环节。',
+          '① ARPDAU 从 $0.182 降至 $0.169，环比 -7.1%；',
+          '② 填充率基本稳定（96.2% → 95.8%），但展示率下降 5.4pct；',
+          '③ eCPM $14.6 → $12.3，环比 -15.8%，是收入下跌主因。明细：'
+        ],
+        table: {
+          columns: [
+            { label: '指标' }, { label: '09-13' }, { label: '09-14' }, { label: '09-15' }, { label: '环比' }
+          ],
+          warnCols: [4],
+          rows: [
+            ['填充率', '96.2%', '95.8%', '95.9%', '-0.3pct'],
+            ['展示率', '78.4%', '73.0%', '72.6%', '-5.4pct'],
+            ['人均展示', '4.8', '4.5', '4.4', '-6.3%'],
+            ['eCPM($)', '14.6', '12.3', '12.1', '-15.8%'],
+            ['点击率', '2.1%', '2.0%', '2.0%', '-0.1pct'],
+            ['ARPDAU($)', '0.182', '0.170', '0.169', '-7.1%']
+          ]
+        }
+      },
+      {
+        role: 'user',
+        text: 'eCPM 跌得最多，按国家和广告位再拆一下，是哪里的问题？'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '已按国家 × 广告位拆解 eCPM 跌幅贡献：',
+          '① 美国插屏广告位 eCPM $22.4 → $16.8，贡献整体跌幅的 64%，该广告位 09-14 起新增了 Admob Bidding 底价策略调整（底价由 $18 提至 $45）；',
+          '② 底价上调导致低价竞价被过滤，填充未明显下降但展示率被压缩（与漏斗表现一致），成交价并未提升；',
+          '③ 激励视频与原生广告位 eCPM 波动均在 ±3% 以内，可排除大盘广告需求侧波动。'
+        ]
+      },
+      {
+        role: 'user',
+        text: '那应该怎么处理？'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '处理建议：',
+          '1. 将美国插屏 Bidding 底价回退至 $18，或改用分时段底价（美区高峰时段 $30、其余时段 $18）；',
+          '2. 回退后观察 48h，对比展示率、eCPM 与 ARPDAU 的综合收益（以 ARPDAU 而非单一 eCPM 为决策口径）；',
+          '3. 增加「底价调整后 24h 展示率跌幅 >5% 自动告警」，并沉淀底价调整的灰度发布流程；',
+          '4. 中期可接入 Admob 实时 Bidding 与中介 A/B 测试，用实验数据决定最优底价。'
+        ]
+      }
+    ]
+  },
+  {
+    theme: 'purple',
+    icon: 'trend',
+    category: '应用内事件',
+    hot: 3,
+    keywords: ['漏斗', '流失', '转化', '事件', '行为路径', '模版', '权限'],
+    title: '【应用内事件】应用类事件漏斗流失与行为分析',
+    desc: '分析应用内关键事件漏斗转化、流失节点与用户行为路径',
+    question: '请分析 onedrama 应用内关键事件（启动→引导曝光→引导点击→模版制作→模版应用）的漏斗转化与流失情况，定位流失率最高的节点并结合用户行为路径给出优化建议。',
+    rounds: [
+      {
+        role: 'user',
+        text: '分析 onedrama 2026-09-09~09-15 应用内核心事件漏斗：启动→引导曝光→引导点击→模版制作→模版应用，给出每步转化率和流失率。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '已完成核心事件漏斗分析（周期内去重用户口径）：',
+          '① 整体应用率（启动→模版应用）为 18.7%；',
+          '② 流失最严重节点为「引导点击→模版制作」，流失率 39.4%；',
+          '③ 其次为「引导曝光→引导点击」，流失率 34.8%。明细：'
+        ],
+        table: {
+          columns: [
+            { label: '漏斗步骤' }, { label: '事件用户数' }, { label: '步长转化率' }, { label: '流失率' }, { label: '累计转化率' }
+          ],
+          warnCols: [3],
+          rows: [
+            ['App 启动', '386,200', '—', '—', '100%'],
+            ['引导曝光', '352,800', '91.4%', '8.6%', '91.4%'],
+            ['引导点击', '230,100', '65.2%', '34.8%', '59.6%'],
+            ['模版制作', '139,400', '60.6%', '39.4%', '36.1%'],
+            ['模版应用', '72,200', '51.8%', '48.2%', '18.7%']
+          ]
+        }
+      },
+      {
+        role: 'user',
+        text: '「引导点击→模版制作」流失最严重，帮我分析这部分流失用户的行为路径，看看他们卡点在哪。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '已对「引导点击后未制作模版」的 90,700 名用户做行为路径分析：',
+          '① 57% 的用户点击引导后进入「模版选择页」，但在素材加载等待 >3s 后直接退出（该页 P90 加载耗时 3.8s）；',
+          '② 23% 的用户进入制作页后因「未授予相册权限」中断，权限弹窗仅出现 1 次且无二次引导；',
+          '③ 14% 的用户反复切换分类 Tab 但未选中模版，推测为模版封面与预期不符；',
+          '④ 其余 6% 为其他零散原因。核心卡点集中在加载性能与权限引导。'
+        ]
+      },
+      {
+        role: 'user',
+        text: '基于这些发现输出优化方案。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '优化方案（按预期收益排序）：',
+          '1. 模版素材预加载：在引导曝光阶段预取首屏模版资源，将选择页 P90 加载压到 1.5s 内，预计回收 57% 流失中的大部分；',
+          '2. 权限二次引导：首次拒绝后在制作页内提供「去开启权限」内嵌卡片，替代系统弹窗只能触发一次的限制；',
+          '3. 模版封面优化：对高曝光低点击模版做封面 A/B（成品效果图替代素材图），并按点击/制作转化率排序；',
+          '4. 建立漏斗周度巡检看板，重点监控「引导点击→模版制作」与加载耗时、权限授予率的联动，验证上述改动收益。'
+        ]
+      }
+    ]
+  },
+  {
+    theme: 'blue',
+    icon: 'pie',
+    category: '多维分析',
+    hot: 4,
+    keywords: ['占比', '渠道', '国家', 'ROI', '结构', '付费率', '投放'],
+    title: '【多维分析】分国家渠道结构占比与 ROI 分析',
+    desc: '按国家、渠道拆解新增/收入结构占比与投放 ROI，识别高效市场',
+    question: '分析 onedrama 2026-09 月各国家 × 渠道的新增用户占比、收入占比与 ROI，找出投入产出最高和需要优化的渠道组合，输出结构占比图表与建议。',
+    rounds: [
+      {
+        role: 'user',
+        text: '分析 onedrama 2026-09 月分国家 × 渠道的新增占比、收入占比和 ROI，帮我找出最值得加投和需要优化的组合。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '已完成国家 × 渠道结构与 ROI 分析，Top 组合如下（收入口径为广告+内购）：',
+          '① 美国 × Meta 新增占比 16.2%、收入占比 24.8%，ROI 187%，为最高效组合；',
+          '② 巴西 × AppLovin 新增占比 9.5% 但 ROI 仅 72%，属于量大质低；',
+          '③ 日本 × Google UAC 收入占比 8.1%、ROI 156%，有加投空间。明细：'
+        ],
+        table: {
+          columns: [
+            { label: '国家' }, { label: '渠道' }, { label: '新增占比' }, { label: '收入占比' }, { label: 'ROI' }
+          ],
+          warnCols: [4],
+          rows: [
+            ['美国', 'Meta', '16.2%', '24.8%', '187%'],
+            ['日本', 'Google UAC', '6.4%', '8.1%', '156%'],
+            ['德国', 'Meta', '5.1%', '6.8%', '142%'],
+            ['印尼', 'AppLovin', '11.3%', '6.9%', '88%'],
+            ['巴西', 'AppLovin', '9.5%', '4.2%', '72%']
+          ]
+        },
+        note: '注：ROI = 周期内回收收入 / 投放花费；红色为低于 100% 回本线的组合。'
+      },
+      {
+        role: 'user',
+        text: '巴西 AppLovin 量很大但不回本，帮我下钻看看是素材问题还是人群问题。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '巴西 × AppLovin 下钻结论：',
+          '① 次留 31%（大盘均值 39%），新客质量偏低，主要投放到了低机型激励流量；',
+          '② 素材 A（强福利诱导）占花费 63%，其用户次留仅 27%、广告展示意愿低；素材 B（功能演示）次留 36%、ROI 94%；',
+          '③ 判断主因是素材吸引的人群不匹配，而非市场本身问题。'
+        ]
+      },
+      {
+        role: 'user',
+        text: '基于这些结论给出预算和素材的优化建议。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '优化建议：',
+          '1. 预算向美国 × Meta、日本 × Google UAC 倾斜，在 ROI 不低于 140% 的前提下逐步加投 20%；',
+          '2. 巴西市场停投强福利素材 A，将预算切给功能演示素材 B，并测试 2~3 组新素材；',
+          '3. 在 AppLovin 侧将流量定向从激励位调整为插屏/原生位，观察次留与 ROI；',
+          '4. 建立「新增占比 vs 收入占比」偏离度周监控，对连续两周 ROI<90% 的组合自动预警。'
+        ]
+      }
+    ]
+  },
+  {
+    theme: 'green',
+    icon: 'wallet',
+    category: '收入分析',
+    hot: 5,
+    keywords: ['收入', 'IAP', '内购', '广告收入', 'ARPPU', '构成', '订阅'],
+    title: '【收入分析】广告与内购收入构成及趋势分析',
+    desc: '拆解 IAA 广告与 IAP 内购收入构成、ARPPU 与订阅趋势',
+    question: '分析 onedrama 2026-08 月总收入构成（IAA 广告 / IAP 内购占比）、近 8 周收入趋势及内购 ARPPU、订阅续费率，输出收入健康度评估与提升建议。',
+    rounds: [
+      {
+        role: 'user',
+        text: '分析 onedrama 2026-08 月收入构成，IAA 和 IAP 各占多少？再看下近 8 周趋势和订阅续费情况。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '已完成收入构成与趋势分析：',
+          '① 08 月总收入 $386,200，其中 IAA 广告 $301,300（78.0%）、IAP 内购 $84,900（22.0%），仍是典型广告变现模型；',
+          '② 近 8 周总收入周环比平均 +2.1%，增长主要由 IAA 驱动，IAP 连续 3 周持平；',
+          '③ 订阅首月续费率 41%，ARPPU $6.8。构成明细：'
+        ],
+        table: {
+          columns: [
+            { label: '收入类型' }, { label: '08月收入($)' }, { label: '占比' }, { label: '环比' }, { label: '备注' }
+          ],
+          rows: [
+            ['IAA 广告', '301,300', '78.0%', '+5.6%', '增长主力'],
+            ['IAP-订阅', '62,100', '16.1%', '+0.8%', '续费率41%'],
+            ['IAP-单次购买', '22,800', '5.9%', '-2.4%', '小幅下滑'],
+            ['合计', '386,200', '100%', '+4.3%', '—']
+          ]
+        }
+      },
+      {
+        role: 'user',
+        text: 'IAP 一直不温不火，问题可能出在哪？'
+      },
+      {
+        role: 'ai',
+        lines: [
+          'IAP 链路诊断：',
+          '① 付费率仅 1.9%，付费入口集中在制作结果页，引导曝光到点击转化率只有 2.3%；',
+          '② 订阅页 68% 的用户在价格区停留 <3s 即退出，缺少月付/年付的价值对比锚点；',
+          '③ 单次购买商品与订阅权益区分不清晰，存在互相稀释；',
+          '④ 首月续费率 41% 低于行业 45%~50% 区间，主要流失发生在订阅后第 2 周（高级模版使用频次低）。'
+        ]
+      },
+      {
+        role: 'user',
+        text: '给出收入提升方案。'
+      },
+      {
+        role: 'ai',
+        lines: [
+          '收入提升方案：',
+          '1. 订阅页增加年付省 40% 的价格锚点与权益对比，目标将付费页转化率从 2.3% 提升到 3.5%；',
+          '2. 在用户第 2~3 次使用免费模版后推送限时升级引导，提高付费触达频次；',
+          '3. 订阅后第 2 周推送高级模版精选与使用提醒，将续费率目标设为 46%；',
+          '4. 梳理单次购买与订阅权益，用单次包做低价引流、订阅做长期转化，避免相互稀释；',
+          '5. 建立 IAA/IAP 双轮收入看板，跟踪付费率、ARPPU、续费率三大 IAP 指标的周变化。'
+        ]
+      }
+    ]
+  }
+]
 
 const specExamples = reactive([
   {
@@ -889,6 +1506,14 @@ function handleEnter() {
   sendMessage()
 }
 
+/* ---------- 推荐示例：使用此提问 ---------- */
+function useRecommendQuestion(q) {
+  inputText.value = q
+  recommendPanelOpen.value = false
+  recoDetailVisible.value = false
+  nextTick(() => inputRef.value && inputRef.value.focus())
+}
+
 /* ---------- 提示词美化 ---------- */
 function beautifyPrompt() {
   const text = inputText.value.trim()
@@ -1054,7 +1679,18 @@ const markerList = [
   { element: '重命名按钮', marker: 'history-item-edit-{id}', desc: 'hover 出现；点击进入 inline 重命名输入框' },
   { element: '重命名输入框', marker: 'history-item-rename-input-{id}', desc: '回车/失焦确认；ESC 取消' },
   { element: '侧边栏用户信息', marker: 'sidebar-user-info', desc: '当前登录用户账号信息' },
-  { element: '规范示例按钮', marker: 'btn-spec-examples', desc: '右上角入口，点击弹出规范示例弹窗' },
+  { element: '输入区顶部工具栏', marker: 'input-toolbar-top', desc: '输入框上方的辅助功能工具栏' },
+  { element: '推荐示例按钮', marker: 'btn-recommend-examples', desc: '输入框上方工具栏入口，点击展开/收起上滑推荐示例面板' },
+  { element: '推荐示例上滑面板', marker: 'recommend-panel', desc: '输入框上方上滑展开的推荐示例卡片网格' },
+  { element: '推荐示例卡片', marker: 'recommend-tile-{index}', desc: '精选卡片（Top3），点击弹出该场景的多轮 AI 对话示例弹窗' },
+  { element: '查看全部示例入口', marker: 'recommend-library-open', desc: '固定位于精选区第 4 格，示例超过 3 个时出现，点击打开全量示例库弹窗' },
+  { element: '全量示例库弹窗', marker: 'recommend-library-modal', desc: '左侧分类、顶部搜索、右侧场景列表' },
+  { element: '全量库分类项', marker: 'lib-cat-{分类名}', desc: '按分类筛选示例列表，含数量角标' },
+  { element: '全量库搜索框', marker: 'lib-search', desc: '按标题、描述、关键词模糊过滤' },
+  { element: '全量库示例行', marker: 'lib-row-{index}', desc: '点击进入该场景多轮对话详情' },
+  { element: '对话示例详情弹窗', marker: 'recommend-detail-modal', desc: '展示每轮用户提示词与 AI 数据分析回复（含数据表格）' },
+  { element: '使用此提问', marker: 'recommend-detail-use', desc: '将示例首轮提问填充到输入框并聚焦，关闭弹窗，不自动发送' },
+  { element: '示范按钮', marker: 'btn-spec-examples', desc: '输入框上方工具栏入口，点击弹出规范示例弹窗' },
   { element: '规范示例弹窗', marker: 'spec-modal', desc: '展示提问规范与正反例对比，支持展开/收起错误说明' },
   { element: '右侧主区域', marker: 'ai-chat-main', desc: '对话主区域容器' },
   { element: '欢迎卡片', marker: 'welcome-card', desc: '初始欢迎卡片，展示助手介绍与使用指引' },
@@ -1180,55 +1816,6 @@ const markerList = [
   flex-direction: column;
   overflow: visible;
 }
-.main-topbar {
-  padding: 12px 20px; border-bottom: 1px solid #f0f0f0;
-  display: flex; align-items: center; justify-content: flex-end;
-}
-.spec-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 12px; border: 1px solid #e5e7eb; border-radius: 6px;
-  background: #fff; color: #4b5563; font-size: 13px; cursor: pointer;
-  transition: all 0.2s;
-}
-.spec-btn:hover { border-color: #1677ff; color: #1677ff; background: #f0f5ff; }
-.main-title { font-size: 16px; font-weight: 600; color: #1f2937; }
-
-/* ===== 规范示例弹窗 ===== */
-.spec-list { display: flex; flex-direction: column; gap: 16px; max-height: 68vh; overflow-y: auto; padding-right: 4px; }
-.spec-card {
-  border: 1px solid #eef0f4; border-radius: 8px; background: #fff; overflow: hidden;
-}
-.spec-card-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid #eef0f4; background: #fafbfc;
-}
-.spec-card-title { font-size: 14px; font-weight: 600; color: #1677ff; }
-.spec-card-toggle { font-size: 13px; color: #1677ff; cursor: pointer; user-select: none; }
-.spec-card-toggle:hover { text-decoration: underline; }
-.spec-card-body { padding: 14px 16px; }
-.spec-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
-.spec-col { display: flex; flex-direction: column; gap: 6px; }
-.spec-col-label { font-size: 13px; color: #6b7280; font-weight: 500; }
-.spec-bad {
-  flex: 1; padding: 10px 12px; background: #fff1f0; border: 1px solid #ffa39e; border-radius: 6px;
-  font-size: 13px; color: #cf1322; line-height: 1.6; word-break: break-word; min-height: 60px;
-}
-.spec-good {
-  flex: 1; padding: 10px 12px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px;
-  font-size: 13px; color: #389e0d; line-height: 1.6; word-break: break-word; min-height: 60px;
-}
-.spec-explain-label {
-  margin-top: 10px; font-size: 12px; color: #1677ff; cursor: pointer; user-select: none;
-  display: inline-block;
-}
-.spec-explain-label:hover { text-decoration: underline; }
-.spec-explain {
-  margin-top: 8px; padding: 12px; background: #f9fafb; border-radius: 6px;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.spec-explain-item { font-size: 12px; line-height: 1.7; color: #1f2937; }
-.explain-tag { color: #1f2937; font-weight: 600; }
-.explain-text { color: #1f2937; }
 
 .message-area { flex: 1; overflow-y: auto; padding: 20px; }
 
@@ -1360,35 +1947,258 @@ const markerList = [
 .chat-input {
   flex: 0 0 auto; width: 100%; border: none; outline: none; resize: vertical;
   min-height: 72px; max-height: 320px; height: 72px;
-  padding: 12px 110px 12px 14px; font-size: 14px; line-height: 1.7;
+  padding: 12px 14px; font-size: 14px; line-height: 1.7;
   background: transparent; color: #1f2937; font-family: inherit;
   overflow-y: auto; box-sizing: border-box;
   cursor: text;
 }
 .chat-input::placeholder { color: #9ca3af; }
+.input-toolbar-top {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px 4px; flex-shrink: 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.input-toolbar-top .spec-btn {
+  padding: 3px 10px; background: #fafafa;
+  border: 1px solid #e5e7eb; color: #595959;
+}
+.input-toolbar-top .spec-btn:first-child { margin-left: auto; }
+.input-toolbar-top .spec-btn:hover {
+  background: #fff; border-color: #1677ff; color: #1677ff;
+}
+.spec-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 6px; font-size: 13px; cursor: pointer;
+  transition: all 0.2s;
+}
 .input-toolbar {
   display: flex; align-items: center; gap: 6px; padding: 4px 10px 8px; flex-shrink: 0;
 }
-.upload-btn {
-  width: 32px; height: 32px; border: none; border-radius: 6px; background: #f6ffed;
-  color: #52c41a; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
+
+/* ===== 规范示例弹窗 ===== */
+.spec-list { display: flex; flex-direction: column; gap: 16px; max-height: 68vh; overflow-y: auto; padding-right: 4px; }
+.spec-card {
+  border: 1px solid #eef0f4; border-radius: 8px; background: #fff; overflow: hidden;
 }
-.upload-btn:hover { background: #e6ffd4; color: #389e0d; }
-.beautify-btn {
-  width: 32px; height: 32px; border: none; border-radius: 6px; background: #f0f5ff;
-  color: #1677ff; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
+.spec-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid #eef0f4; background: #fafbfc;
 }
-.beautify-btn:hover:not(:disabled) { background: #e6f0ff; color: #4096ff; }
-.beautify-btn:disabled { background: #f5f5f5; color: #bfbfbf; cursor: not-allowed; }
-.send-btn {
-  width: 34px; height: 34px; border: none; border-radius: 6px; background: #1677ff;
-  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+.spec-card-title { font-size: 14px; font-weight: 600; color: #1677ff; }
+.spec-card-toggle { font-size: 13px; color: #1677ff; cursor: pointer; user-select: none; }
+.spec-card-toggle:hover { text-decoration: underline; }
+.spec-card-body { padding: 14px 16px; }
+.spec-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
+.spec-col { display: flex; flex-direction: column; gap: 6px; }
+.spec-col-label { font-size: 13px; color: #6b7280; font-weight: 500; }
+.spec-bad {
+  flex: 1; padding: 10px 12px; background: #fff1f0; border: 1px solid #ffa39e; border-radius: 6px;
+  font-size: 13px; color: #cf1322; line-height: 1.6; word-break: break-word; min-height: 60px;
+}
+.spec-good {
+  flex: 1; padding: 10px 12px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px;
+  font-size: 13px; color: #389e0d; line-height: 1.6; word-break: break-word; min-height: 60px;
+}
+.spec-explain-label {
+  margin-top: 10px; font-size: 12px; color: #1677ff; cursor: pointer; user-select: none;
+  display: inline-block;
+}
+.spec-explain-label:hover { text-decoration: underline; }
+.spec-explain {
+  margin-top: 8px; padding: 12px; background: #f9fafb; border-radius: 6px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.spec-explain-item { font-size: 12px; line-height: 1.7; color: #1f2937; }
+.explain-tag { color: #1f2937; font-weight: 600; }
+.explain-text { color: #1f2937; }
+
+/* ===== 推荐示例上滑面板 ===== */
+.reco-panel {
+  flex-shrink: 0;
+  max-height: 0; opacity: 0; overflow: hidden;
+  transform: translateY(24px);
+  transition: max-height 0.35s ease, opacity 0.3s ease, transform 0.35s ease;
+  background: #fff;
+}
+.reco-panel.open {
+  max-height: 420px; opacity: 1; transform: translateY(0);
+}
+.reco-panel-inner { padding: 8px 20px 16px; }
+.reco-panel-title {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px;
+}
+.reco-panel-line { flex: 1; height: 1px; background: #e5e7eb; }
+.reco-panel-text { font-size: 14px; color: #8c8c8c; font-weight: 500; white-space: nowrap; }
+.reco-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+.reco-tile {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px; border-radius: 16px;
+  cursor: pointer; user-select: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.reco-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+.reco-tile-icon {
+  flex-shrink: 0; width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.65);
+}
+.reco-tile-body { min-width: 0; }
+.reco-tile-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 4px; }
+.reco-tile-desc { font-size: 13px; color: #595959; line-height: 1.5; }
+.reco-tile-blue   { background: #eaf4ff; }
+.reco-tile-blue   .reco-tile-icon { color: #1677ff; }
+.reco-tile-green  { background: #e9f9ef; }
+.reco-tile-green  .reco-tile-icon { color: #16a34a; }
+.reco-tile-purple { background: #f1ecff; }
+.reco-tile-purple .reco-tile-icon { color: #7c3aed; }
+.reco-tile-more {
+  background: #fff; border: 1.5px dashed #d9d9d9; justify-content: center; text-align: center;
+}
+.reco-tile-more:hover { border-color: #1677ff; background: #f5f9ff; }
+.reco-tile-more-icon {
+  flex-shrink: 0; color: #8c8c8c;
+  display: flex; align-items: center; justify-content: center;
+}
+.reco-tile-more:hover .reco-tile-more-icon { color: #1677ff; }
+.reco-tile-more .reco-tile-body { min-width: 0; }
+.reco-tile-more .reco-tile-title { color: #595959; }
+.reco-tile-more:hover .reco-tile-title { color: #1677ff; }
+.reco-tile-more .reco-tile-desc { font-size: 12px; }
+
+/* ===== 全量示例库弹窗 ===== */
+.lib-body { display: flex; height: 60vh; }
+.lib-aside {
+  flex-shrink: 0; width: 150px; min-height: 0; padding: 6px 8px;
+  border-right: 1px solid #f0f0f0; overflow-y: auto;
+}
+.lib-cat {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #595959;
+  cursor: pointer; user-select: none; transition: all 0.15s; margin-bottom: 2px;
+}
+.lib-cat:hover { background: #f5f5f5; }
+.lib-cat.active { background: #e6f4ff; color: #1677ff; font-weight: 600; }
+.lib-cat-count { font-size: 12px; color: #bfbfbf; }
+.lib-cat.active .lib-cat-count { color: #1677ff; }
+.lib-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; padding-left: 16px; }
+.lib-search {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 7px 12px; border: 1px solid #e5e7eb; border-radius: 8px;
+  color: #bfbfbf; margin-bottom: 12px; transition: border-color 0.2s;
+}
+.lib-search:focus-within { border-color: #1677ff; }
+.lib-search-input {
+  flex: 1; border: none; outline: none; font-size: 13px; color: #1f2937; background: transparent;
+}
+.lib-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+.lib-row {
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  padding: 11px 14px; border: 1px solid #eef0f4; border-radius: 10px;
+  cursor: pointer; transition: all 0.15s;
+}
+.lib-row:hover { border-color: #91caff; background: #f5f9ff; }
+.lib-row-icon {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; background: #f5f5f5;
+}
+.lib-icon-blue   { color: #1677ff; background: #eaf4ff; }
+.lib-icon-green  { color: #16a34a; background: #e9f9ef; }
+.lib-icon-purple { color: #7c3aed; background: #f1ecff; }
+.lib-row-body { flex: 1; min-width: 0; }
+.lib-row-title { font-size: 13.5px; font-weight: 600; color: #1f2937; margin-bottom: 2px; }
+.lib-row-desc {
+  font-size: 12px; color: #8c8c8c; line-height: 1.4;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lib-row-cat {
+  flex-shrink: 0; font-size: 12px; color: #595959;
+  background: #f5f5f5; padding: 2px 9px; border-radius: 10px;
+}
+.lib-row-arrow { flex-shrink: 0; color: #bfbfbf; font-size: 18px; line-height: 1; }
+.lib-row:hover .lib-row-arrow { color: #1677ff; }
+.lib-empty { padding: 48px 0; text-align: center; color: #bfbfbf; font-size: 13px; }
+
+/* ===== 推荐示例·AI 对话详情弹窗 ===== */
+.reco-chat-dialog { padding: 4px 2px 0; }
+.rcd-scroll { max-height: 62vh; overflow-y: auto; padding-right: 8px; }
+.rcd-round + .rcd-round { margin-top: 18px; }
+.rcd-row { display: flex; gap: 10px; align-items: flex-start; }
+.rcd-row-user { flex-direction: row-reverse; }
+.rcd-user-name {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  background: #1677ff; color: #fff; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; margin-top: 2px;
+}
+.rcd-ai-avatar {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  background: #f0f5ff; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; margin-top: 2px;
+}
+.rcd-bubble {
+  max-width: 85%; padding: 10px 14px; border-radius: 10px;
+  font-size: 13px; line-height: 1.75; word-break: break-word;
+}
+.rcd-bubble-user {
+  background: #1677ff; color: #fff; border-top-right-radius: 3px;
+}
+.rcd-bubble-ai {
+  background: #f7f8fa; color: #1f2937; border: 1px solid #eef0f4;
+  border-top-left-radius: 3px;
+}
+.rcd-line { margin: 0; }
+.rcd-line + .rcd-line { margin-top: 5px; }
+.rcd-table-wrap {
+  margin-top: 10px; overflow-x: auto;
+  border: 1px solid #e5e7eb; border-radius: 8px; background: #fff;
+}
+.rcd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; white-space: nowrap; }
+.rcd-table th {
+  background: #fafafa; color: #595959; font-weight: 600;
+  padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e7eb;
+}
+.rcd-table td { padding: 8px 12px; border-bottom: 1px solid #f2f3f5; color: #1f2937; }
+.rcd-table tr:last-child td { border-bottom: none; }
+.rcd-warn { color: #cf1322 !important; font-weight: 600; }
+.rcd-note {
+  margin-top: 8px; font-size: 12px; color: #8c8c8c; line-height: 1.6;
+}
+.rcd-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 18px; padding-top: 14px; border-top: 1px solid #f0f0f0;
+}
+.rcd-tip { font-size: 12px; color: #8c8c8c; }
+.rcd-use-btn {
+  flex-shrink: 0; padding: 6px 16px; border-radius: 6px;
+  background: #1677ff; color: #fff; border: none; font-size: 13px; cursor: pointer;
   transition: background 0.2s;
 }
+.rcd-use-btn:hover { background: #4096ff; }
+.upload-btn {
+  width: 32px; height: 32px; border: 1px solid #d9d9d9; border-radius: 50%;
+  background: #f5f5f5; color: #1f2937; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.upload-btn:hover { background: #e8e8e8; border-color: #8c8c8c; }
+.beautify-btn {
+  width: 32px; height: 32px; margin-left: auto; border: 1px solid #1f2937; border-radius: 50%;
+  background: #fff; color: #1f2937; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.beautify-btn:hover:not(:disabled) { background: #1f2937; color: #fff; border-color: #1f2937; }
+.beautify-btn:disabled { background: #f5f5f5; color: #8c8c8c; border-color: #d9d9d9; cursor: not-allowed; }
+.send-btn {
+  width: 34px; height: 34px; border: none; border-radius: 6px;
+  background: #1677ff; color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, opacity 0.2s;
+}
 .send-btn:hover:not(:disabled) { background: #4096ff; }
-.send-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+.send-btn:disabled { background: #91caff; color: rgba(255,255,255,0.85); cursor: not-allowed; }
 .send-arrow { display: inline-block; transform: rotate(-90deg); font-size: 14px; }
 
 /* 拖拽高亮 */
