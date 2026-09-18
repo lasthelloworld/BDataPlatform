@@ -84,6 +84,21 @@
 
     <!-- ============ 右侧对话主区域 ============ -->
     <section class="chat-main" data-marker="ai-chat-main">
+      <!-- 对话区顶部工具栏 -->
+      <header class="chat-topbar" data-marker="chat-top-toolbar">
+        <button
+          class="chat-topbar-btn"
+          type="button"
+          title="对话大纲"
+          data-marker="btn-chat-outline"
+          @click="outlineVisible = true"
+        >
+          <svg viewBox="0 0 1126 1024" width="20" height="20" fill="currentColor">
+            <path d="M142.2336 0a142.2336 142.2336 0 0 1 56.8832 272.5888v210.944H312.832c15.7184 0 28.4672 12.8 28.4672 28.4672v56.8832a28.4672 28.4672 0 0 1-28.4672 28.4672H199.168v263.1168c0 16.5376 3.4304 31.488 8.704 42.0864l2.048 3.6864a34.0992 34.0992 0 0 0 1.8944 2.9184l0.8704 1.024H312.832c15.7184 0 28.4672 12.8 28.4672 28.4672v56.8832A28.4672 28.4672 0 0 1 312.832 1024H207.2576c-72.8064 0-119.3984-73.2672-121.856-156.7744l-0.0512-6.7584V272.5888A142.2336 142.2336 0 0 1 142.1824 0z m886.9888 853.3504a51.2 51.2 0 0 1 51.2 51.2V972.8a51.2 51.2 0 0 1-51.2 51.2h-466.432a51.2 51.2 0 0 1-51.2-51.2v-68.2496a51.2 51.2 0 0 1 51.2-51.2h466.432z m0-398.2336a51.2 51.2 0 0 1 51.2 51.2v68.2496a51.2 51.2 0 0 1-51.2 51.2h-466.432a51.2 51.2 0 0 1-51.2-51.2V506.368a51.2 51.2 0 0 1 51.2-51.2h466.432z m0-398.2336a51.2 51.2 0 0 1 51.2 51.2v68.2496a51.2 51.2 0 0 1-51.2 51.2h-466.432a51.2 51.2 0 0 1-51.2-51.2V108.0832a51.2 51.2 0 0 1 51.2-51.2h466.432z"/>
+          </svg>
+        </button>
+      </header>
+
       <div class="message-area" ref="messageAreaRef">
         <!-- 欢迎卡片 -->
         <div v-if="showWelcome" class="welcome-card" data-marker="welcome-card">
@@ -106,7 +121,8 @@
             v-for="msg in currentMessages"
             :key="msg.id"
             class="message-row"
-            :class="msg.role"
+            :class="[msg.role, { 'msg-highlight': highlightMsgId === msg.id }]"
+            :data-msg-id="msg.id"
           >
             <div class="message-avatar">{{ msg.role === 'user' ? '👤' : '🤖' }}</div>
             <div class="message-bubble">
@@ -158,6 +174,96 @@
                   ></div>
                 </div>
               </template>
+              <!-- 单条回答操作栏 -->
+              <div v-if="msg.role === 'ai'" class="msg-actions" data-marker="msg-feedback">
+                <button class="ma-btn" data-marker="msg-copy" title="复制" @click="copyAnswer(msg)">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  <span>复制</span>
+                </button>
+                <button class="ma-btn" data-marker="msg-share" title="分享" @click="shareAnswer(msg)">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                  <span>分享</span>
+                </button>
+                <a-dropdown :trigger="['click']" placement="topLeft">
+                  <button class="ma-btn ma-icon-btn" data-marker="msg-more" title="更多">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
+                  </button>
+                  <template #overlay>
+                    <a-menu>
+                      <a-menu-item key="regenerate" data-marker="msg-regenerate" @click="regenerateAnswer(msg)">🔄 重新生成</a-menu-item>
+                      <a-menu-item key="report" data-marker="msg-report" @click="reportAnswer(msg)">⚠️ 报告问题</a-menu-item>
+                    </a-menu>
+                  </template>
+                </a-dropdown>
+
+                <span class="ma-divider"></span>
+
+                <button
+                  class="ma-icon-btn"
+                  :class="{ active: msg.feedback === 'up' }"
+                  title="有帮助"
+                  data-marker="msg-feedback-up"
+                  @click="setFeedback(msg, 'up')"
+                >
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3z"></path><path d="M7 10l4.5-7.5a2 2 0 0 1 3.6 1.7L14 8h5.2a2 2 0 0 1 1.96 2.4l-1.3 6.5A2 2 0 0 1 17.9 18.6H7"></path></svg>
+                </button>
+
+                <a-popover
+                  v-model:open="msg.feedbackPopOpen"
+                  trigger="click"
+                  placement="topLeft"
+                  :overlay-style="{ padding: 0 }"
+                  overlay-class-name="fb-popover"
+                >
+                  <button
+                    class="ma-icon-btn"
+                    :class="{ active: msg.feedback === 'down' }"
+                    title="没帮助"
+                    data-marker="msg-feedback-down"
+                  >
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3z"></path><path d="M17 14l-4.5 7.5a2 2 0 0 1-3.6-1.7L10 16H4.8a2 2 0 0 1-1.96-2.4l1.3-6.5A2 2 0 0 1 6.1 5.4H17"></path></svg>
+                  </button>
+                  <template #content>
+                    <div class="fb-pop" data-marker="msg-feedback-panel">
+                      <div class="fb-head">
+                        <span class="fb-title">反馈提交</span>
+                        <button class="fb-close" data-marker="msg-feedback-close" @click="msg.feedbackPopOpen = false">×</button>
+                      </div>
+                      <div class="fb-tip">请选择理由帮助我们做的更好:</div>
+                      <div class="fb-chips" data-marker="msg-feedback-reasons">
+                        <button
+                          v-for="r in feedbackReasonOptions"
+                          :key="r"
+                          type="button"
+                          class="fb-chip"
+                          :class="{ active: (msg.feedbackReasons || []).includes(r) }"
+                          :data-marker="'msg-feedback-reason-' + r"
+                          @click="toggleFeedbackReason(msg, r)"
+                        >{{ r }}</button>
+                      </div>
+                      <textarea
+                        v-model="msg.feedbackComment"
+                        class="fb-textarea"
+                        placeholder="我们想知道您对此回答的哪个部分不满意，您认为更好的回答是什么?"
+                        rows="6"
+                        maxlength="300"
+                        data-marker="msg-feedback-comment"
+                      ></textarea>
+                      <div class="fb-foot">
+                        <button class="fb-btn" data-marker="msg-feedback-clear" @click="clearFeedbackDraft(msg)">清空</button>
+                        <button
+                          class="fb-btn fb-btn-primary"
+                          :disabled="!(msg.feedbackReasons && msg.feedbackReasons.length)"
+                          data-marker="msg-feedback-confirm"
+                          @click="submitFeedback(msg)"
+                        >确定</button>
+                      </div>
+                    </div>
+                  </template>
+                </a-popover>
+
+                <span class="ma-time">{{ msg.time }}</span>
+              </div>
             </div>
           </div>
 
@@ -419,6 +525,204 @@
         </div>
       </a-drawer>
 
+      <!-- 对话大纲侧滑抽屉 -->
+      <a-drawer
+        v-model:open="outlineVisible"
+        title="对话大纲"
+        placement="right"
+        :width="380"
+        :footer="null"
+        :closable="true"
+        data-marker="outline-drawer"
+      >
+        <div class="outline-wrap">
+          <div
+            v-if="!outlineUserTurns.length && !outlineFiles.length"
+            class="outline-empty"
+          >
+            <div class="outline-empty-icon">🗂️</div>
+            <div>暂无对话内容</div>
+            <div class="outline-empty-sub">开始提问后，这里会自动生成提问、系统输出与文件记录大纲</div>
+          </div>
+
+          <template v-else>
+            <!-- （1）用户对话记录大纲 -->
+            <section class="ol-section" data-marker="outline-section-user">
+              <div class="ol-section-head">
+                <span class="ol-section-title">用户提问</span>
+                <span class="ol-section-count">{{ outlineUserTurns.length }}</span>
+              </div>
+              <ul v-if="outlineUserTurns.length" class="ol-list">
+                <li
+                  v-for="t in outlineUserTurns"
+                  :key="t.id"
+                  class="ol-item"
+                  data-marker="outline-user-item"
+                  @click="scrollToMessage(t.id)"
+                >
+                  <span class="ol-item-index">{{ t.index }}</span>
+                  <div class="ol-item-body">
+                    <div class="ol-item-text" :title="t.text">{{ t.text }}</div>
+                    <div class="ol-item-meta">
+                      <span>{{ t.time }}</span>
+                      <span v-if="t.files.length" class="ol-item-files">📎 {{ t.files.length }} 个附件</span>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <div v-else class="ol-section-empty">暂无提问记录</div>
+            </section>
+
+            <!-- （2）系统输出大纲 -->
+            <section class="ol-section" data-marker="outline-section-ai">
+              <div class="ol-section-head">
+                <span class="ol-section-title">系统输出</span>
+                <span class="ol-section-count">{{ outlineAiTurns.length }}</span>
+              </div>
+              <ul v-if="outlineAiTurns.length" class="ol-list">
+                <li
+                  v-for="t in outlineAiTurns"
+                  :key="t.id"
+                  class="ol-item"
+                  data-marker="outline-ai-item"
+                  @click="scrollToMessage(t.id)"
+                >
+                  <span class="ol-item-index ai">{{ t.index }}</span>
+                  <div class="ol-item-body">
+                    <div class="ol-item-tags">
+                      <span v-if="t.counts.text" class="ol-tag">文本 ×{{ t.counts.text }}</span>
+                      <span v-if="t.counts.table" class="ol-tag">表格 ×{{ t.counts.table }}</span>
+                      <span v-if="t.counts.chart" class="ol-tag">图表 ×{{ t.counts.chart }}</span>
+                    </div>
+                    <div v-if="t.summary" class="ol-item-summary" :title="t.summary">{{ t.summary }}</div>
+                    <div class="ol-item-meta">
+                      <span>{{ t.time }}</span>
+                      <span v-if="t.elapsed">耗时 {{ t.elapsed }}s</span>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <div v-else class="ol-section-empty">暂无系统输出</div>
+            </section>
+
+            <!-- （3）文件记录 -->
+            <section class="ol-section" data-marker="outline-section-files">
+              <div class="ol-section-head">
+                <span class="ol-section-title">文件记录</span>
+                <span class="ol-section-count">{{ outlineFiles.length }}</span>
+              </div>
+              <ul v-if="outlineFiles.length" class="ol-file-list">
+                <li
+                  v-for="f in outlineFiles"
+                  :key="f.key"
+                  class="ol-file"
+                  :class="{ pending: f.pending }"
+                  data-marker="outline-file-item"
+                  @click="scrollToMessage(f.msgId)"
+                >
+                  <span class="ol-file-icon">{{ f.kind === '图片' ? '🖼️' : '📄' }}</span>
+                  <div class="ol-file-body">
+                    <div class="ol-file-name" :title="f.name">{{ f.name }}</div>
+                    <div class="ol-file-meta">
+                      <span>{{ f.kind }}</span>
+                      <span v-if="f.size">{{ f.size }}</span>
+                      <span>{{ f.turnLabel }}</span>
+                    </div>
+                  </div>
+                  <span v-if="f.pending" class="ol-file-badge">待发送</span>
+                </li>
+              </ul>
+              <div v-else class="ol-section-empty">对话中暂无文件，可在输入框上传图片或 Excel</div>
+            </section>
+          </template>
+        </div>
+      </a-drawer>
+
+      <!-- 离开会话评分弹框 -->
+      <a-modal
+        v-model:open="ratingVisible"
+        :width="520"
+        :footer="null"
+        :closable="true"
+        :mask-closable="false"
+        :destroy-on-close="true"
+        data-marker="rating-modal"
+        @cancel="snoozeAndLeave"
+      >
+        <!-- 星级打分 + 备注 -->
+        <div v-if="ratingStep === 'score'" class="rt-score" data-marker="rating-step-score">
+          <div class="rt-header">
+            <div class="rt-title">为本次数据分析打分</div>
+            <div class="rt-subtitle">请对以下三个维度分别打星，您的评分将帮助 Hopemobi Mind 持续改进</div>
+          </div>
+
+          <div
+            v-for="dim in ratingDims"
+            :key="dim.key"
+            class="rt-dim"
+            :data-marker="'rating-dim-' + dim.key"
+          >
+            <div class="rt-dim-head">
+              <span class="rt-dim-name">{{ dim.name }}</span>
+              <span class="rt-dim-tip">{{ dim.tip }}</span>
+            </div>
+            <a-rate
+              v-model:value="ratingForm[dim.key]"
+              class="rt-stars"
+              :data-marker="'rating-stars-' + dim.key"
+            />
+          </div>
+
+          <div class="rt-total">
+            <span class="rt-total-label">当前评分</span>
+            <span class="rt-total-value">{{ ratingTotal }}</span>
+            <span class="rt-total-max">/ 15 分</span>
+            <span class="rt-total-hint">（每个维度 1~5 星，共三个维度）</span>
+          </div>
+
+          <div class="rt-reason-wrap" data-marker="rating-reasons-wrap">
+            <div class="rt-reason-label">问题原因<span class="rt-reason-optional">（选填，可多选）</span></div>
+            <a-checkbox-group
+              v-model:value="ratingReasons"
+              :options="ratingReasonOptions"
+              class="rt-reason-group"
+              data-marker="rating-reasons"
+            />
+          </div>
+
+          <div class="rt-comment-wrap" data-marker="rating-comment-wrap">
+            <div class="rt-comment-label">备注</div>
+            <a-textarea
+              v-model:value="ratingComment"
+              class="rt-comment"
+              placeholder="补充说明或具体问题（选填）"
+              :rows="3"
+              :maxlength="300"
+              show-count
+              data-marker="rating-comment"
+            />
+          </div>
+
+          <div class="rt-actions">
+            <a-button data-marker="rating-later" @click="snoozeAndLeave">稍后评价</a-button>
+            <a-button
+              type="primary"
+              :disabled="!ratingCanSubmit"
+              data-marker="rating-submit"
+              @click="submitScores"
+            >提交评分</a-button>
+          </div>
+        </div>
+
+        <!-- 感谢 -->
+        <div v-else class="rt-thanks" data-marker="rating-step-thanks">
+          <div class="rt-thanks-icon">🙏</div>
+          <div class="rt-thanks-title">感谢您的反馈！</div>
+          <div class="rt-thanks-sub">本次评分 <b>{{ lastRatingTotal }}</b> / 15 分，我们已记录</div>
+          <a-button type="primary" data-marker="rating-finish" @click="finishRating">完成</a-button>
+        </div>
+      </a-modal>
+
       <!-- 规范示例弹窗 -->
       <a-modal
         v-model:open="specModalVisible"
@@ -615,7 +919,9 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import * as echarts from 'echarts'
+import { message } from 'ant-design-vue'
 
 /* ---------- 7 条标准业务示例问题（一字不差） ---------- */
 const sampleQuestions = [
@@ -1429,23 +1735,315 @@ const currentSession = computed(() => sessions.find((s) => s.id === currentSessi
 const currentMessages = computed(() => currentSession.value?.messages || [])
 const showWelcome = computed(() => currentMessages.value.length === 0)
 
+/* ---------- 对话大纲侧滑 ---------- */
+const outlineVisible = ref(false)
+const highlightMsgId = ref(null)
+let highlightTimer = null
+
+function nowTime() {
+  const d = new Date()
+  const p = (n) => String(n).padStart(2, '0')
+  return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+}
+
+/* (1) 用户每轮提问大纲 */
+const outlineUserTurns = computed(() => {
+  let idx = 0
+  return currentMessages.value
+    .filter((m) => m.role === 'user')
+    .map((m) => {
+      idx += 1
+      const textBlock = m.blocks.find((b) => b.type === 'text')
+      const files = m.blocks.filter((b) => b.type === 'image' || b.type === 'file')
+      return {
+        id: m.id,
+        index: idx,
+        text: textBlock?.content || '（仅发送了附件）',
+        time: m.time || '',
+        files
+      }
+    })
+})
+
+/* (2) 系统输出大纲（按轮汇总输出内容构成） */
+const outlineAiTurns = computed(() => {
+  let idx = 0
+  return currentMessages.value
+    .filter((m) => m.role === 'ai')
+    .map((m) => {
+      idx += 1
+      const counts = { text: 0, table: 0, chart: 0 }
+      m.blocks.forEach((b) => { if (counts[b.type] !== undefined) counts[b.type] += 1 })
+      const summary = m.blocks.find((b) => b.type === 'text')?.content || ''
+      return { id: m.id, index: idx, time: m.time || '', elapsed: m.elapsed || '', counts, summary }
+    })
+})
+
+/* (3) 文件记录（对话中已发送 + 输入框待发送） */
+const outlineFiles = computed(() => {
+  const list = []
+  let turn = 0
+  currentMessages.value.forEach((m) => {
+    if (m.role !== 'user') return
+    turn += 1
+    m.blocks.forEach((b) => {
+      if (b.type === 'image' || b.type === 'file') {
+        list.push({
+          key: m.id + '_' + b.name,
+          name: b.name,
+          kind: b.type === 'image' ? '图片' : '文件',
+          size: b.size || '',
+          turnLabel: '第 ' + turn + ' 轮提问',
+          pending: false,
+          msgId: m.id
+        })
+      }
+    })
+  })
+  attachments.value.forEach((a) => {
+    list.push({
+      key: a.id,
+      name: a.name,
+      kind: a.kind === 'image' ? '图片' : '文件',
+      size: a.size || '',
+      turnLabel: '待发送',
+      pending: true,
+      msgId: null
+    })
+  })
+  return list
+})
+
+/* 点击大纲项：滚动定位到对应消息并短暂高亮 */
+function scrollToMessage(id) {
+  if (!id) return
+  const el = messageListRef.value?.querySelector(`[data-msg-id="${id}"]`)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  highlightMsgId.value = id
+  clearTimeout(highlightTimer)
+  highlightTimer = setTimeout(() => { highlightMsgId.value = null }, 1800)
+}
+
+/* ---------- 单条回答操作与反馈 ---------- */
+const feedbackReasonOptions = ['不是我想要的数据', '答非所问', '不符合业务常识', '加载过慢', '其他']
+
+/* 提取回答纯文本（用于复制） */
+function answerPlainText(msg) {
+  const parts = []
+  for (const b of msg.blocks || []) {
+    if (b.type === 'text' && b.content) parts.push(b.content)
+    if (b.type === 'table') parts.push(`（表格：${(b.columns || []).map(c => c.title).join(' / ')}，共 ${(b.rows || []).length} 行）`)
+  }
+  return parts.join('\n\n')
+}
+
+function copyAnswer(msg) {
+  const text = answerPlainText(msg)
+  if (navigator.clipboard && text) navigator.clipboard.writeText(text)
+  message.success('回答内容已复制')
+}
+
+function shareAnswer(msg) {
+  console.log('[msg-share]', { msgId: msg.id })
+  message.info('演示环境：分享功能待接入')
+}
+
+function regenerateAnswer(msg) {
+  console.log('[msg-regenerate]', { msgId: msg.id })
+  message.info('演示环境：将基于上一个问题重新生成')
+}
+
+function reportAnswer(msg) {
+  console.log('[msg-report]', { msgId: msg.id })
+  message.info('演示环境：问题已记录')
+}
+
+/* 点赞：直接切换；点踩通过 popover 提交 */
+function setFeedback(msg, type) {
+  if (type === 'up') {
+    msg.feedback = msg.feedback === 'up' ? null : 'up'
+    console.log('[msg-feedback]', { msgId: msg.id, feedback: msg.feedback })
+  }
+}
+
+function toggleFeedbackReason(msg, r) {
+  if (!Array.isArray(msg.feedbackReasons)) msg.feedbackReasons = []
+  const i = msg.feedbackReasons.indexOf(r)
+  if (i >= 0) msg.feedbackReasons.splice(i, 1)
+  else msg.feedbackReasons.push(r)
+}
+
+function clearFeedbackDraft(msg) {
+  msg.feedbackReasons = []
+  msg.feedbackComment = ''
+}
+
+function submitFeedback(msg) {
+  if (!msg.feedbackReasons || !msg.feedbackReasons.length) return
+  msg.feedback = 'down'
+  msg.feedbackPopOpen = false
+  // mock：单轮差评采集（后续接后端接口）
+  console.log('[msg-feedback]', {
+    msgId: msg.id,
+    feedback: 'down',
+    reasons: msg.feedbackReasons,
+    comment: (msg.feedbackComment || '').trim()
+  })
+  message.success('反馈已提交，感谢你的建议')
+}
+
+/* ---------- 离开会话评分（三维 10 分制） ---------- */
+const router = useRouter()
+const RATING_SNOOZE_KEY = 'ai-chat-rating-snooze-date'
+
+const ratingVisible = ref(false)
+const ratingStep = ref('score') // score | thanks
+const ratingStepEnteredAt = ref(0)
+/* 三个维度均为 1~5 星，10 分制换算由服务端按 4/4/2 权重处理 */
+const ratingForm = ref({ accuracy: 0, rationality: 0, conciseness: 0 })
+const ratingReasons = ref([])
+const ratingReasonOptions = ['数据错误', '逻辑不通', '没定位到问题', '图表不直观', '其他']
+const ratingComment = ref('')
+const lastRatingTotal = ref(0)
+let pendingLeaveAction = null
+let pendingRoutePath = null
+
+/* 三维度星级评价 */
+const ratingDims = [
+  { key: 'accuracy', name: '① 输出数据准确性', tip: '数据是否准确、口径是否一致' },
+  { key: 'rationality', name: '② 分析逻辑与问题定位', tip: '分析是否合理、问题定位是否准确' },
+  { key: 'conciseness', name: '③ 交互与内容简洁直观', tip: '输出是否简洁易懂、图表是否直观' }
+]
+
+/* 三项都打星后才能提交 */
+const ratingCanSubmit = computed(() =>
+  ratingForm.value.accuracy > 0 &&
+  ratingForm.value.rationality > 0 &&
+  ratingForm.value.conciseness > 0
+)
+
+/* 原始总分：三维度星数相加，满分 15（10 分制由服务端折算） */
+const ratingTotal = computed(() =>
+  ratingForm.value.accuracy + ratingForm.value.rationality + ratingForm.value.conciseness
+)
+
+function todayStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/* 是否需要弹评分：有消息、非 loading、本会话未评、今天没点过稍后 */
+function shouldShowRating() {
+  const sess = currentSession.value
+  if (!sess) return false
+  if (currentMessages.value.length === 0) return false // 空对话不评价
+  if (loading.value) return false
+  if (sess.rating) return false
+  if (localStorage.getItem(RATING_SNOOZE_KEY) === todayStr()) return false
+  return true
+}
+
+/* 离开动作统一入口：需要评价则暂存动作并弹框，否则直接放行 */
+function guardLeave(action) {
+  if (shouldShowRating()) {
+    pendingLeaveAction = action
+    openRating()
+  } else {
+    action()
+  }
+}
+
+/* 路由离开 AI-Chat 同样拦截（关闭标签页/刷新无法弹自定义框，不处理） */
+onBeforeRouteLeave((to) => {
+  if (shouldShowRating()) {
+    pendingRoutePath = to.fullPath
+    openRating()
+    return false
+  }
+  return true
+})
+
+function openRating() {
+  ratingForm.value = { accuracy: 0, rationality: 0, conciseness: 0 }
+  ratingReasons.value = []
+  ratingComment.value = ''
+  ratingStep.value = 'score'
+  ratingStepEnteredAt.value = performance.now()
+  ratingVisible.value = true
+}
+
+/* 步骤刚切换的 350ms 内忽略按钮点击，防止同位置按钮被同一次点击手势穿透触发 */
+function isFreshStepClick() {
+  return performance.now() - ratingStepEnteredAt.value < 350
+}
+
+function submitScores() {
+  if (!ratingCanSubmit.value) return
+  const f = ratingForm.value
+  const total = ratingTotal.value
+  lastRatingTotal.value = total
+  const record = {
+    sessionId: currentSessionId.value,
+    accuracyStars: f.accuracy,     // 数据准确性 1~5 星
+    rationalityStars: f.rationality, // 分析逻辑与问题定位 1~5 星
+    concisenessStars: f.conciseness, // 简洁直观 1~5 星
+    total,                          // 原始总分，满分 15（10 分制由服务端折算）
+    reasons: ratingReasons.value.slice(),
+    comment: ratingComment.value.trim(),
+    time: new Date().toISOString()
+  }
+  if (currentSession.value) currentSession.value.rating = record
+  // mock：会话级评分采集（10 分制由服务端按 4/4/2 权重换算）
+  console.log('[session-rating]', record)
+  ratingStep.value = 'thanks'
+  ratingStepEnteredAt.value = performance.now()
+}
+
+/* 稍后评价/×：当天不再弹，继续原离开动作 */
+function snoozeAndLeave() {
+  localStorage.setItem(RATING_SNOOZE_KEY, todayStr())
+  ratingVisible.value = false
+  continueLeave()
+}
+
+/* 完成评价：继续原离开动作（防同一次点击手势穿透误触发） */
+function finishRating() {
+  if (isFreshStepClick()) return
+  ratingVisible.value = false
+  continueLeave()
+}
+
+function continueLeave() {
+  const action = pendingLeaveAction
+  pendingLeaveAction = null
+  const routePath = pendingRoutePath
+  pendingRoutePath = null
+  if (action) action()
+  else if (routePath) router.push(routePath)
+}
+
 /* ---------- 交互方法 ---------- */
 function toggleSidebar() {
   sidebarCollapsed.value = !sidebarCollapsed.value
 }
 
 function newChat() {
-  const s = createSession()
-  sessions.unshift(s)
-  currentSessionId.value = s.id
-  inputText.value = ''
-  loading.value = false
+  guardLeave(() => {
+    const s = createSession()
+    sessions.unshift(s)
+    currentSessionId.value = s.id
+    inputText.value = ''
+    loading.value = false
+  })
 }
 
 function selectSession(id) {
-  currentSessionId.value = id
-  loading.value = false
-  nextTick(() => { renderCharts(); scrollToBottom() })
+  guardLeave(() => {
+    currentSessionId.value = id
+    loading.value = false
+    nextTick(() => { renderCharts(); scrollToBottom() })
+  })
 }
 
 const renameTargetId = ref(null)
@@ -1594,10 +2192,10 @@ function sendMessage() {
   const blocks = []
   if (text) blocks.push({ type: 'text', content: text })
   for (const a of atts) {
-    if (a.kind === 'image') blocks.push({ type: 'image', url: a.url, name: a.name })
+    if (a.kind === 'image') blocks.push({ type: 'image', url: a.url, name: a.name, size: a.size })
     else blocks.push({ type: 'file', name: a.name, size: a.size })
   }
-  sess.messages.push({ id: 'msg_' + (++msgSeq), role: 'user', blocks })
+  sess.messages.push({ id: 'msg_' + (++msgSeq), role: 'user', blocks, time: nowTime() })
   // 新建会话时，用首条消息文本或首个附件名命名
   if (sess.title === '新会话') {
     const firstLabel = text || (atts[0]?.name || '')
@@ -1617,6 +2215,7 @@ function sendMessage() {
       role: 'ai',
       blocks: resp.blocks,
       elapsed,
+      time: nowTime(),
       reasoning: buildMockReasoning(q, elapsed)
     })
     loading.value = false
@@ -1693,8 +2292,35 @@ const markerList = [
   { element: '示范按钮', marker: 'btn-spec-examples', desc: '输入框上方工具栏入口，点击弹出规范示例弹窗' },
   { element: '规范示例弹窗', marker: 'spec-modal', desc: '展示提问规范与正反例对比，支持展开/收起错误说明' },
   { element: '右侧主区域', marker: 'ai-chat-main', desc: '对话主区域容器' },
+  { element: '对话区顶部工具栏', marker: 'chat-top-toolbar', desc: '对话区最上方的白色工具条，右置辅助功能按钮' },
+  { element: '对话大纲按钮', marker: 'btn-chat-outline', desc: '顶部工具栏右侧侧滑面板图标按钮，点击从右侧滑出对话大纲抽屉' },
+  { element: '对话大纲抽屉', marker: 'outline-drawer', desc: '右侧滑出的大纲面板，含用户提问、系统输出、文件记录三部分' },
+  { element: '用户提问大纲', marker: 'outline-section-user', desc: '按轮汇总每次用户提问（序号、内容、时间、附件数），点击定位到对应消息' },
+  { element: '系统输出大纲', marker: 'outline-section-ai', desc: '按轮汇总 AI 输出构成（文本/表格/图表数量、摘要、耗时），点击定位到对应消息' },
+  { element: '文件记录', marker: 'outline-section-files', desc: '汇总对话中上传的图片/文件（类型、大小、所属轮次），含待发送附件标记' },
   { element: '欢迎卡片', marker: 'welcome-card', desc: '初始欢迎卡片，展示助手介绍与使用指引' },
   { element: '消息流列表', marker: 'message-list', desc: '用户与 AI 的问答消息流' },
+  { element: '单条回答操作栏', marker: 'msg-feedback', desc: '每条 AI 回答底部操作区：复制、分享、更多、点赞、点踩、回答时间' },
+  { element: '复制回答', marker: 'msg-copy', desc: '复制该条回答的文本与表格摘要到剪贴板' },
+  { element: '分享回答', marker: 'msg-share', desc: '分享该条回答（演示环境待接入）' },
+  { element: '更多操作', marker: 'msg-more', desc: '更多菜单：重新生成、报告问题' },
+  { element: '回答有帮助', marker: 'msg-feedback-up', desc: '线性点赞图标，标记单条回答有帮助，再次点击取消' },
+  { element: '回答没帮助', marker: 'msg-feedback-down', desc: '线性点踩图标，点击弹出「反馈提交」浮层' },
+  { element: '反馈提交浮层', marker: 'msg-feedback-panel', desc: '点踩后弹出：理由标签多选 + 补充说明输入框 + 清空/确定' },
+  { element: '反馈理由标签', marker: 'msg-feedback-reasons', desc: '不是我想要的数据/答非所问/不符合业务常识/加载过慢/其他，多选，至少选一项才能确定' },
+  { element: '反馈补充说明', marker: 'msg-feedback-comment', desc: '填写不满意的部分及期望的回答，选填，最多 300 字' },
+  { element: '反馈清空', marker: 'msg-feedback-clear', desc: '清空已选理由与补充说明' },
+  { element: '反馈确定', marker: 'msg-feedback-confirm', desc: '提交本条回答的差评反馈，提交后点踩图标高亮' },
+  { element: '离开评分弹框', marker: 'rating-modal', desc: '新对话/切换会话/路由离开且本会话有消息时弹出的会话级评分框' },
+  { element: '星级打分层', marker: 'rating-step-score', desc: '三维度各 1~5 星评价（准确性/逻辑与定位/简洁直观），原始总分满分 15，服务端可折算 10 分制' },
+  { element: '评分维度行', marker: 'rating-dim-{accuracy/rationality/conciseness}', desc: '展示维度名称与说明，右侧为该维度的星级评分组件' },
+  { element: '维度星级', marker: 'rating-stars-{accuracy/rationality/conciseness}', desc: '对应维度的 1~5 星点选，三项均打星后才可提交' },
+  { element: '实时总分', marker: 'rating-step-score', desc: '星级下方实时展示三维度星数之和（X / 15 分）' },
+  { element: '问题原因多选', marker: 'rating-reasons', desc: '备注上方的问题原因复选框（数据错误/逻辑不通/没定位到问题/图表不直观/其他），选填可多选' },
+  { element: '评分备注', marker: 'rating-comment', desc: '用户自定义补充说明或具体问题（选填，最多 300 字）' },
+  { element: '稍后评价', marker: 'rating-later', desc: '当天不再弹出评分框，并继续原本的离开动作' },
+  { element: '提交评分', marker: 'rating-submit', desc: '三个维度均已打星后可提交，保存星级、问题原因与备注后进入感谢页' },
+  { element: '评分完成', marker: 'rating-finish', desc: '感谢页展示本次 X / 15 分，点击完成关闭弹框并继续原本的离开动作' },
   { element: '输入操作区', marker: 'chat-input-area', desc: '底部输入与发送区域' },
   { element: '多行输入框', marker: 'chat-input', desc: '问题输入框，支持回车发送' },
   { element: '文件上传按钮', marker: 'btn-upload', desc: '支持 png/jpg/csv/xls/xlsx；也可拖拽文件到输入区' },
@@ -1816,6 +2442,330 @@ const markerList = [
   flex-direction: column;
   overflow: visible;
 }
+
+/* 对话区顶部工具栏 */
+.chat-topbar {
+  flex: 0 0 auto;
+  height: 48px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 8px 8px 0 0;
+}
+.chat-topbar-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-topbar-btn:hover { background: #f5f5f5; }
+
+/* 大纲定位时的消息高亮 */
+.message-row.msg-highlight .message-bubble {
+  animation: msg-flash 1.8s ease-out;
+}
+@keyframes msg-flash {
+  0%   { box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.35); }
+  70%  { box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 119, 255, 0); }
+}
+
+/* ===== 对话大纲抽屉 ===== */
+.outline-wrap { display: flex; flex-direction: column; gap: 20px; }
+.outline-empty {
+  margin-top: 48px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.outline-empty-icon { font-size: 36px; margin-bottom: 8px; }
+.outline-empty-sub { font-size: 12px; color: #c0c4cc; margin-top: 4px; }
+
+.ol-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.ol-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.ol-section-head::before {
+  content: '';
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  background: #1677ff;
+}
+.ol-section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #f0f0f0;
+}
+.ol-section-count {
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: #f0f5ff;
+  color: #1677ff;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+.ol-section-empty { font-size: 12px; color: #b6bcc6; padding: 4px 0 8px 10px; }
+
+.ol-list, .ol-file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ol-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ol-item:hover {
+  border-color: #91caff;
+  background: #f5f9ff;
+}
+.ol-item-index {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: #e6f4ff;
+  color: #1677ff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+.ol-item-index.ai { background: #f6ffed; color: #52c41a; }
+.ol-item-body { flex: 1; min-width: 0; }
+.ol-item-text {
+  font-size: 13px;
+  color: #1f2937;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ol-item-summary {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 3px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ol-item-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.ol-tag {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #f5f5f5;
+  color: #595959;
+  font-size: 11px;
+  line-height: 18px;
+}
+.ol-item-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* 文件记录 */
+.ol-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ol-file:hover { border-color: #91caff; background: #f5f9ff; }
+.ol-file.pending { background: #fafafa; border-style: dashed; cursor: default; }
+.ol-file-icon { flex: 0 0 auto; font-size: 18px; }
+.ol-file-body { flex: 1; min-width: 0; }
+.ol-file-name {
+  font-size: 13px;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ol-file-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+.ol-file-badge {
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: #fff7e6;
+  color: #d46b08;
+  font-size: 11px;
+}
+
+/* 单条回答操作栏 */
+.msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 8px;
+  color: #8a94a6;
+}
+.ma-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 13px;
+  color: #8a94a6;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ma-btn:hover { color: #1677ff; background: #f5f9ff; }
+.ma-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: #8a94a6;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ma-icon-btn:hover { color: #1677ff; background: #f5f9ff; }
+.ma-icon-btn.active { color: #1677ff; background: #e6f4ff; }
+.ma-divider {
+  width: 1px;
+  height: 14px;
+  margin: 0 8px;
+  background: #e0e4ea;
+}
+.ma-time {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #a8b0bd;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 反馈浮层（popover 内容 teleport 到 body，样式见文件末尾非 scoped 块） */
+
+/* ===== 离开评分弹框 ===== */
+.rt-header { margin-bottom: 18px; }
+.rt-title { font-size: 16px; font-weight: 600; color: #1f2937; }
+.rt-subtitle { margin-top: 4px; font-size: 12px; color: #9ca3af; }
+
+.rt-dim {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.rt-dim-head { min-width: 0; }
+.rt-dim-name { display: block; font-size: 13px; font-weight: 600; color: #1f2937; }
+.rt-dim-tip { display: block; margin-top: 2px; font-size: 11px; color: #9ca3af; }
+.rt-stars { flex: 0 0 auto; font-size: 22px; }
+
+.rt-total {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #f7f9fc;
+  border-radius: 8px;
+}
+.rt-total-label { font-size: 13px; color: #6b7280; }
+.rt-total-value { font-size: 22px; font-weight: 700; color: #1677ff; line-height: 1; }
+.rt-total-max { font-size: 13px; color: #6b7280; }
+.rt-total-hint { margin-left: auto; font-size: 11px; color: #b0b6c0; }
+
+.rt-reason-wrap { margin-top: 16px; }
+.rt-reason-label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.rt-reason-optional { font-weight: 400; font-size: 12px; color: #9ca3af; }
+.rt-reason-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+.rt-reason-group :deep(.ant-checkbox-wrapper) { font-size: 13px; color: #374151; }
+
+.rt-comment-wrap { margin-top: 16px; }
+.rt-comment-label {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.rt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* 感谢层 */
+.rt-thanks {
+  padding: 24px 0 12px;
+  text-align: center;
+}
+.rt-thanks-icon { font-size: 44px; margin-bottom: 12px; }
+.rt-thanks-title { font-size: 17px; font-weight: 600; color: #1f2937; margin-bottom: 8px; }
+.rt-thanks-sub { font-size: 13px; color: #6b7280; margin-bottom: 22px; }
+.rt-thanks-sub b { color: #1677ff; font-size: 16px; }
 
 .message-area { flex: 1; overflow-y: auto; padding: 20px; }
 
@@ -2253,4 +3203,111 @@ const markerList = [
 }
 .marker-table th { background: #f0f2f5; color: #374151; }
 .marker-table td { color: #6b7280; }
+</style>
+
+<!-- 反馈提交浮层（a-popover 内容渲染在 body 下，需非 scoped 样式） -->
+<style>
+.fb-popover .ant-popover-inner {
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.12);
+}
+.fb-popover .ant-popover-inner-content { padding: 0; }
+.fb-popover .ant-popover-arrow { display: none; }
+
+.fb-pop {
+  width: 380px;
+  padding: 16px 18px 14px;
+  box-sizing: border-box;
+  background: #fff;
+}
+.fb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.fb-title { font-size: 15px; font-weight: 600; color: #1f2937; }
+.fb-close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  color: #9ca3af;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.fb-close:hover { color: #4b5563; background: #f5f5f5; }
+.fb-tip { margin-bottom: 10px; font-size: 13px; color: #6b7280; }
+.fb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.fb-chip {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #4b5563;
+  background: #f5f6f8;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.fb-chip:hover { color: #1677ff; background: #f0f7ff; }
+.fb-chip.active {
+  color: #1677ff;
+  background: #e6f4ff;
+  border-color: #91caff;
+}
+.fb-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #1f2937;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.18s;
+}
+.fb-textarea::placeholder { color: #b6bcc7; }
+.fb-textarea:focus { border-color: #1677ff; }
+.fb-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+.fb-btn {
+  height: 30px;
+  padding: 0 18px;
+  font-size: 13px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  color: #4b5563;
+  cursor: pointer;
+}
+.fb-btn:hover { border-color: #1677ff; color: #1677ff; }
+.fb-btn-primary {
+  background: #1677ff;
+  border-color: #1677ff;
+  color: #fff;
+}
+.fb-btn-primary:hover { background: #4096ff; border-color: #4096ff; color: #fff; }
+.fb-btn-primary:disabled {
+  background: #f0f0f0;
+  border-color: #f0f0f0;
+  color: #b6bcc7;
+  cursor: not-allowed;
+}
 </style>
