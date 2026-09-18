@@ -1933,14 +1933,13 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-/* 是否需要弹评分：有消息、非 loading、本会话未评、今天没点过稍后 */
+/* 是否需要弹评分：当前会话至少有一条用户输入、且本会话未评过 */
 function shouldShowRating() {
   const sess = currentSession.value
   if (!sess) return false
-  if (currentMessages.value.length === 0) return false // 空对话不评价
-  if (loading.value) return false
+  const hasUserInput = (sess.messages || []).some(m => m.role === 'user')
+  if (!hasUserInput) return false
   if (sess.rating) return false
-  if (localStorage.getItem(RATING_SNOOZE_KEY) === todayStr()) return false
   return true
 }
 
@@ -2000,9 +1999,8 @@ function submitScores() {
   ratingStepEnteredAt.value = performance.now()
 }
 
-/* 稍后评价/×：当天不再弹，继续原离开动作 */
+/* 稍后/×：关闭弹框，继续原离开动作（不设频控，下次切换仍会提示） */
 function snoozeAndLeave() {
-  localStorage.setItem(RATING_SNOOZE_KEY, todayStr())
   ratingVisible.value = false
   continueLeave()
 }
