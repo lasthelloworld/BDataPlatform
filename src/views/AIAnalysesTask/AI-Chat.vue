@@ -13,6 +13,11 @@
           <span class="plus">＋</span> 新对话
         </button>
 
+        <button class="scheduled-task-btn" data-marker="btn-scheduled-task" @click="openScheduledTask">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>
+          <span>定时任务</span>
+        </button>
+
         <div class="common-questions">
           <div class="cq-header" data-marker="menu-common-questions" @click="commonOpen = !commonOpen">
             <span>常看问题</span>
@@ -31,7 +36,7 @@
         </div>
 
         <div class="history-section" data-marker="history-group">
-          <div class="history-title">历史记录</div>
+          <div class="history-title">历史会话记录</div>
           <div class="history-group-label">今天</div>
           <div class="history-list">
             <div
@@ -55,6 +60,7 @@
                 />
               </template>
               <template v-else>
+                <svg class="hi-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 <span class="hi-text">{{ s.title }}</span>
                 <span class="hi-actions">
                   <span class="hi-edit" :data-marker="'history-item-edit-' + s.id" @click.stop="openRename(s)" title="重命名">✎</span>
@@ -71,6 +77,25 @@
             </div>
           </div>
         </div>
+
+        <div class="history-section task-section" data-marker="task-output-group">
+          <div class="history-title">定时任务输出记录</div>
+          <div class="history-group-label">最近执行</div>
+          <div class="history-list">
+            <div
+              v-for="t in taskOutputs"
+              :key="t.id"
+              class="history-item task-item"
+              :class="{ failed: t.status === 'failed', active: activeTask && activeTask.id === t.id && activeView === 'taskDetail' }"
+              :data-marker="'task-output-item-' + t.id"
+              @click="viewTaskOutput(t)"
+            >
+              <svg class="hi-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>
+              <span class="hi-text">{{ t.name }}</span>
+              <span class="task-status" :class="t.status">{{ t.status === 'success' ? '✓' : '!' }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-show="!sidebarCollapsed" class="sidebar-footer" data-marker="sidebar-user-info">
@@ -82,8 +107,9 @@
       </div>
     </aside>
 
-    <!-- ============ 右侧对话主区域 ============ -->
+    <!-- ============ 右侧主区域 ============ -->
     <section class="chat-main" data-marker="ai-chat-main">
+      <template v-if="activeView === 'chat'">
       <!-- 对话区顶部工具栏 -->
       <header class="chat-topbar" data-marker="chat-top-toolbar">
         <button
@@ -913,6 +939,81 @@
           </div>
         </div>
       </a-modal>
+      </template>
+
+      <template v-else-if="activeView === 'tasks'">
+        <div class="st-wrapper" data-marker="scheduled-tasks-embedded">
+          <ScheduledTasks @back="activeView = 'chat'" />
+        </div>
+      </template>
+      <template v-else-if="activeView === 'taskDetail' && activeTask">
+        <!-- 定时任务执行详情（内嵌到右侧主区域） -->
+        <div class="td-page" :data-marker="'task-detail-page-' + activeTask.id">
+          <div class="td-topbar">
+            <button class="td-back" data-marker="task-detail-back" @click="backFromTaskDetail">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              返回{{ taskDetailSource === 'tasks' ? '任务列表' : '对话' }}
+            </button>
+            <div class="td-topbar-title">{{ activeTask.name }}</div>
+          </div>
+
+          <!-- 头部元信息 -->
+          <div class="td-head">
+            <div class="td-head-row">
+              <span class="td-badge" :class="activeTask.status === 'success' ? 'ok' : 'err'">
+                {{ activeTask.status === 'success' ? '✓ 执行成功' : '✕ 执行失败' }}
+              </span>
+              <span class="td-cycle">⏱ {{ activeTask.cycle }}</span>
+              <span class="td-last">上次执行：{{ activeTask.lastRun }}</span>
+            </div>
+            <div class="td-prompt">
+              <div class="td-prompt-label">任务内容</div>
+              <div class="td-prompt-text">{{ activeTask.prompt }}</div>
+            </div>
+          </div>
+
+          <!-- 失败态 -->
+          <div v-if="activeTask.status === 'failed' || !activeTask.result" class="td-fail">
+            <div class="td-fail-title">任务执行失败</div>
+            <div class="td-fail-desc">数据源连接超时，请检查配置后重试。</div>
+          </div>
+
+          <!-- AI 输出 -->
+          <template v-else>
+            <div class="td-ai-block">
+              <div class="td-ai-head">
+                <span class="td-ai-label">🤖 AI 分析输出</span>
+                <span class="td-ai-dur">耗时 {{ activeTask.result.duration }}</span>
+              </div>
+              <p class="td-summary">{{ activeTask.result.summary }}</p>
+
+              <!-- 对比表格 -->
+              <div class="td-table-wrap">
+                <table class="td-table">
+                  <thead>
+                    <tr>
+                      <th v-for="c in activeTask.result.columns" :key="c" :title="c">{{ c }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, ri) in activeTask.result.rows" :key="ri">
+                      <td v-for="(cell, ci) in row" :key="ci" :class="getCellClass(cell)">
+                        {{ cell }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- 图表占位 -->
+              <div v-if="activeTask.result.chartNote" class="td-chart-ph">
+                <span class="td-chart-icon">📊</span>
+                <span>{{ activeTask.result.chartNote }}</span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
     </section>
   </div>
 </template>
@@ -922,6 +1023,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import * as echarts from 'echarts'
 import { message } from 'ant-design-vue'
+import ScheduledTasks from './ScheduledTasks.vue'
 
 /* ---------- 7 条标准业务示例问题（一字不差） ---------- */
 const sampleQuestions = [
@@ -1235,9 +1337,73 @@ function generateMockResponse(question) {
 
 /* ---------- 会话状态 ---------- */
 let sessionSeq = 0
-function createSession(title = '新会话') {
-  return { id: 'sess_' + (++sessionSeq), title, messages: [], createdAt: new Date() }
+function createSession(title = '新会话', type = 'chat') {
+  return { id: 'sess_' + (++sessionSeq), title, type, messages: [], createdAt: new Date() }
 }
+
+/* 定时任务输出记录（mock，每条带 AI 执行详情） */
+const taskOutputs = reactive([
+  {
+    id: 'taskout_1', name: '每日 DAU 巡检', cycle: '每天 09:00',
+    lastRun: '2026-09-20 09:00', status: 'success',
+    prompt: '监控 onedrama 近 7 天 DAU 趋势并标注异常',
+    result: {
+      summary: 'DAU 整体呈上升趋势，昨日（09-19）出现 12.3% 的日环比下滑，集中在东南亚市场，建议关注渠道投放变化。',
+      columns: ['日期', 'DAU', '日环比', '7 日均值', '异常标记'],
+      rows: [
+        ['09-14', '128,450', '+3.2%', '126,100', '—'],
+        ['09-15', '130,210', '+1.4%', '126,800', '—'],
+        ['09-16', '125,800', '-3.4%', '127,000', '⚠ 低于均值'],
+        ['09-17', '129,900', '+3.3%', '127,500', '—'],
+        ['09-18', '132,400', '+1.9%', '128,200', '—'],
+        ['09-19', '116,100', '▼ -12.3%', '127,800', '⚠⚠ 显著异常'],
+        ['09-20', '129,700', '+11.7%', '128,900', '—']
+      ],
+      chartNote: '近 7 天 DAU 折线图 + 异常点高亮',
+      duration: '2.4s'
+    }
+  },
+  {
+    id: 'taskout_2', name: '每周 IAA 变现排查', cycle: '每周一 10:30',
+    lastRun: '2026-09-20 10:32', status: 'success',
+    prompt: '每周一输出 onedrama 全渠道 IAA 广告漏斗分析报告',
+    result: {
+      summary: '本周 IAA 填充率环比上升 2.1%，但 eCPM 环比下滑 5.6%，主要受北美市场广告主预算下调影响；ARPDAU 基本持平。',
+      columns: ['指标', '本周值', '上周值', '环比', '趋势'],
+      rows: [
+        ['填充率', '91.2%', '89.3%', '▲ +2.1%', '↑'],
+        ['展示率', '68.5%', '67.8%', '+0.7%', '→'],
+        ['eCPM', '$3.82', '$4.05', '▼ -5.6%', '↓'],
+        ['ARPDAU', '$0.41', '$0.40', '+2.5%', '→']
+      ],
+      chartNote: '渠道 × 国家 IAA 漏斗堆叠柱状图',
+      duration: '3.1s'
+    }
+  },
+  {
+    id: 'taskout_3', name: '每日 ROI 监控', cycle: '每天 18:00',
+    lastRun: '2026-09-20 18:00', status: 'failed',
+    prompt: '分国家 × 渠道 ROI，低于 1.2 触发告警',
+    result: null
+  },
+  {
+    id: 'taskout_4', name: '留存率异动预警', cycle: '每天 08:30',
+    lastRun: '2026-09-19 08:30', status: 'success',
+    prompt: '次日/7 日留存大幅下跌时告警并定位渠道',
+    result: {
+      summary: '09-18 新增用户次日留存 34.2%（前 7 日均值 38.7%），下滑 4.5pp；定位到 TikTok 渠道新素材 CTR 下滑导致流量质量下降。',
+      columns: ['渠道', '次日留存', '7 日留存', 'vs 7 日均值', '告警'],
+      rows: [
+        ['Google Ads', '38.1%', '12.4%', '-0.6pp', '—'],
+        ['TikTok', '29.5%', '8.7%', '▼ -6.2pp', '⚠ 异常'],
+        ['Meta', '36.8%', '11.9%', '-1.9pp', '—'],
+        ['ASA', '42.3%', '14.8%', '+1.2pp', '—']
+      ],
+      chartNote: '各渠道留存率分组柱状图',
+      duration: '2.7s'
+    }
+  }
+])
 
 const sessions = reactive([createSession()])
 const currentSessionId = ref(sessions[0].id)
@@ -1246,6 +1412,7 @@ const loading = ref(false)
 const beautifying = ref(false)
 const sidebarCollapsed = ref(false)
 const commonOpen = ref(false)
+const activeView = ref('chat') // 'chat' | 'tasks'
 const messageAreaRef = ref(null)
 const messageListRef = ref(null)
 const inputRef = ref(null)
@@ -2033,6 +2200,7 @@ function newChat() {
     currentSessionId.value = s.id
     inputText.value = ''
     loading.value = false
+    activeView.value = 'chat'
   })
 }
 
@@ -2040,6 +2208,7 @@ function selectSession(id) {
   guardLeave(() => {
     currentSessionId.value = id
     loading.value = false
+    activeView.value = 'chat'
     nextTick(() => { renderCharts(); scrollToBottom() })
   })
 }
@@ -2075,6 +2244,34 @@ function confirmRename() {
 function cancelRename() {
   renameTargetId.value = null
   renameText.value = ''
+}
+
+/* 任务详情：内嵌到右侧主区域，activeView 切换 */
+const activeTask = ref(null)
+const taskDetailSource = ref('chat') // 'chat' | 'tasks'
+
+/* 侧边栏点击：切换内嵌定时任务页面 或 打开任务执行详情 */
+function openScheduledTask() {
+  activeView.value = 'tasks'
+}
+
+function viewTaskOutput(t) {
+  activeTask.value = t
+  taskDetailSource.value = activeView.value === 'tasks' ? 'tasks' : 'chat'
+  activeView.value = 'taskDetail'
+}
+
+function backFromTaskDetail() {
+  activeView.value = taskDetailSource.value === 'tasks' ? 'tasks' : 'chat'
+}
+
+/* 对比表格单元格样式：涨跌自动标色 */
+function getCellClass(cell) {
+  if (typeof cell !== 'string') return ''
+  if (/^[▲↑]/.test(cell) || /\+\d/.test(cell)) return 'td-up'
+  if (/^[▼↓]/.test(cell) || /-\d/.test(cell) && /\d/.test(cell)) return 'td-down'
+  if (/⚠/.test(cell)) return 'td-warn'
+  return ''
 }
 
 function deleteSession(id) {
@@ -2270,6 +2467,7 @@ const markerList = [
   { element: '侧边栏整体', marker: 'ai-chat-sidebar', desc: '左侧会话侧边栏容器' },
   { element: '侧边栏头部折叠', marker: 'sidebar-collapse-header', desc: '点击折叠/展开侧边栏' },
   { element: '新对话按钮', marker: 'btn-new-chat', desc: '新建空白会话，重置为欢迎状态' },
+  { element: '定时任务按钮', marker: 'btn-scheduled-task', desc: '打开定时任务管理入口（定时执行分析任务）' },
   { element: '常看问题菜单', marker: 'menu-common-questions', desc: '展开/收起常看问题列表' },
   { element: '历史记录分组', marker: 'history-group', desc: '历史会话列表区域' },
   { element: '单条历史会话', marker: 'history-item-{id}', desc: '点击切换会话；hover 显示编辑/删除按钮' },
@@ -2379,6 +2577,14 @@ const markerList = [
 .new-chat-btn:hover { background: #1677ff; color: #fff; border-style: solid; }
 .new-chat-btn .plus { font-size: 16px; line-height: 1; }
 
+.scheduled-task-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px;
+  background: #fff; color: #4b5563; font-size: 14px; cursor: pointer; transition: all 0.2s;
+  margin-top: 8px;
+}
+.scheduled-task-btn:hover { border-color: #1677ff; color: #1677ff; background: #f5f9ff; }
+
 .common-questions { border: 1px solid #f0f0f0; border-radius: 6px; overflow: hidden; }
 .cq-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -2398,11 +2604,14 @@ const markerList = [
 .history-list { display: flex; flex-direction: column; gap: 2px; }
 .history-item {
   display: flex; align-items: center; justify-content: space-between;
+  gap: 6px;
   padding: 7px 10px; border-radius: 6px; font-size: 13px; color: #374151;
   cursor: pointer; transition: background 0.2s;
 }
 .history-item:hover { background: #f5faff; }
 .history-item.active { background: #e6f0ff; color: #1677ff; }
+.hi-icon { flex-shrink: 0; color: #9ca3af; }
+.history-item.active .hi-icon { color: #1677ff; }
 .hi-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hi-actions { display: none; align-items: center; gap: 4px; margin-left: 4px; flex-shrink: 0; }
 .history-item:hover .hi-actions { display: flex; }
@@ -2414,6 +2623,117 @@ const markerList = [
 }
 .hi-edit:hover { background: #e6f0ff; color: #1677ff; }
 .hi-del:hover { background: #fee; color: #ef4444; }
+
+/* 定时任务输出记录分组 */
+.task-section { margin-top: 4px; padding-top: 10px; border-top: 1px solid #f0f2f5; }
+.history-item.task-item .hi-icon { color: #1677ff; }
+.history-item.task-item:hover .hi-icon { color: #4096ff; }
+.history-item.task-item.failed { color: #8b4e00; background: #fff7e6; }
+.history-item.task-item.failed:hover { background: #ffe7ba; }
+.history-item.task-item.failed .hi-icon { color: #fa8c16; }
+.task-status {
+  width: 18px; height: 18px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; font-size: 11px; font-weight: 600;
+  background: #f6ffed; color: #52c41a;
+}
+.task-status.failed { background: #fff1f0; color: #ff4d4f; }
+
+/* 内嵌定时任务容器 */
+.st-wrapper {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  background: #f7f8fa;
+}
+
+/* ====== 定时任务详情 drawer ====== */
+.td-page {
+  height: 100%; overflow-y: auto; padding: 0 24px 24px;
+  background: #fafbfc;
+}
+.td-topbar {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 0; margin-bottom: 16px;
+  background: #fafbfc; border-bottom: 1px solid #eef0f3;
+}
+.td-back {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: transparent; border: none; cursor: pointer;
+  color: #1677ff; font-size: 13px; padding: 4px 6px;
+  border-radius: 4px; transition: background 0.15s;
+}
+.td-back:hover { background: #e6f4ff; }
+.td-topbar-title { font-size: 16px; font-weight: 600; color: #1f2937; }
+.td-head { margin-bottom: 16px; }
+.td-head-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  margin-bottom: 10px;
+}
+.td-badge {
+  font-size: 12px; padding: 2px 10px; border-radius: 10px; font-weight: 500;
+}
+.td-badge.ok { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+.td-badge.err { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+.td-cycle { font-size: 13px; color: #6b7280; }
+.td-last { font-size: 12px; color: #9ca3af; }
+.td-prompt {
+  padding: 10px 12px; background: #f5f9ff; border-left: 3px solid #1677ff; border-radius: 4px;
+}
+.td-prompt-label { font-size: 12px; color: #1677ff; font-weight: 600; margin-bottom: 4px; }
+.td-prompt-text { font-size: 13px; color: #374151; line-height: 1.6; }
+
+/* 失败态 */
+.td-fail {
+  text-align: center; padding: 50px 20px;
+  background: #fff7e6; border-radius: 8px; border: 1px dashed #ffd591;
+}
+.td-fail-title { font-size: 15px; color: #d46b08; font-weight: 600; margin-bottom: 6px; }
+.td-fail-desc { font-size: 13px; color: #8c8c8c; margin-bottom: 16px; }
+
+/* AI 输出块 */
+.td-ai-block {
+  background: #fff; border: 1px solid #f0f0f0; border-radius: 8px; padding: 16px;
+}
+.td-ai-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid #f5f5f5;
+}
+.td-ai-label { font-size: 14px; font-weight: 600; color: #1f2937; }
+.td-ai-dur { font-size: 12px; color: #9ca3af; }
+.td-summary {
+  font-size: 13.5px; color: #374151; line-height: 1.7; margin: 0 0 14px;
+  padding: 10px 12px; background: #f9fafb; border-radius: 6px;
+}
+
+/* 对比表格 */
+.td-table-wrap { overflow-x: auto; margin-bottom: 12px; border: 1px solid #f0f0f0; border-radius: 6px; }
+.td-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.td-table th {
+  background: #fafafa; color: #374151; font-weight: 600; text-align: left;
+  padding: 9px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;
+}
+.td-table td {
+  padding: 8px 12px; border-bottom: 1px solid #f5f5f5; color: #1f2937;
+}
+.td-table tbody tr:last-child td { border-bottom: none; }
+.td-table td.td-up { color: #389e0d; font-weight: 600; }
+.td-table td.td-down { color: #cf1322; font-weight: 600; }
+.td-table td.td-warn { color: #d46b08; font-weight: 600; background: #fffbe6; }
+
+/* 图表占位 */
+.td-chart-ph {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px; background: linear-gradient(135deg, #f0f5ff 0%, #f9f0ff 100%);
+  border-radius: 6px; font-size: 13px; color: #374151;
+  border: 1px dashed #adc6ff;
+}
+.td-chart-icon { font-size: 18px; }
+
+/* 侧边栏 task-item active 高亮 */
+.history-item.task-item.active { background: #e6f0ff; color: #1677ff; }
+.history-item.task-item.active .hi-icon { color: #1677ff; }
+
 .hi-input {
   flex: 1; min-width: 0; padding: 2px 8px; border: 1px solid #1677ff; border-radius: 4px;
   font-size: 13px; outline: none; background: #fff; color: #1f2937;

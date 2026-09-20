@@ -42,6 +42,12 @@ const routes = [
     meta: { title: 'AI-Chat' }
   },
   {
+    path: '/scheduled-tasks',
+    name: 'ScheduledTasks',
+    component: () => import('../views/AIAnalysesTask/ScheduledTasks.vue'),
+    meta: { title: '定时任务' }
+  },
+  {
     path: '/ai-analyses-task/:id',
     name: 'AITaskDetail',
     component: () => import('../views/AITaskDetail/index.vue'),
