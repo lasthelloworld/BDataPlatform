@@ -949,69 +949,165 @@
       <template v-else-if="activeView === 'taskDetail' && activeTask">
         <!-- 定时任务执行详情（内嵌到右侧主区域） -->
         <div class="td-page" :data-marker="'task-detail-page-' + activeTask.id">
-          <div class="td-topbar">
-            <button class="td-back" data-marker="task-detail-back" @click="backFromTaskDetail">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-              返回{{ taskDetailSource === 'tasks' ? '任务列表' : '对话' }}
-            </button>
-            <div class="td-topbar-title">{{ activeTask.name }}</div>
-          </div>
-
-          <!-- 头部元信息 -->
-          <div class="td-head">
-            <div class="td-head-row">
-              <span class="td-badge" :class="activeTask.status === 'success' ? 'ok' : 'err'">
-                {{ activeTask.status === 'success' ? '✓ 执行成功' : '✕ 执行失败' }}
-              </span>
-              <span class="td-cycle">⏱ {{ activeTask.cycle }}</span>
-              <span class="td-last">上次执行：{{ activeTask.lastRun }}</span>
+          <!-- 可滚动内容区 -->
+          <div class="td-content">
+            <div class="td-topbar">
+              <div class="td-topbar-title">{{ activeTask.name }}</div>
             </div>
-            <div class="td-prompt">
-              <div class="td-prompt-label">任务内容</div>
-              <div class="td-prompt-text">{{ activeTask.prompt }}</div>
-            </div>
-          </div>
 
-          <!-- 失败态 -->
-          <div v-if="activeTask.status === 'failed' || !activeTask.result" class="td-fail">
-            <div class="td-fail-title">任务执行失败</div>
-            <div class="td-fail-desc">数据源连接超时，请检查配置后重试。</div>
-          </div>
-
-          <!-- AI 输出 -->
-          <template v-else>
-            <div class="td-ai-block">
-              <div class="td-ai-head">
-                <span class="td-ai-label">🤖 AI 分析输出</span>
-                <span class="td-ai-dur">耗时 {{ activeTask.result.duration }}</span>
+            <!-- 头部元信息 -->
+            <div class="td-head">
+              <div class="td-head-row">
+                <span class="td-badge" :class="activeTask.status === 'success' ? 'ok' : 'err'">
+                  {{ activeTask.status === 'success' ? '✓ 执行成功' : '✕ 执行失败' }}
+                </span>
+                <span class="td-cycle">⏱ {{ activeTask.cycle }}</span>
+                <span class="td-last">上次执行：{{ activeTask.lastRun }}</span>
               </div>
-              <p class="td-summary">{{ activeTask.result.summary }}</p>
-
-              <!-- 对比表格 -->
-              <div class="td-table-wrap">
-                <table class="td-table">
-                  <thead>
-                    <tr>
-                      <th v-for="c in activeTask.result.columns" :key="c" :title="c">{{ c }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(row, ri) in activeTask.result.rows" :key="ri">
-                      <td v-for="(cell, ci) in row" :key="ci" :class="getCellClass(cell)">
-                        {{ cell }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- 图表占位 -->
-              <div v-if="activeTask.result.chartNote" class="td-chart-ph">
-                <span class="td-chart-icon">📊</span>
-                <span>{{ activeTask.result.chartNote }}</span>
+              <div class="td-prompt">
+                <div class="td-prompt-label">任务内容</div>
+                <div class="td-prompt-text">{{ activeTask.prompt }}</div>
               </div>
             </div>
-          </template>
+
+            <!-- 失败态 -->
+            <div v-if="activeTask.status === 'failed' || !activeTask.result" class="td-fail">
+              <div class="td-fail-title">任务执行失败</div>
+              <div class="td-fail-desc">数据源连接超时，请检查配置后重试。</div>
+            </div>
+
+            <!-- AI 输出 -->
+            <template v-else>
+              <div class="td-ai-block">
+                <div class="td-ai-head">
+                  <span class="td-ai-label">🤖 AI 分析输出</span>
+                  <span class="td-ai-dur">耗时 {{ activeTask.result.duration }}</span>
+                </div>
+                <p class="td-summary">{{ activeTask.result.summary }}</p>
+
+                <!-- 对比表格 -->
+                <div class="td-table-wrap">
+                  <table class="td-table">
+                    <thead>
+                      <tr>
+                        <th v-for="c in activeTask.result.columns" :key="c" :title="c">{{ c }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(row, ri) in activeTask.result.rows" :key="ri">
+                        <td v-for="(cell, ci) in row" :key="ci" :class="getCellClass(cell)">
+                          {{ cell }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- 图表占位 -->
+                <div v-if="activeTask.result.chartNote" class="td-chart-ph">
+                  <span class="td-chart-icon">📊</span>
+                  <span>{{ activeTask.result.chartNote }}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- 追问对话区 -->
+            <div v-if="taskFollowUps.length" class="td-followups">
+              <div v-for="fu in taskFollowUps" :key="fu.id" class="td-fu-item">
+                <div class="td-fu-question">
+                  <span class="td-fu-avatar user">我</span>
+                  <span class="td-fu-text">{{ fu.question }}</span>
+                </div>
+                <div class="td-fu-answer">
+                  <span class="td-fu-avatar ai">🤖</span>
+                  <span class="td-fu-text">{{ fu.answer }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部追问输入框（与主对话输入一致） -->
+          <div
+            class="input-area td-input-area"
+            :class="{ 'has-attachments': attachments.length }"
+            :data-marker="dragOver ? 'task-detail-input-dragover' : 'task-detail-input-area'"
+            @dragover.prevent="dragOver = true"
+            @dragleave.prevent="dragOver = false"
+            @drop.prevent="handleDrop"
+          >
+            <!-- 顶部工具栏 -->
+            <div class="input-toolbar-top" data-marker="task-detail-toolbar-top">
+              <button class="spec-btn" data-marker="task-detail-btn-recommend" @click="toggleRecommendPanel">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="4"/>
+                  <path d="M12 8.2c-1.3-1-2.9-1.4-4.5-1.2v8.6c1.6-.2 3.2.2 4.5 1.2"/>
+                  <path d="M12 8.2c1.3-1 2.9-1.4 4.5-1.2v8.6c-1.6-.2-3.2.2-4.5 1.2"/>
+                </svg>
+                推荐示例
+              </button>
+              <button class="spec-btn" data-marker="task-detail-btn-spec" @click="specModalVisible = true">
+                <svg viewBox="0 0 1024 1024" width="15" height="15" fill="currentColor">
+                  <path d="M553.358222 154.282667v81.351111H181.020444a41.016889 41.016889 0 0 0-41.358222 40.561778v569.002666a40.96 40.96 0 0 0 41.358222 40.618667h579.242667c22.812444-0.056889 41.301333-18.204444 41.358222-40.618667V519.964444h82.773334v325.176889c0 67.356444-55.580444 121.912889-124.131556 121.912889H181.020444C112.469333 967.111111 56.888889 912.497778 56.888889 845.198222V276.195556c0-67.299556 55.580444-121.912889 124.131555-121.912889h372.337778z m267.605334 272.042666l10.24-22.983111a178.915556 178.915556 0 0 1 91.818666-91.420444l31.402667-13.767111A21.560889 21.560889 0 0 0 967.111111 278.584889a21.560889 21.560889 0 0 0-12.686222-19.569778l-29.696-12.970667a178.858667 178.858667 0 0 1-93.127111-94.492444l-10.524445-24.860444A20.992 20.992 0 0 0 801.621333 113.777778c-8.533333 0-16.213333 5.12-19.456 12.913778l-10.524444 24.803555a178.858667 178.858667 0 0 1-93.070222 94.549333l-29.696 12.970667a21.560889 21.560889 0 0 0-12.686223 19.569778c0 8.419556 4.949333 16.042667 12.686223 19.569778l31.402666 13.710222c41.187556 18.147556 73.955556 50.744889 91.875556 91.420444l10.183111 23.04c7.395556 16.839111 31.118222 16.839111 38.684444 0z m-140.515556-30.435555v100.465778H531.456v297.756444H430.990222V496.355556H282.168889V395.946667h398.222222z"/>
+                </svg>
+                示范
+              </button>
+            </div>
+
+            <!-- 附件预览区 -->
+            <div v-if="attachments.length" class="attachment-preview" data-marker="task-detail-attachment-preview">
+              <div v-for="(att, i) in attachments" :key="att.id" class="attachment-item">
+                <template v-if="att.kind === 'image'">
+                  <img :src="att.url" :alt="att.name" class="att-img" />
+                </template>
+                <template v-else>
+                  <div class="att-file">
+                    <span class="att-file-icon">📄</span>
+                    <span class="att-file-name" :title="att.name">{{ att.name }}</span>
+                    <span class="att-file-size">{{ att.size }}</span>
+                  </div>
+                </template>
+                <span class="att-remove" :data-marker="'task-detail-attachment-remove-' + att.id" @click="removeAttachment(i)" title="移除">×</span>
+              </div>
+            </div>
+
+            <textarea
+              v-model="taskFollowUpText"
+              class="chat-input"
+              placeholder="针对本次任务结果追问，或使用 &quot;/&quot; 选择常用语"
+              data-marker="task-detail-input"
+              @keydown.enter.exact.prevent="sendTaskFollowUp"
+            ></textarea>
+
+            <div class="input-toolbar">
+              <label class="upload-btn" data-marker="task-detail-btn-upload" title="上传图片或 Excel 文件">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7.5 10H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-3.5"/>
+                  <path d="M12 17V4"/>
+                  <path d="M7 9l5-5 5 5"/>
+                </svg>
+                <input type="file" accept="image/png,image/jpeg,.csv,.xls,.xlsx" multiple style="display:none" @change="handleFileChange" />
+              </label>
+              <button
+                class="beautify-btn"
+                :disabled="!taskFollowUpText.trim() || taskFollowUpLoading || beautifying"
+                :title="beautifying ? '美化中…' : '一键美化提示词'"
+                data-marker="task-detail-btn-beautify"
+                @click="beautifyTaskFollowUp"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h0"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/>
+                </svg>
+              </button>
+              <button
+                class="send-btn"
+                :disabled="(!taskFollowUpText.trim() && !attachments.length) || taskFollowUpLoading"
+                data-marker="task-detail-send"
+                @click="sendTaskFollowUp"
+              >
+                <span class="send-arrow">➤</span>
+              </button>
+            </div>
+          </div>
         </div>
       </template>
     </section>
@@ -2249,6 +2345,10 @@ function cancelRename() {
 /* 任务详情：内嵌到右侧主区域，activeView 切换 */
 const activeTask = ref(null)
 const taskDetailSource = ref('chat') // 'chat' | 'tasks'
+const taskFollowUpText = ref('')
+const taskFollowUpLoading = ref(false)
+const taskFollowUps = ref([]) // { id, question, answer }
+const taskFollowUpSeq = ref(0)
 
 /* 侧边栏点击：切换内嵌定时任务页面 或 打开任务执行详情 */
 function openScheduledTask() {
@@ -2258,11 +2358,49 @@ function openScheduledTask() {
 function viewTaskOutput(t) {
   activeTask.value = t
   taskDetailSource.value = activeView.value === 'tasks' ? 'tasks' : 'chat'
+  taskFollowUps.value = []
+  taskFollowUpText.value = ''
   activeView.value = 'taskDetail'
 }
 
 function backFromTaskDetail() {
   activeView.value = taskDetailSource.value === 'tasks' ? 'tasks' : 'chat'
+}
+
+/* 任务详情追问发送（mock） */
+function sendTaskFollowUp() {
+  const text = taskFollowUpText.value.trim()
+  if (!text || taskFollowUpLoading.value) return
+  taskFollowUps.value.push({
+    id: 'fu_' + (++taskFollowUpSeq.value),
+    question: text,
+    answer: ''
+  })
+  taskFollowUpText.value = ''
+  taskFollowUpLoading.value = true
+  // mock AI 回复
+  setTimeout(() => {
+    const last = taskFollowUps.value[taskFollowUps.value.length - 1]
+    if (last) {
+      last.answer = `基于任务「${activeTask.value?.name || ''}」的分析结果，这是 AI 的追问回复（mock 数据，后端对接后替换为真实流式输出）。`
+    }
+    taskFollowUpLoading.value = false
+    nextTick(() => {
+      const el = document.querySelector('.td-content')
+      if (el) el.scrollTop = el.scrollHeight
+    })
+  }, 800)
+}
+
+/* 任务详情追问：提示词美化 */
+function beautifyTaskFollowUp() {
+  const text = taskFollowUpText.value.trim()
+  if (!text || taskFollowUpLoading.value || beautifying.value) return
+  beautifying.value = true
+  setTimeout(() => {
+    taskFollowUpText.value = doBeautify(text)
+    beautifying.value = false
+  }, 400)
 }
 
 /* 对比表格单元格样式：涨跌自动标色 */
@@ -2301,7 +2439,11 @@ function handleEnter() {
 
 /* ---------- 推荐示例：使用此提问 ---------- */
 function useRecommendQuestion(q) {
-  inputText.value = q
+  if (activeView.value === 'taskDetail') {
+    taskFollowUpText.value = q
+  } else {
+    inputText.value = q
+  }
   recommendPanelOpen.value = false
   recoDetailVisible.value = false
   nextTick(() => inputRef.value && inputRef.value.focus())
@@ -2646,24 +2788,20 @@ const markerList = [
   background: #f7f8fa;
 }
 
-/* ====== 定时任务详情 drawer ====== */
+/* ====== 定时任务详情（内嵌） ====== */
 .td-page {
-  height: 100%; overflow-y: auto; padding: 0 24px 24px;
-  background: #fafbfc;
+  height: 100%; display: flex; flex-direction: column;
+  background: #fafbfc; overflow: hidden;
+}
+.td-content {
+  flex: 1; overflow-y: auto; padding: 0 24px 16px;
 }
 .td-topbar {
   position: sticky; top: 0; z-index: 2;
   display: flex; align-items: center; gap: 16px;
-  padding: 12px 0; margin-bottom: 16px;
+  padding: 14px 0 12px; margin-bottom: 16px;
   background: #fafbfc; border-bottom: 1px solid #eef0f3;
 }
-.td-back {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: transparent; border: none; cursor: pointer;
-  color: #1677ff; font-size: 13px; padding: 4px 6px;
-  border-radius: 4px; transition: background 0.15s;
-}
-.td-back:hover { background: #e6f4ff; }
 .td-topbar-title { font-size: 16px; font-weight: 600; color: #1f2937; }
 .td-head { margin-bottom: 16px; }
 .td-head-row {
@@ -2729,6 +2867,32 @@ const markerList = [
   border: 1px dashed #adc6ff;
 }
 .td-chart-icon { font-size: 18px; }
+
+/* 追问对话区 */
+.td-followups { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.td-fu-item { display: flex; flex-direction: column; gap: 8px; }
+.td-fu-question, .td-fu-answer {
+  display: flex; align-items: flex-start; gap: 8px; max-width: 85%;
+}
+.td-fu-question { margin-left: auto; flex-direction: row-reverse; }
+.td-fu-avatar {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+}
+.td-fu-avatar.user { background: #1677ff; color: #fff; }
+.td-fu-avatar.ai { background: #f0f5ff; color: #1677ff; border: 1px solid #bae0ff; }
+.td-fu-text {
+  padding: 8px 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;
+  word-break: break-word;
+}
+.td-fu-question .td-fu-text { background: #1677ff; color: #fff; }
+.td-fu-answer .td-fu-text { background: #fff; color: #1f2937; border: 1px solid #e8eaf0; }
+
+/* 底部追问输入框（复用 .input-area 样式） */
+.td-input-area {
+  flex-shrink: 0; margin: 0 24px 16px;
+}
 
 /* 侧边栏 task-item active 高亮 */
 .history-item.task-item.active { background: #e6f0ff; color: #1677ff; }

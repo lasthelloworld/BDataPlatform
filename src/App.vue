@@ -14,15 +14,18 @@
         {{ panelContent }}
       </div>
     </div>
-    <AIWorkbench />
+    <AIWorkbench v-if="!isAIChatRoute" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import AIWorkbench from './components/aiworkbench/index.vue'
 
+const route = useRoute()
+const isAIChatRoute = computed(() => route.path === '/AI-Chat')
 const panelVisible = ref(false)
 const panelContent = ref('点击任意带标注的元素，查看需求详情。')
 
