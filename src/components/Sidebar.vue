@@ -121,6 +121,31 @@
         </a-menu-item>
       </a-sub-menu>
 
+      <a-sub-menu key="meta-event" data-marker="侧边栏菜单-元数据管理">
+        <template #title>
+          <span class="menu-icon">📁</span>
+          <span>元数据管理</span>
+        </template>
+        <a-menu-item
+          key="meta-event/code-set"
+          data-marker="侧边栏菜单-编码集管理"
+        >
+          <span>编码集管理</span>
+        </a-menu-item>
+        <a-menu-item
+          key="meta-event/properties"
+          data-marker="侧边栏菜单-事件属性管理"
+        >
+          <span>事件属性管理</span>
+        </a-menu-item>
+        <a-menu-item
+          key="meta-event/events"
+          data-marker="侧边栏菜单-元事件管理"
+        >
+          <span>元事件管理</span>
+        </a-menu-item>
+      </a-sub-menu>
+
       <a-menu-item
         key="system-settings"
         data-marker="侧边栏菜单-System Settings"

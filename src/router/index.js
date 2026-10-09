@@ -99,6 +99,32 @@ const routes = [
     ]
   },
   {
+    path: '/meta-event',
+    name: 'MetaEvent',
+    redirect: '/meta-event/events',
+    meta: { title: '元事件管理' },
+    children: [
+      {
+        path: 'code-set',
+        name: 'MetaEventCodeSet',
+        component: () => import('../views/MetaEvent/CodeSet.vue'),
+        meta: { title: '编码集管理' }
+      },
+      {
+        path: 'properties',
+        name: 'MetaEventProperties',
+        component: () => import('../views/MetaEvent/Properties.vue'),
+        meta: { title: '事件属性管理' }
+      },
+      {
+        path: 'events',
+        name: 'MetaEventEvents',
+        component: () => import('../views/MetaEvent/Events.vue'),
+        meta: { title: '元事件管理' }
+      }
+    ]
+  },
+  {
     path: '/system-settings',
     name: 'SystemSettings',
     component: () => import('../App.vue'),
