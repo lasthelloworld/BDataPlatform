@@ -1,10 +1,10 @@
 <template>
   <div class="ev-page">
-    <!-- 左侧：组织树（产品组→品类→产品→主题域） -->
+    <!-- 左侧：组织树（产品组→品类→主题域） -->
     <div class="ev-left">
       <div class="ev-left-header">事件组织</div>
       <div class="ev-left-toolbar">
-        <a-button type="primary" size="small" @click="openNodeModal(null)" data-marker="元事件-组织树-新增节点-在树顶部新增节点">+ 新增节点</a-button>
+        <a-button type="primary" size="small" @click="openNodeModal(null)" data-marker="元事件-组织树-新增节点-在树顶部新增产品组节点">+ 新增节点</a-button>
         <a-input-search
           v-model:value="treeSearch"
           placeholder="搜索节点"
@@ -20,7 +20,7 @@
           v-model:expandedKeys="treeExpandedKeys"
           :tree-data="filteredTreeData"
           class="ev-tree"
-          data-marker="元事件-组织树-四级层级，点击节点联动右侧事件列表"
+          data-marker="元事件-组织树-产品组→品类→主题域，点击节点联动右侧事件列表"
           @select="onTreeSelect"
         >
           <template #title="nodeData">
@@ -65,6 +65,15 @@
           <a-select-option value="custom">自定义</a-select-option>
         </a-select>
         <a-select
+          v-model:value="businessTypeFilter"
+          placeholder="业务类型"
+          style="width: 120px"
+          data-marker="元事件-业务类型筛选-IAP/IAA/网赚"
+          allow-clear
+        >
+          <a-select-option v-for="bt in businessTypeOptions" :key="bt.value" :value="bt.value">{{ bt.label }}</a-select-option>
+        </a-select>
+        <a-select
           v-model:value="productFilter"
           mode="multiple"
           placeholder="产品筛选"
@@ -82,6 +91,12 @@
           allow-clear
         />
         <div style="flex: 1"></div>
+        <a-button @click="openImportModal" data-marker="元事件-导入事件按钮-通过 Excel 文件导入事件，关联事件属性与编码集一并导入">
+          导入事件
+        </a-button>
+        <a-button @click="openExportModal" data-marker="元事件-导出事件按钮-按产品组/品类/事件类型导出事件点位 CSV（Excel 可打开）">
+          导出事件
+        </a-button>
         <a-button type="primary" @click="openCreateDrawer" data-marker="元事件-新建事件按钮-创建一个新的元事件">
           + 新建事件
         </a-button>
@@ -98,7 +113,13 @@
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'type'">
-            <a-tag :color="record.type === 'common' ? 'blue' : 'green'">{{ record.type === 'common' ? '通用' : '自定义' }}</a-tag>
+            <a-tooltip v-if="record.type === 'common'" title="系统初始化的通用点位事件，不允许删除，仅允许编辑">
+              <a-tag color="blue">通用</a-tag>
+            </a-tooltip>
+            <a-tag v-else color="green">自定义</a-tag>
+          </template>
+          <template v-else-if="column.key === 'businessType'">
+            <a-tag :color="businessTypeColor[record.businessType] || 'default'">{{ record.businessType || '—' }}</a-tag>
           </template>
           <template v-else-if="column.key === 'platforms'">
             <a-tag v-for="p in record.platforms" :key="p" color="default">{{ p }}</a-tag>
@@ -117,7 +138,10 @@
           </template>
           <template v-else-if="column.key === 'action'">
             <a-button type="link" size="small" @click="openEditDrawer(record)" :data-marker="'元事件-编辑事件-' + record.eventId">编辑</a-button>
-            <a-popconfirm title="确认删除该事件？" @confirm="deleteEvent(record.id)">
+            <a-tooltip v-if="record.type === 'common'" title="通用事件为系统初始化点位，不允许删除">
+              <a-button type="link" size="small" danger disabled>删除</a-button>
+            </a-tooltip>
+            <a-popconfirm v-else title="确认删除该事件？" @confirm="deleteEvent(record.id)">
               <a-button type="link" size="small" danger :data-marker="'元事件-删除事件-' + record.eventId">删除</a-button>
             </a-popconfirm>
           </template>
@@ -200,6 +224,17 @@
             </a-col>
           </a-row>
           <a-row :gutter="16">
+            <a-col :span="12">
+              <a-form-item label="业务类型" required>
+                <a-select
+                  v-model:value="form.businessType"
+                  :options="businessTypeOptions"
+                  placeholder="请选择业务类型"
+                  data-marker="元事件-业务类型选择-IAP/IAA/网赚"
+                  allow-clear
+                />
+              </a-form-item>
+            </a-col>
             <!-- 产品版本（先隐藏） -->
             <a-col v-if="false" :span="12">
               <a-form-item v-if="form.type === 'custom'" label="产品版本" required>
@@ -320,9 +355,28 @@
       cancel-text="取消"
       @ok="confirmAddProps"
     >
+      <div class="ev-prop-modal-filter">
+        <a-input
+          v-model:value="propCodeKw"
+          placeholder="按属性编码/显示名搜索"
+          allow-clear
+          style="width: 220px; margin-right: 8px"
+          data-marker="元事件-添加属性弹窗-属性编码搜索-按属性编码/显示名快速检索"
+        />
+        <a-select
+          v-model:value="propTypeFilter"
+          placeholder="按类型筛选"
+          allow-clear
+          style="width: 160px"
+          data-marker="元事件-添加属性弹窗-类型筛选-通用/自定义"
+        >
+          <a-select-option value="common">通用</a-select-option>
+          <a-select-option value="custom">自定义</a-select-option>
+        </a-select>
+      </div>
       <a-table
         :columns="propModalColumns"
-        :data-source="propertyList"
+        :data-source="filteredPropertyList"
         row-key="id"
         size="small"
         bordered
@@ -331,7 +385,10 @@
         data-marker="元事件-属性选择表格-批量勾选要绑定的属性"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'dataType'">
+          <template v-if="column.key === 'type'">
+            <a-tag :color="record.type === 'common' ? 'green' : 'orange'">{{ record.type === 'common' ? '通用' : '自定义' }}</a-tag>
+          </template>
+          <template v-else-if="column.key === 'dataType'">
             <a-tag :color="dataTypeColor[record.dataType]">{{ record.dataType }}</a-tag>
           </template>
         </template>
@@ -368,6 +425,121 @@
       </a-form>
     </a-modal>
 
+    <!-- 导入事件 弹窗 -->
+    <a-modal
+      v-model:open="importModalVisible"
+      title="导入事件"
+      ok-text="导入"
+      cancel-text="取消"
+      @ok="confirmImport"
+    >
+      <a-alert
+        type="warning"
+        show-icon
+        message="导入事件后，对应事件的关联事件属性和编码集也会一并导入"
+        class="import-tip"
+        data-marker="元事件-导入弹窗-导入提示-关联事件属性与编码集一并导入"
+      />
+      <a-form layout="vertical">
+        <a-form-item label="事件文件" required extra="仅支持 .xlsx / .xls 格式的 Excel 文件">
+          <a-upload
+            v-model:file-list="importFileList"
+            accept=".xlsx,.xls"
+            :max-count="1"
+            :before-upload="beforeImportUpload"
+            data-marker="元事件-导入弹窗-文件选择框-选择要导入的事件 Excel 文件"
+          >
+            <a-button data-marker="元事件-导入弹窗-选择文件按钮-打开本地文件选择器">
+              <template #icon><UploadOutlined /></template>
+              选择 Excel 文件
+            </a-button>
+          </a-upload>
+        </a-form-item>
+        <a-form-item label="导入至产品组" required>
+          <a-select
+            v-model:value="importGroup"
+            :options="groupOptions"
+            placeholder="请选择产品组"
+            data-marker="元事件-导入弹窗-产品组选择-级联过滤品类选项"
+            @change="onImportGroupChange"
+          />
+        </a-form-item>
+        <a-form-item label="导入至产品品类" required>
+          <a-select
+            v-model:value="importCategory"
+            :options="importCategoryOptions"
+            :disabled="!importGroup"
+            :placeholder="importGroup ? '请选择产品品类' : '请先选择产品组'"
+            data-marker="元事件-导入弹窗-产品品类选择-按所选产品组级联"
+          />
+        </a-form-item>
+        <a-form-item label="业务类型" required>
+          <a-select
+            v-model:value="importBusinessType"
+            :options="businessTypeOptions"
+            placeholder="请选择业务类型"
+            data-marker="元事件-导入弹窗-业务类型单选-IAP/IAA/网赚"
+            allow-clear
+          />
+        </a-form-item>
+      </a-form>
+      <div v-if="importFileName" class="import-preview" data-marker="元事件-导入弹窗-导入预览-展示所选文件与导入目标">
+        将把 <b>{{ importFileName }}</b> 中的事件导入至 <b>{{ importTargetText }}</b>，事件属性与编码集随事件一并导入
+      </div>
+    </a-modal>
+
+    <!-- 导出事件 弹窗 -->
+    <a-modal
+      v-model:open="exportModalVisible"
+      title="导出事件"
+      ok-text="导出"
+      cancel-text="取消"
+      @ok="confirmExport"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="产品组" required>
+          <a-select
+            v-model:value="exportGroup"
+            :options="groupOptions"
+            placeholder="请选择产品组"
+            data-marker="元事件-导出弹窗-产品组选择-级联过滤品类选项"
+            @change="onExportGroupChange"
+          />
+        </a-form-item>
+        <a-form-item label="产品品类" required>
+          <a-select
+            v-model:value="exportCategory"
+            :options="exportCategoryOptions"
+            :disabled="!exportGroup"
+            :placeholder="exportGroup ? '请选择产品品类' : '请先选择产品组'"
+            data-marker="元事件-导出弹窗-产品品类选择-按所选产品组级联"
+          />
+        </a-form-item>
+        <a-form-item label="事件类型" extra="留空则导出通用与自定义全部点位">
+          <a-select
+            v-model:value="exportType"
+            :options="[{ value: 'common', label: '通用' }, { value: 'custom', label: '自定义' }]"
+            placeholder="全部类型"
+            allow-clear
+            data-marker="元事件-导出弹窗-事件类型选择-通用/自定义，留空导出全部点位"
+          />
+        </a-form-item>
+        <a-form-item label="业务类型" extra="可多选，留空则导出全部业务类型">
+          <a-select
+            v-model:value="exportBusinessTypes"
+            mode="multiple"
+            :options="businessTypeOptions"
+            placeholder="全部业务类型"
+            allow-clear
+            data-marker="元事件-导出弹窗-业务类型多选-IAP/IAA/网赚，留空导出全部"
+          />
+        </a-form-item>
+      </a-form>
+      <div v-if="exportPreviewCount > 0" class="import-preview" data-marker="元事件-导出弹窗-导出预览-展示符合条件的点位数量">
+        符合条件的点位 <b>{{ exportPreviewCount }}</b> 个，将导出为 CSV 文件（Excel 可直接打开）
+      </div>
+    </a-modal>
+
     <!-- 交互说明 -->
     <details class="anno-details">
       <summary>📌 交互说明</summary>
@@ -377,11 +549,22 @@
         <li>元事件-组织树-点击节点-联动右侧该子树下事件列表</li>
         <li>元事件-组织树-节点备注-必填</li>
         <li>元事件-事件类型筛选-通用/自定义</li>
+        <li>元事件-业务类型筛选-IAP/IAA/网赚，联动过滤列表数据</li>
+        <li>元事件-业务类型选择-新增/编辑事件必填业务类型（IAP/IAA/网赚）</li>
         <li>元事件-产品筛选多选-按产品过滤事件列表</li>
         <li>元事件-事件ID搜索-按 eventId 模糊匹配</li>
         <li>元事件-新建事件按钮-创建一个新的元事件</li>
+        <li>元事件-导入事件按钮-通过 Excel 文件导入事件，关联事件属性与编码集一并导入</li>
+        <li>元事件-导入弹窗-提示：导入事件后，关联事件属性和编码集也会一并导入</li>
+        <li>元事件-导入弹窗-文件选择框-仅支持 .xlsx/.xls 单文件，非 Excel 文件被拒绝</li>
+        <li>元事件-导入弹窗-导入至产品组→产品品类 级联选择，导入事件以草稿态落入所选品类</li>
+        <li>元事件-导入弹窗-业务类型单选-IAP/IAA/网赚，导入事件归属该业务类型</li>
+        <li>元事件-导出弹窗-业务类型多选-IAP/IAA/网赚，留空导出全部业务类型</li>
+        <li>元事件-导出事件按钮-按产品组/品类/事件类型导出事件点位 CSV（Excel 可打开）</li>
+        <li>元事件-导出弹窗-产品组→产品品类 级联选择 + 事件类型（通用/自定义，留空导出全部）</li>
+        <li>元事件-导出弹窗-导出预览-展示符合条件的点位数量，文件名含组/品类/类型</li>
         <li>元事件-事件列表表格-元事件库主表（含所属产品列）</li>
-        <li>元事件-编辑事件 / 删除事件-行内操作（删除二次确认）</li>
+        <li>元事件-编辑事件 / 删除事件-行内操作（通用事件不允许删除，仅可编辑；删除二次确认）</li>
         <li>元事件-事件ID/事件名称输入框-必填</li>
         <li>元事件-事件类型单选-通用/自定义（必填）</li>
         <li>元事件-埋点平台多选-Android/iOS/Web（必填）</li>
@@ -390,6 +573,8 @@
         <li>元事件-应用内事件开关-是否仅 App 内可触发（必填）</li>
         <li>元事件-事件描述输入框-必填</li>
         <li>元事件-添加属性按钮-从属性库批量勾选绑定</li>
+        <li>元事件-添加属性弹窗-类型筛选-通用/自定义</li>
+        <li>元事件-添加属性弹窗-属性编码搜索-按属性编码/显示名快速检索</li>
         <li>元事件-清空绑定按钮-移除全部已绑定属性</li>
         <li>元事件-已绑定属性表格-展示当前事件绑定的属性</li>
         <li>元事件-移除属性-行内移除单个属性</li>
@@ -404,10 +589,11 @@
 
 <script setup>
 import { ref, computed, reactive } from 'vue'
-import { message } from 'ant-design-vue'
+import { message, Upload } from 'ant-design-vue'
+import { UploadOutlined } from '@ant-design/icons-vue'
 import { orgTreeData, products, eventProperties, events, versionHistory } from './mock.js'
 
-/* ====== 组织树 ====== */
+/* ====== 组织树（产品组 → 品类 → 主题域） ====== */
 const treeData = ref(JSON.parse(JSON.stringify(orgTreeData)))
 const iconMap = { group: '🏢', category: '📂', product: '📦', domain: '🏷' }
 const treeSearch = ref('')
@@ -622,6 +808,14 @@ const dataTypeColor = {
   enum: 'geekblue'
 }
 
+/* 业务类型：IAP（内购）/ IAA（广告变现）/ 网赚 */
+const businessTypeOptions = [
+  { value: 'IAP', label: 'IAP' },
+  { value: 'IAA', label: 'IAA' },
+  { value: '网赚', label: '网赚' }
+]
+const businessTypeColor = { IAP: 'purple', IAA: 'blue', 网赚: 'orange' }
+
 /* 主题域 tree-select 数据：仅 domain 层级可选 */
 const domainTreeData = computed(() => {
   const map = (nodes) => {
@@ -673,6 +867,7 @@ const findDomainPath = (key) => {
 }
 
 const typeFilter = ref(undefined)
+const businessTypeFilter = ref(undefined)
 const searchText = ref('')
 const productFilter = ref([])
 
@@ -683,6 +878,7 @@ const filteredEvents = computed(() => {
     list = list.filter(e => domainKeys.includes(e.domain))
   }
   if (typeFilter.value) list = list.filter(e => e.type === typeFilter.value)
+  if (businessTypeFilter.value) list = list.filter(e => e.businessType === businessTypeFilter.value)
   if (searchText.value) {
     const kw = searchText.value.trim().toLowerCase()
     list = list.filter(e => e.eventId.toLowerCase().includes(kw))
@@ -693,6 +889,189 @@ const filteredEvents = computed(() => {
   return list
 })
 
+/* ====== 导入事件弹窗 ====== */
+const importModalVisible = ref(false)
+const importFileList = ref([])
+const importGroup = ref(undefined)
+const importCategory = ref(undefined)
+const importBusinessType = ref(undefined)
+
+const importGroupOptions = computed(() =>
+  treeData.value
+    .filter(n => n.type === 'group')
+    .map(g => ({ value: g.key, label: g.title }))
+)
+const groupOptions = importGroupOptions
+
+const importCategoryOptions = computed(() => {
+  if (!importGroup.value) return []
+  const g = findNode(treeData.value, importGroup.value)
+  return (g?.children || [])
+    .filter(c => c.type === 'category')
+    .map(c => ({ value: c.key, label: c.title }))
+})
+
+const onImportGroupChange = () => {
+  importCategory.value = undefined
+}
+
+const importFileName = computed(() => importFileList.value[0]?.name || '')
+
+const importTargetText = computed(() => {
+  const g = importGroup.value ? findNode(treeData.value, importGroup.value) : null
+  const c = importCategory.value ? findNode(treeData.value, importCategory.value) : null
+  return [g?.title, c?.title].filter(Boolean).join(' / ')
+})
+
+const beforeImportUpload = (file) => {
+  const ok = /\.(xlsx|xls)$/i.test(file.name)
+  if (!ok) {
+    message.error('仅支持 .xlsx / .xls 格式的 Excel 文件')
+    return Upload.LIST_IGNORE
+  }
+  return false // 阻止自动上传，仅加入待导入列表
+}
+
+const openImportModal = () => {
+  importFileList.value = []
+  importGroup.value = undefined
+  importCategory.value = undefined
+  importBusinessType.value = undefined
+  importModalVisible.value = true
+}
+
+const confirmImport = () => {
+  if (!importFileList.value.length) { message.warning('请选择要导入的 Excel 文件'); return }
+  if (!importGroup.value) { message.warning('请选择产品组'); return }
+  if (!importCategory.value) { message.warning('请选择产品品类'); return }
+  if (!importBusinessType.value) { message.warning('请选择业务类型'); return }
+  /* 目标主题域：所选品类下第一个主题域 */
+  const cat = findNode(treeData.value, importCategory.value)
+  const firstDomain = (cat?.children || []).find(n => n.type === 'domain')
+  const catProducts = productList.value.filter(p => p.categoryId === importCategory.value).map(p => p.id)
+  /* 原型阶段模拟解析 Excel：固定示例事件 */
+  const demoEvents = [
+    { eventId: 'in_app_review', name: '应用内评价', platforms: ['Android', 'iOS'], isAppEvent: true, boundProps: ['ep_4', 'ep_8'], description: '用户提交应用内评价时触发（模拟 Excel 导入）。按 UV 统计。' },
+    { eventId: 'share_click', name: '分享点击', platforms: ['Android', 'iOS', 'Web'], isAppEvent: true, boundProps: ['ep_3', 'ep_9'], description: '用户点击分享按钮时触发（模拟 Excel 导入）。按 PV 统计。' }
+  ]
+  const existIds = new Set(eventList.value.map(e => e.eventId))
+  const toImport = demoEvents.filter(e => !existIds.has(e.eventId))
+  if (!toImport.length) {
+    message.warning('文件中的事件均已存在，无需重复导入')
+    return
+  }
+  toImport.forEach(e => {
+    eventList.value.push({
+      ...e,
+      id: 'ev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      type: 'custom',
+      businessType: importBusinessType.value,
+      group: importGroup.value,
+      category: importCategory.value,
+      products: catProducts,
+      productVersion: '',
+      domain: firstDomain ? firstDomain.key : '',
+      status: 'draft',
+      version: 'v1.0',
+      versionStatus: 'draft'
+    })
+  })
+  const propIds = new Set()
+  toImport.forEach(e => (e.boundProps || []).forEach(pid => propIds.add(pid)))
+  const codeSetIds = new Set()
+  propIds.forEach(pid => {
+    const prop = propertyList.value.find(p => p.id === pid)
+    if (prop && prop.codeSetId) codeSetIds.add(prop.codeSetId)
+  })
+  message.success(`已从 ${importFileName.value} 导入 ${toImport.length} 个事件，关联的 ${propIds.size} 个事件属性、${codeSetIds.size} 个编码集已一并导入`)
+  importModalVisible.value = false
+}
+
+/* ====== 导出事件弹窗 ====== */
+const exportModalVisible = ref(false)
+const exportGroup = ref(undefined)
+const exportCategory = ref(undefined)
+const exportType = ref(undefined)
+const exportBusinessTypes = ref([])
+
+const exportCategoryOptions = computed(() => {
+  if (!exportGroup.value) return []
+  const g = findNode(treeData.value, exportGroup.value)
+  return (g?.children || [])
+    .filter(c => c.type === 'category')
+    .map(c => ({ value: c.key, label: c.title }))
+})
+
+const onExportGroupChange = () => {
+  exportCategory.value = undefined
+}
+
+/* 业务类型多选过滤：留空导出全部 */
+const matchBusinessType = (e) => !exportBusinessTypes.value.length || exportBusinessTypes.value.includes(e.businessType)
+
+const exportPreviewCount = computed(() => {
+  if (!exportGroup.value || !exportCategory.value) return 0
+  return eventList.value.filter(e => e.group === exportGroup.value && e.category === exportCategory.value && (!exportType.value || e.type === exportType.value) && matchBusinessType(e)).length
+})
+
+const openExportModal = () => {
+  exportGroup.value = undefined
+  exportCategory.value = undefined
+  exportType.value = undefined
+  exportBusinessTypes.value = []
+  exportModalVisible.value = true
+}
+
+const confirmExport = () => {
+  if (!exportGroup.value) { message.warning('请选择产品组'); return }
+  if (!exportCategory.value) { message.warning('请选择产品品类'); return }
+  const rows = eventList.value.filter(e => e.group === exportGroup.value && e.category === exportCategory.value && (!exportType.value || e.type === exportType.value) && matchBusinessType(e))
+  if (!rows.length) {
+    message.warning('所选条件下暂无可导出的事件点位')
+    return
+  }
+  /* 列结构对齐 PRD 事件元数据标准结构 */
+  const header = ['事件ID', '事件名称', '事件类型', '业务类型', '埋点平台', '产品组', '产品品类', '主题域', '所属产品', '应用内事件', '状态', '事件描述', '事件属性集']
+  const esc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"'
+  const lines = [header.map(esc).join(',')]
+  rows.forEach(e => {
+    const props = (e.boundProps || []).map(pid => {
+      const p = propertyList.value.find(x => x.id === pid)
+      return p ? `${p.name}(${p.displayName})` : pid
+    }).join('; ')
+    lines.push([
+      e.eventId,
+      e.name,
+      e.type === 'common' ? '通用' : '自定义',
+      e.businessType || '—',
+      (e.platforms || []).join('; '),
+      getDomainTitle(e.group),
+      getDomainTitle(e.category),
+      getDomainTitle(e.domain),
+      (e.products || []).map(getProductName).join('; '),
+      e.isAppEvent ? '是' : '否',
+      e.status === 'published' ? '已发布' : '草稿',
+      e.description,
+      props
+    ].map(esc).join(','))
+  })
+  const g = findNode(treeData.value, exportGroup.value)
+  const c = findNode(treeData.value, exportCategory.value)
+  const typeText = exportType.value === 'common' ? '_通用' : exportType.value === 'custom' ? '_自定义' : ''
+  const bizText = exportBusinessTypes.value.length ? '_' + exportBusinessTypes.value.join('-') : ''
+  const fileName = `事件点位_${g?.title || ''}-${c?.title || ''}${typeText}${bizText}.csv`
+  /* UTF-8 BOM 保证 Excel 直接打开中文不乱码 */
+  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  a.click()
+  URL.revokeObjectURL(url)
+  message.success(`已导出 ${rows.length} 个事件点位：${fileName}`)
+  exportModalVisible.value = false
+}
+
 /* ====== 事件抽屉 ====== */
 const drawerVisible = ref(false)
 const editingEvent = ref(null)
@@ -701,6 +1080,7 @@ const form = reactive({
   eventId: '',
   name: '',
   type: 'common',
+  businessType: undefined,
   platforms: [],
   domain: '',
   products: [],
@@ -718,6 +1098,7 @@ const resetForm = () => {
     eventId: '',
     name: '',
     type: 'common',
+    businessType: undefined,
     platforms: [],
     domain: '',
     products: [],
@@ -750,6 +1131,7 @@ const validateForm = () => {
   if (!form.eventId.trim()) { message.warning('请输入事件ID'); return false }
   if (!form.name.trim()) { message.warning('请输入事件名称'); return false }
   if (!form.type) { message.warning('请选择事件类型'); return false }
+  if (!form.businessType) { message.warning('请选择业务类型'); return false }
   if (!form.platforms.length) { message.warning('请选择埋点平台'); return false }
   if (!form.domain) { message.warning('请选择主题域'); return false }
   if (!form.products.length) { message.warning('请选择所属产品'); return false }
@@ -787,6 +1169,11 @@ const handleSave = () => saveEvent(false)
 const handlePublish = () => saveEvent(true)
 
 const deleteEvent = (id) => {
+  const ev = eventList.value.find(e => e.id === id)
+  if (ev && ev.type === 'common') {
+    message.warning('通用事件为系统初始化点位，不允许删除')
+    return
+  }
   eventList.value = eventList.value.filter(e => e.id !== id)
   message.success('事件已删除')
 }
@@ -810,9 +1197,26 @@ const clearBoundProps = () => {
 /* 添加属性弹窗 */
 const propModalVisible = ref(false)
 const propSelectedKeys = ref([])
+const propTypeFilter = ref(undefined)
+const propCodeKw = ref('')
+
+const filteredPropertyList = computed(() => {
+  let list = propertyList.value
+  if (propTypeFilter.value) list = list.filter(p => p.type === propTypeFilter.value)
+  const kw = propCodeKw.value.trim().toLowerCase()
+  if (kw) {
+    list = list.filter(p =>
+      (p.name || '').toLowerCase().includes(kw) ||
+      (p.displayName || '').toLowerCase().includes(kw)
+    )
+  }
+  return list
+})
 
 const openPropModal = () => {
   propSelectedKeys.value = []
+  propTypeFilter.value = undefined
+  propCodeKw.value = ''
   propModalVisible.value = true
 }
 
@@ -856,9 +1260,10 @@ const publishCurrent = () => {
 
 /* 列定义 */
 const columns = [
-  { title: '事件ID', dataIndex: 'eventId', key: 'eventId', width: 180, customHeaderCell: () => ({ title: '事件唯一标识符，全局唯一不可重复' }) },
+  { title: '事件ID', dataIndex: 'eventId', key: 'eventId', width: 180, customHeaderCell: () => ({ title: '事件唯一标识符，同一品类下的事件ID唯一，不可重复' }) },
   { title: '事件名称', dataIndex: 'name', key: 'name', width: 140, customHeaderCell: () => ({ title: '业务可读的事件名称' }) },
   { title: '事件类型', key: 'type', width: 90, customHeaderCell: () => ({ title: '通用=跨产品复用；自定义=绑定到具体产品' }) },
+  { title: '业务类型', key: 'businessType', width: 90, customHeaderCell: () => ({ title: '事件所属业务类型：IAP（内购）/ IAA（广告变现）/ 网赚' }) },
   { title: '埋点平台', key: 'platforms', customHeaderCell: () => ({ title: '该事件采集的端，多 tag 展示' }) },
   { title: '主题域', key: 'domain', width: 120, customHeaderCell: () => ({ title: '事件归属的主题域名称（挂载到主题域）' }) },
   { title: '所属产品', key: 'products', customHeaderCell: () => ({ title: '事件归属的产品，可多选' }) },
@@ -876,18 +1281,22 @@ const boundPropColumns = [
 ]
 
 const propModalColumns = [
-  { title: '属性名', dataIndex: 'name', key: 'name' },
+  { title: '属性编码', dataIndex: 'name', key: 'name' },
   { title: '显示名', dataIndex: 'displayName', key: 'displayName' },
+  { title: '类型', key: 'type', width: 90 },
   { title: '数据类型', key: 'dataType', width: 100 },
   { title: '备注', dataIndex: 'remark', key: 'remark' }
 ]
 </script>
 
 <style scoped>
+.ev-prop-modal-filter {
+  margin-bottom: 12px;
+}
 .ev-page {
   display: flex;
   flex-direction: row;
-  height: calc(100vh - 96px);
+  height: 100%;
   gap: 0;
 }
 
@@ -1045,6 +1454,13 @@ const propModalColumns = [
   cursor: pointer;
   font-weight: 600;
   color: #1677ff;
+}
+.import-tip {
+  margin-bottom: 16px;
+}
+.import-preview {
+  font-size: 13px;
+  color: #475569;
 }
 .anno-details ul {
   margin-top: 8px;

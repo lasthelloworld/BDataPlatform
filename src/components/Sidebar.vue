@@ -8,7 +8,7 @@
       mode="inline"
       :open-keys="openKeys"
       :selected-keys="[activeMenu]"
-      :default-open-keys="['team-report', 'ai-analyses', 'event-monitoring']"
+      :default-open-keys="['team-report', 'ai-analyses', 'event-monitoring', 'meta-event']"
       @open-change="handleOpenChange"
       @select="handleSelect"
       class="menu"
@@ -121,28 +121,16 @@
         </a-menu-item>
       </a-sub-menu>
 
-      <a-sub-menu key="meta-event" data-marker="侧边栏菜单-元数据管理">
+      <a-sub-menu key="meta-event" data-marker="侧边栏菜单-元事件管理">
         <template #title>
           <span class="menu-icon">📁</span>
-          <span>元数据管理</span>
+          <span>元事件管理</span>
         </template>
         <a-menu-item
-          key="meta-event/code-set"
-          data-marker="侧边栏菜单-编码集管理"
-        >
-          <span>编码集管理</span>
-        </a-menu-item>
-        <a-menu-item
-          key="meta-event/properties"
-          data-marker="侧边栏菜单-事件属性管理"
-        >
-          <span>事件属性管理</span>
-        </a-menu-item>
-        <a-menu-item
           key="meta-event/events"
-          data-marker="侧边栏菜单-元事件管理"
+          data-marker="侧边栏菜单-事件管理-编码集/事件属性/元事件 三页签合并"
         >
-          <span>元事件管理</span>
+          <span>事件管理</span>
         </a-menu-item>
       </a-sub-menu>
 
@@ -175,6 +163,11 @@ const activeMenu = ref('dashboard')
 const openKeys = ref(['team-report'])
 
 watch(() => route.path, (path) => {
+  /* 事件管理：三个子页签路由统一高亮单条菜单 */
+  if (path.startsWith('/meta-event')) {
+    activeMenu.value = 'meta-event/events'
+    return
+  }
   const menuKey = path.replace('/', '')
   activeMenu.value = menuKey || 'dashboard'
 }, { immediate: true })

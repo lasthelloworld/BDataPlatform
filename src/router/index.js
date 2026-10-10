@@ -99,30 +99,15 @@ const routes = [
     ]
   },
   {
+    /* 精确匹配 /meta-event 时重定向到默认页签；避免与可选参数路由形成无限重定向 */
     path: '/meta-event',
+    redirect: '/meta-event/events'
+  },
+  {
+    path: '/meta-event/:tab?',
     name: 'MetaEvent',
-    redirect: '/meta-event/events',
-    meta: { title: '元事件管理' },
-    children: [
-      {
-        path: 'code-set',
-        name: 'MetaEventCodeSet',
-        component: () => import('../views/MetaEvent/CodeSet.vue'),
-        meta: { title: '编码集管理' }
-      },
-      {
-        path: 'properties',
-        name: 'MetaEventProperties',
-        component: () => import('../views/MetaEvent/Properties.vue'),
-        meta: { title: '事件属性管理' }
-      },
-      {
-        path: 'events',
-        name: 'MetaEventEvents',
-        component: () => import('../views/MetaEvent/Events.vue'),
-        meta: { title: '元事件管理' }
-      }
-    ]
+    component: () => import('../views/MetaEvent/index.vue'),
+    meta: { title: '事件管理' }
   },
   {
     path: '/system-settings',
