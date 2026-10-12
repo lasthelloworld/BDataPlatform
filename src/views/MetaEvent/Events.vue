@@ -4,7 +4,13 @@
     <div class="ev-left">
       <div class="ev-left-header">事件组织</div>
       <div class="ev-left-toolbar">
-        <a-button type="primary" size="small" @click="openNodeModal(null)" data-marker="元事件-组织树-新增节点-在树顶部新增产品组节点">+ 新增节点</a-button>
+        <a-button
+          type="primary"
+          size="small"
+          :disabled="!canAddDomain"
+          @click="addDomainBtn"
+          data-marker="元事件-组织树-新增主题域-选中品类节点后新增主题域"
+        >+ 新增主题域</a-button>
         <a-input-search
           v-model:value="treeSearch"
           placeholder="搜索节点"
@@ -31,9 +37,8 @@
               </span>
               <template #overlay>
                 <a-menu @click="(e) => onContextMenuClick(e.key, nodeData)">
-                  <a-menu-item key="add" :disabled="nodeData.type === 'domain'">新增子节点</a-menu-item>
-                  <a-menu-item key="edit">编辑</a-menu-item>
-                  <a-menu-item key="delete">删除</a-menu-item>
+                  <a-menu-item key="edit" :disabled="nodeData.type !== 'domain'">编辑</a-menu-item>
+                  <a-menu-item key="delete" :disabled="nodeData.type !== 'domain'">删除</a-menu-item>
                 </a-menu>
               </template>
             </a-dropdown>
@@ -41,7 +46,7 @@
         </a-tree>
       </div>
       <div class="ev-left-note">
-        【备注】事件挂载到「主题域」末级节点下；选择任意节点联动右侧该子树下的事件。
+        【备注】产品组/品类由库表同步，仅可查询；主题域可在品类下新增/编辑/删除，事件挂载到主题域末级节点下。
       </div>
     </div>
 
@@ -404,20 +409,12 @@
       @ok="handleNodeSave"
     >
       <a-form :model="nodeForm" layout="vertical">
-        <a-form-item label="节点类型" required>
-          <a-select
-            v-model:value="nodeForm.type"
-            placeholder="选择节点类型"
-            :disabled="!!editingNode"
-            data-marker="元事件-组织树-节点类型-产品组/品类/主题域"
-          >
-            <a-select-option value="group">产品组</a-select-option>
-            <a-select-option value="category">品类</a-select-option>
-            <a-select-option value="domain">主题域</a-select-option>
-          </a-select>
+        <a-form-item label="节点类型">
+          <a-tag color="blue">主题域</a-tag>
+          <span style="margin-left: 8px; color: #999; font-size: 12px;">产品组/品类由库表同步，仅支持主题域维护</span>
         </a-form-item>
         <a-form-item label="名称" required>
-          <a-input v-model:value="nodeForm.title" placeholder="请输入节点名称" data-marker="元事件-组织树-节点名称-必填" />
+          <a-input v-model:value="nodeForm.title" placeholder="请输入主题域名称" data-marker="元事件-组织树-节点名称-必填" />
         </a-form-item>
         <a-form-item label="备注" required>
           <a-textarea v-model:value="nodeForm.remark" placeholder="请输入备注" :rows="3" data-marker="元事件-组织树-节点备注-必填" />
@@ -442,18 +439,24 @@
       />
       <a-form layout="vertical">
         <a-form-item label="事件文件" required extra="仅支持 .xlsx / .xls 格式的 Excel 文件">
-          <a-upload
-            v-model:file-list="importFileList"
-            accept=".xlsx,.xls"
-            :max-count="1"
-            :before-upload="beforeImportUpload"
-            data-marker="元事件-导入弹窗-文件选择框-选择要导入的事件 Excel 文件"
-          >
-            <a-button data-marker="元事件-导入弹窗-选择文件按钮-打开本地文件选择器">
-              <template #icon><UploadOutlined /></template>
-              选择 Excel 文件
+          <div class="import-file-row">
+            <a-upload
+              v-model:file-list="importFileList"
+              accept=".xlsx,.xls"
+              :max-count="1"
+              :before-upload="beforeImportUpload"
+              data-marker="元事件-导入弹窗-文件选择框-选择要导入的事件 Excel 文件"
+            >
+              <a-button data-marker="元事件-导入弹窗-选择文件按钮-打开本地文件选择器">
+                <template #icon><UploadOutlined /></template>
+                选择 Excel 文件
+              </a-button>
+            </a-upload>
+            <a-button type="link" size="small" @click="downloadImportTemplate" data-marker="元事件-导入弹窗-下载模版-下载事件导入 Excel 模版">
+              <template #icon><DownloadOutlined /></template>
+              下载导入模版
             </a-button>
-          </a-upload>
+          </div>
         </a-form-item>
         <a-form-item label="导入至产品组" required>
           <a-select
@@ -544,9 +547,11 @@
     <details class="anno-details">
       <summary>📌 交互说明</summary>
       <ul>
-        <li>元事件-组织树-新增节点/右键菜单-产品组→品类→主题域 三级 CRUD</li>
+        <li>元事件-组织树-新增主题域-选中品类节点后新增主题域</li>
         <li>元事件-组织树-节点搜索-按名称模糊匹配</li>
-        <li>元事件-组织树-点击节点-联动右侧该子树下事件列表</li>
+        <li>元事件-组织树-产品组→品类→主题域，点击节点联动右侧事件列表</li>
+        <li>元事件-组织树-右键菜单-仅主题域可编辑/删除</li>
+        <li>元事件-组织树-节点名称-必填</li>
         <li>元事件-组织树-节点备注-必填</li>
         <li>元事件-事件类型筛选-通用/自定义</li>
         <li>元事件-业务类型筛选-IAP/IAA/网赚，联动过滤列表数据</li>
@@ -557,6 +562,7 @@
         <li>元事件-导入事件按钮-通过 Excel 文件导入事件，关联事件属性与编码集一并导入</li>
         <li>元事件-导入弹窗-提示：导入事件后，关联事件属性和编码集也会一并导入</li>
         <li>元事件-导入弹窗-文件选择框-仅支持 .xlsx/.xls 单文件，非 Excel 文件被拒绝</li>
+        <li>元事件-导入弹窗-下载模版-下载事件导入 Excel 模版，含表头与示例行</li>
         <li>元事件-导入弹窗-导入至产品组→产品品类 级联选择，导入事件以草稿态落入所选品类</li>
         <li>元事件-导入弹窗-业务类型单选-IAP/IAA/网赚，导入事件归属该业务类型</li>
         <li>元事件-导出弹窗-业务类型多选-IAP/IAA/网赚，留空导出全部业务类型</li>
@@ -590,7 +596,7 @@
 <script setup>
 import { ref, computed, reactive } from 'vue'
 import { message, Upload } from 'ant-design-vue'
-import { UploadOutlined } from '@ant-design/icons-vue'
+import { UploadOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 import { orgTreeData, products, eventProperties, events, versionHistory } from './mock.js'
 
 /* ====== 组织树（产品组 → 品类 → 主题域） ====== */
@@ -674,19 +680,26 @@ const onTreeSelect = (keys) => {
   treeSelectedKeys.value = keys
 }
 
-/* 节点 CRUD 弹窗 */
+/* 节点 CRUD 弹窗（仅主题域可维护） */
 const nodeModalVisible = ref(false)
 const editingNode = ref(null)
-const nodeForm = reactive({ type: 'group', title: '', remark: '', parentKey: null })
+const nodeForm = reactive({ type: 'domain', title: '', remark: '', parentKey: null })
 
-const nextChildType = (parentType) => {
-  const map = { group: 'category', category: 'domain' }
-  return map[parentType] || 'group'
+const canAddDomain = computed(() => {
+  return selectedNode.value && selectedNode.value.type === 'category'
+})
+
+const addDomainBtn = () => {
+  if (!canAddDomain.value) {
+    message.warning('请先选中一个品类节点')
+    return
+  }
+  openNodeModal(selectedNode.value)
 }
 
 const openNodeModal = (parentNode) => {
   editingNode.value = null
-  nodeForm.type = parentNode ? nextChildType(parentNode.type) : 'group'
+  nodeForm.type = 'domain'
   nodeForm.title = ''
   nodeForm.remark = ''
   nodeForm.parentKey = parentNode ? parentNode.key : null
@@ -694,8 +707,12 @@ const openNodeModal = (parentNode) => {
 }
 
 const openEditNodeModal = (node) => {
+  if (node.type !== 'domain') {
+    message.warning('产品组/品类由库表同步，不支持编辑')
+    return
+  }
   editingNode.value = node
-  nodeForm.type = node.type
+  nodeForm.type = 'domain'
   nodeForm.title = node.title
   nodeForm.remark = node.remark || ''
   nodeForm.parentKey = null
@@ -704,7 +721,7 @@ const openEditNodeModal = (node) => {
 
 const handleNodeSave = () => {
   if (!nodeForm.title.trim()) {
-    message.warning('请输入节点名称')
+    message.warning('请输入主题域名称')
     return
   }
   if (!nodeForm.remark.trim()) {
@@ -717,12 +734,12 @@ const handleNodeSave = () => {
       node.title = nodeForm.title.trim()
       node.remark = nodeForm.remark
     }
-    message.success('节点已更新')
+    message.success('主题域已更新')
   } else {
     const newNode = {
       key: 'node_' + Date.now(),
       title: nodeForm.title.trim(),
-      type: nodeForm.type,
+      type: 'domain',
       remark: nodeForm.remark,
       children: []
     }
@@ -733,15 +750,17 @@ const handleNodeSave = () => {
         parent.children.push(newNode)
         treeExpandedKeys.value = [...treeExpandedKeys.value, parent.key]
       }
-    } else {
-      treeData.value.push(newNode)
     }
-    message.success('节点已新增')
+    message.success('主题域已新增')
   }
   nodeModalVisible.value = false
 }
 
 const deleteNode = (node) => {
+  if (node.type !== 'domain') {
+    message.warning('产品组/品类由库表同步，不支持删除')
+    return
+  }
   const remove = (nodes, key) => {
     for (let i = 0; i < nodes.length; i++) {
       if (nodes[i].key === key) {
@@ -754,12 +773,12 @@ const deleteNode = (node) => {
   }
   remove(treeData.value, node.key)
   if (treeSelectedKeys.value.includes(node.key)) treeSelectedKeys.value = []
-  message.success('节点已删除')
+  message.success('主题域已删除')
 }
 
+
 const onContextMenuClick = (action, nodeData) => {
-  if (action === 'add') openNodeModal(nodeData)
-  else if (action === 'edit') openEditNodeModal(nodeData)
+  if (action === 'edit') openEditNodeModal(nodeData)
   else if (action === 'delete') deleteNode(nodeData)
 }
 
@@ -938,6 +957,20 @@ const openImportModal = () => {
   importCategory.value = undefined
   importBusinessType.value = undefined
   importModalVisible.value = true
+}
+
+const downloadImportTemplate = () => {
+  const headers = ['事件ID', '事件名称', '事件类型', '业务类型', '埋点平台', '产品组', '产品品类', '主题域', '所属产品', '应用内事件', '状态', '事件描述']
+  const sample = ['app_open', '应用打开', '通用', 'IAA', 'AppsFlyer', '产品二组', '工具品类', '用户活跃', 'tool_app', '是', '草稿', '应用启动时触发']
+  const csv = [headers.join(','), sample.join(',')]
+  const bom = '\uFEFF'
+  const blob = new Blob([bom + csv.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = '事件导入模版.csv'
+  link.click()
+  URL.revokeObjectURL(link.href)
+  message.success('导入模版已下载，请按模版格式填写后导入')
 }
 
 const confirmImport = () => {
@@ -1336,6 +1369,7 @@ const propModalColumns = [
   gap: 4px;
   padding: 2px 4px;
   border-radius: 4px;
+  width: 100%;
 }
 .tree-node.active {
   background: #e6f4ff;
@@ -1343,6 +1377,16 @@ const propModalColumns = [
 }
 .tree-icon {
   font-size: 14px;
+}
+.tree-actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 0;
+}
+.tree-actions .ant-btn {
+  padding: 0 4px;
+  height: 22px;
+  font-size: 12px;
 }
 .ev-left-note {
   margin-top: 12px;
@@ -1457,6 +1501,11 @@ const propModalColumns = [
 }
 .import-tip {
   margin-bottom: 16px;
+}
+.import-file-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 .import-preview {
   font-size: 13px;
